@@ -1,0 +1,1002 @@
+.lumora-login-page {
+  --login-orange: #f97316;
+  --login-orange-dark: #ea580c;
+  --login-ink: #17120f;
+  --login-muted: #756b64;
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(249, 115, 22, .15), transparent 29%),
+    radial-gradient(circle at 92% 90%, rgba(255, 178, 107, .16), transparent 26%),
+    #f8f5f2;
+  color: var(--login-ink);
+}
+
+.lumora-login-shell {
+  width: min(980px, 100%);
+  min-height: min(580px, calc(100vh - 48px));
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(355px, .85fr);
+  overflow: hidden;
+  border: 1px solid rgba(55, 36, 25, .08);
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 24px 72px rgba(54, 33, 20, .14);
+}
+
+.lumora-login-showcase {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 30px 34px 27px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    linear-gradient(148deg, rgba(255, 255, 255, .08), transparent 38%),
+    linear-gradient(145deg, #2c160c 0%, #5a260d 48%, #c74d0b 100%);
+}
+
+.lumora-login-showcase::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  opacity: .16;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .2) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, #000, transparent 75%);
+}
+
+.lumora-login-orb {
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.lumora-login-orb-one {
+  top: -120px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 173, 102, .22);
+}
+
+.lumora-login-orb-two {
+  bottom: -130px;
+  left: -90px;
+  width: 260px;
+  height: 260px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.lumora-login-brand,
+.lumora-login-mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.lumora-login-brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(145deg, #ff9a45, #f15a0b);
+  box-shadow: 0 12px 24px rgba(94, 29, 0, .26), inset 0 1px rgba(255, 255, 255, .28);
+}
+
+.lumora-login-brand strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: .12em;
+}
+
+.lumora-login-brand span {
+  display: block;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, .62);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.lumora-login-copy {
+  max-width: 470px;
+  margin-top: 36px;
+}
+
+.lumora-login-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 999px;
+  color: #ffd4b0;
+  background: rgba(255, 255, 255, .08);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.lumora-login-copy h1 {
+  max-width: 470px;
+  margin: 17px 0 13px;
+  font-size: clamp(30px, 3.2vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+.lumora-login-copy p {
+  max-width: 465px;
+  margin: 0;
+  color: rgba(255, 255, 255, .72);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.lumora-login-preview {
+  width: min(400px, 96%);
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .1);
+  box-shadow: 0 20px 48px rgba(27, 9, 0, .2);
+  backdrop-filter: blur(18px);
+}
+
+.lumora-preview-head,
+.lumora-preview-order,
+.lumora-preview-footer {
+  display: flex;
+  align-items: center;
+}
+
+.lumora-preview-head {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lumora-preview-head div > span,
+.lumora-preview-order div span,
+.lumora-preview-footer span {
+  display: block;
+  color: rgba(255, 255, 255, .58);
+  font-size: 11px;
+}
+
+.lumora-preview-head strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 17px;
+}
+
+.lumora-preview-status {
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #ffe1c6;
+  background: rgba(249, 115, 22, .22);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.lumora-preview-order {
+  gap: 11px;
+  margin: 14px 0 13px;
+  padding: 11px;
+  border-radius: 13px;
+  background: rgba(20, 7, 1, .2);
+}
+
+.lumora-preview-food {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .12);
+  font-size: 21px;
+}
+
+.lumora-preview-order div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.lumora-preview-order div strong {
+  display: block;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lumora-preview-order div span {
+  margin-top: 4px;
+}
+
+.lumora-preview-order b {
+  color: #ffd8b5;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.lumora-preview-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+}
+
+.lumora-preview-progress span {
+  display: block;
+  width: 72%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffbd85, #ff741e);
+}
+
+.lumora-preview-footer {
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 11px;
+  color: #ffc18e;
+}
+
+.lumora-login-roles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.lumora-login-roles div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, .11);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, .68);
+  background: rgba(255, 255, 255, .05);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.lumora-login-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 32px 42px 22px;
+  background: #fff;
+}
+
+.lumora-login-mobile-brand {
+  display: none;
+}
+
+.lumora-login-form-wrap {
+  width: min(330px, 100%);
+  margin: auto;
+}
+
+.lumora-login-heading > span {
+  color: var(--login-orange-dark);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.lumora-login-heading h2 {
+  margin: 8px 0 8px;
+  color: var(--login-ink);
+  font-size: 26px;
+  line-height: 1.18;
+  letter-spacing: -.03em;
+}
+
+.lumora-login-heading p {
+  margin: 0;
+  color: var(--login-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lumora-login-form {
+  display: grid;
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.lumora-login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 11px;
+  color: #b42318;
+  background: #fff5f4;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.lumora-login-error > span {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #ef4444;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.lumora-login-error p {
+  margin: 0;
+}
+
+.lumora-login-field {
+  display: grid;
+  gap: 7px;
+}
+
+.lumora-login-field > span {
+  color: #302822;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lumora-login-input-wrap {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid #e6dfda;
+  border-radius: 12px;
+  color: #a09790;
+  background: #fcfbfa;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.lumora-login-input-wrap:focus-within {
+  border-color: #fb923c;
+  color: var(--login-orange-dark);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, .11);
+}
+
+.lumora-login-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: #201914;
+  background: transparent;
+  font-size: 13px;
+}
+
+.lumora-login-input-wrap input::placeholder {
+  color: #aaa19b;
+}
+
+.lumora-login-input-wrap:has(input:disabled) {
+  opacity: .68;
+  background: #f6f3f1;
+}
+
+.lumora-password-toggle {
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: #80766f;
+  background: transparent;
+  cursor: pointer;
+}
+
+.lumora-password-toggle:hover:not(:disabled) {
+  color: var(--login-orange-dark);
+  background: #fff2e8;
+}
+
+.lumora-login-submit {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 2px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #fb7a1e, #e65308);
+  box-shadow: 0 12px 22px rgba(234, 88, 12, .25);
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.lumora-login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 26px rgba(234, 88, 12, .3);
+  filter: saturate(1.05);
+}
+
+.lumora-login-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.lumora-login-submit:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+.lumora-login-spinner {
+  animation: lumoraLoginSpin .75s linear infinite;
+}
+
+.lumora-login-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 17px;
+  color: #8a817b;
+  font-size: 10px;
+  text-align: center;
+}
+
+.lumora-login-security svg {
+  flex: 0 0 auto;
+  color: #f97316;
+}
+
+.lumora-login-copyright {
+  margin: 18px 0 0;
+  color: #aea6a0;
+  font-size: 10px;
+  text-align: center;
+}
+
+@keyframes lumoraLoginSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 980px) {
+  .lumora-login-page {
+    padding: 18px;
+  }
+
+  .lumora-login-shell {
+    grid-template-columns: minmax(0, .9fr) minmax(350px, 1.1fr);
+    min-height: calc(100vh - 36px);
+  }
+
+  .lumora-login-showcase {
+    padding: 30px 28px;
+  }
+
+  .lumora-login-copy {
+    margin-top: 39px;
+  }
+
+  .lumora-login-copy h1 {
+    font-size: 36px;
+  }
+
+  .lumora-login-preview {
+    width: 100%;
+  }
+
+  .lumora-login-roles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lumora-login-panel {
+    padding-inline: 34px;
+  }
+}
+
+@media (max-width: 760px) {
+  .lumora-login-page {
+    display: block;
+    padding: 0;
+    background: #fff;
+  }
+
+  .lumora-login-shell {
+    min-height: 100vh;
+    display: block;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .lumora-login-showcase {
+    display: none;
+  }
+
+  .lumora-login-panel {
+    min-height: 100vh;
+    padding: 24px 22px 20px;
+  }
+
+  .lumora-login-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 190px;
+    pointer-events: none;
+    background: radial-gradient(circle at 100% 0, rgba(249, 115, 22, .14), transparent 52%);
+  }
+
+  .lumora-login-mobile-brand {
+    position: relative;
+    z-index: 1;
+    display: flex;
+  }
+
+  .lumora-login-mobile-brand .lumora-login-brand-mark {
+    width: 39px;
+    height: 39px;
+    flex-basis: 39px;
+    border-radius: 12px;
+  }
+
+  .lumora-login-mobile-brand strong {
+    color: #2b211b;
+    font-size: 17px;
+    letter-spacing: .1em;
+  }
+
+  .lumora-login-form-wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin: auto 0;
+    padding: 44px 0 30px;
+  }
+
+  .lumora-login-heading h2 {
+    font-size: 27px;
+  }
+}
+
+@media (max-width: 420px) {
+  .lumora-login-panel {
+    padding-inline: 18px;
+  }
+
+  .lumora-login-form-wrap {
+    padding-top: 38px;
+  }
+
+  .lumora-login-heading h2 {
+    font-size: 25px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumora-login-submit,
+  .lumora-login-input-wrap {
+    transition: none;
+  }
+
+  .lumora-login-spinner {
+    animation-duration: 1.5s;
+  }
+}
+
+/* ==================== Password recovery with email OTP ==================== */
+.lumora-login-form-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -7px;
+}
+
+.lumora-login-form-tools a,
+.lumora-back-to-login,
+.lumora-recovery-actions button {
+  color: var(--login-orange-dark);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.lumora-login-form-tools a:hover,
+.lumora-back-to-login:hover,
+.lumora-recovery-actions button:hover:not(:disabled) {
+  color: #c2410c;
+  text-decoration: underline;
+}
+
+.lumora-recovery-shell {
+  min-height: min(620px, calc(100vh - 48px));
+}
+
+.lumora-recovery-showcase {
+  padding-bottom: 30px;
+}
+
+.lumora-recovery-copy {
+  margin-top: 42px;
+}
+
+.lumora-recovery-guide {
+  display: grid;
+  gap: 12px;
+  margin-top: 31px;
+}
+
+.lumora-recovery-guide > div {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  opacity: .5;
+  transition: opacity .2s ease;
+}
+
+.lumora-recovery-guide > div.is-active {
+  opacity: 1;
+}
+
+.lumora-recovery-guide > div > span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(255, 255, 255, .09);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.lumora-recovery-guide > div.is-active > span {
+  border-color: rgba(255, 194, 143, .44);
+  color: #fff2e7;
+  background: rgba(249, 115, 22, .3);
+}
+
+.lumora-recovery-guide section strong {
+  display: block;
+  color: #fff;
+  font-size: 12px;
+}
+
+.lumora-recovery-guide section p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, .61);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.lumora-recovery-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 20px;
+  color: rgba(255, 255, 255, .62);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.lumora-recovery-note svg {
+  flex: 0 0 auto;
+  color: #ffb77c;
+}
+
+.lumora-recovery-form-wrap {
+  width: min(360px, 100%);
+}
+
+.lumora-recovery-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 25px;
+}
+
+.lumora-recovery-progress span {
+  height: 4px;
+  border-radius: 999px;
+  background: #eee8e4;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.lumora-recovery-progress span.is-active {
+  background: linear-gradient(90deg, #fb923c, #ea580c);
+  transform: scaleY(1.16);
+}
+
+.lumora-login-heading p strong {
+  color: #41352d;
+  font-weight: 850;
+}
+
+.lumora-otp-group {
+  display: grid;
+  gap: 10px;
+}
+
+.lumora-otp-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #302822;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lumora-otp-label b {
+  color: #15803d;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lumora-otp-label b.is-warning {
+  color: #dc2626;
+}
+
+.lumora-otp-inputs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lumora-otp-inputs input {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1 / 1.04;
+  border: 1px solid #e4dcd7;
+  border-radius: 12px;
+  outline: 0;
+  color: #251b15;
+  background: #fcfbfa;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  caret-color: var(--login-orange-dark);
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.lumora-otp-inputs input:focus {
+  border-color: #fb923c;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, .12);
+}
+
+.lumora-otp-inputs input:disabled {
+  opacity: .65;
+}
+
+.lumora-recovery-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lumora-recovery-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.lumora-recovery-actions button:disabled {
+  color: #aaa19b;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.lumora-password-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 9px;
+  padding: 11px 12px;
+  border: 1px solid #eee7e2;
+  border-radius: 12px;
+  background: #faf8f6;
+}
+
+.lumora-password-rules span {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: #948a83;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.lumora-password-rules span svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.lumora-password-rules span.is-valid {
+  color: #15803d;
+}
+
+.lumora-back-to-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.lumora-recovery-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.lumora-recovery-success-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 17px;
+  border-radius: 50%;
+  color: #15803d;
+  background: #eaf8ef;
+  box-shadow: 0 0 0 9px #f5fbf7;
+}
+
+.lumora-recovery-success > span {
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.lumora-recovery-success h2 {
+  margin: 9px 0 9px;
+  color: var(--login-ink);
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -.03em;
+}
+
+.lumora-recovery-success p {
+  max-width: 320px;
+  margin: 0 0 22px;
+  color: var(--login-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lumora-recovery-success .lumora-login-submit {
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .lumora-recovery-panel {
+    min-height: 100vh;
+  }
+
+  .lumora-recovery-form-wrap {
+    padding-top: 32px;
+  }
+}
+
+@media (max-width: 420px) {
+  .lumora-otp-inputs {
+    gap: 5px;
+  }
+
+  .lumora-otp-inputs input {
+    border-radius: 10px;
+    font-size: 18px;
+  }
+
+  .lumora-password-rules {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== Google Identity Services ==================== */
+.lumora-login-divider {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 18px 0 14px;
+  color: #a39a94;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.lumora-login-divider::before,
+.lumora-login-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #eee8e4;
+}
+
+.lumora-google-login {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity .18s ease;
+}
+
+.lumora-google-login.is-disabled {
+  opacity: .58;
+  pointer-events: none;
+}
+
+.lumora-google-login-button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+}
+
+.lumora-google-login-button > div,
+.lumora-google-login-button iframe {
+  max-width: 100% !important;
+}
+
+.lumora-google-config-message {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px dashed #e6dfda;
+  border-radius: 11px;
+  color: #8a817b;
+  background: #fcfbfa;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+}

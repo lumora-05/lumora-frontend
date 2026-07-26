@@ -1,0 +1,75 @@
+import { useEffect, useState } from 'react';
+import { Bell, History, ReceiptText, UserRound, X } from 'lucide-react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import Sidebar from '../components/common/Sidebar';
+import CashierHeader from '../components/common/CashierHeader';
+
+const items = [
+  { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
+  { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },
+  { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
+  { to: '/cashier/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
+];
+
+const pageMeta = {
+  '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
+  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],
+  '/cashier/notifications': ['Thông báo thu ngân', 'Các bàn đang yêu cầu thanh toán'],
+  '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
+  '/cashier': ['Thanh toán', 'Ưu tiên các bàn đã yêu cầu thanh toán lâu nhất'],
+};
+
+export default function CashierLayout() {
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
+  let title;
+  let subtitle;
+  if (detailMatch) {
+    if (location.pathname.includes('/payment/')) {
+      title = 'Thanh toán hóa đơn';
+      subtitle = 'Kiểm tra phương thức và xác nhận giao dịch';
+    } else if (location.pathname.includes('/print/')) {
+      title = 'In hóa đơn';
+      subtitle = 'Kiểm tra bản in trước khi gửi đến máy in';
+    } else {
+      title = 'Chi tiết hóa đơn';
+      subtitle = 'Kiểm tra món ăn và tổng tiền của bàn';
+    }
+  } else {
+    const key = Object.keys(pageMeta).find((path) => path !== '/cashier' && location.pathname.startsWith(path)) || '/cashier';
+    [title, subtitle] = pageMeta[key];
+  }
+
+  return (
+    <div className="app-shell cashier-shell">
+      <Sidebar title="Thu ngân" items={items} />
+
+      {menuOpen ? <button type="button" className="cashier-mobile-overlay" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} /> : null}
+      <aside className={`cashier-mobile-drawer ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
+        <div className="cashier-mobile-drawer-head">
+          <div><ReceiptText size={22} /><strong>Khu vực thu ngân</strong></div>
+          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Đóng menu"><X size={21} /></button>
+        </div>
+        <nav>
+          {items.map(({ to, label, mobileIcon: Icon }) => (
+            <NavLink key={to} to={to} end={to === '/cashier'} className={({ isActive }) => isActive ? 'active' : ''}>
+              <Icon size={19} />{label}
+            </NavLink>
+          ))}
+          <NavLink to="/cashier/notifications" className={({ isActive }) => isActive ? 'active' : ''}>
+            <Bell size={19} />Thông báo
+          </NavLink>
+        </nav>
+      </aside>
+
+      <main className="cashier-main">
+        <CashierHeader title={title} subtitle={subtitle} onOpenMenu={() => setMenuOpen(true)} />
+        <Outlet />
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,59 @@
+import { NavLink } from 'react-router-dom';
+import { AlertTriangle, BarChart3, Bell, BellRing, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils, UtensilsCrossed } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+
+const iconMap = {
+  dashboard: Grid2X2,
+  users: Users,
+  table: Table2,
+  menu: Utensils,
+  orders: ClipboardList,
+  report: BarChart3,
+  home: Home,
+  qr: QrCode,
+  list: ClipboardList,
+  category: Tags,
+  inventory: Boxes,
+  gift: Gift,
+  account: Settings,
+  notify: Bell,
+  review: Star,
+  service: BellRing,
+  cashier: CreditCard,
+  kitchen: ChefHat,
+  history: History,
+  alert: AlertTriangle,
+  printer: Printer,
+  receipt: ReceiptText,
+  reservation: CalendarCheck2,
+};
+
+export default function Sidebar({ title, items }) {
+  const { user, logout } = useAuth();
+
+  return (
+    <aside className="sidebar admin-sidebar">
+      <div className="brand">
+        <div className="brand-logo"><UtensilsCrossed size={28} strokeWidth={2.4} /></div>
+        <div className="brand-text">
+          <b>LUMORA</b>
+          <span>{title}</span>
+        </div>
+      </div>
+
+      <nav>
+        {items.map((i) => {
+          const Icon = iconMap[i.icon] || Home;
+          return (
+            <NavLink key={i.to} to={i.to} end={i.to.split('/').length <= 2} className={({ isActive }) => isActive ? 'active' : ''}>
+              <Icon size={20} />
+              {i.label}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {user && <button className="sidebar-logout" onClick={logout}><LogOut size={18} />Đăng xuất</button>}
+    </aside>
+  );
+}

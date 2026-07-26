@@ -1,0 +1,89 @@
+export const RESERVATION_STATUS = {
+  CHO_XAC_NHAN: { label: 'Chờ xác nhận', tone: 'pending' },
+  DA_XAC_NHAN: { label: 'Đã xác nhận', tone: 'confirmed' },
+  KHACH_DA_DEN: { label: 'Khách đã đến', tone: 'arrived' },
+  DA_XEP_BAN: { label: 'Đã xếp bàn', tone: 'seated' },
+  HOAN_THANH: { label: 'Hoàn thành', tone: 'completed' },
+  DA_HUY: { label: 'Đã hủy', tone: 'cancelled' },
+  TU_CHOI: { label: 'Từ chối', tone: 'rejected' },
+  KHONG_DEN: { label: 'Không đến', tone: 'no-show' },
+};
+
+export function reservationData(response) {
+  if (response && typeof response === 'object' && Object.prototype.hasOwnProperty.call(response, 'data')) {
+    return response.data;
+  }
+  return response;
+}
+
+export function reservationId(item) {
+  return item?.maDatBan ?? item?.id ?? null;
+}
+
+export function reservationStatus(item) {
+  return String(item?.trangThai || '').toUpperCase();
+}
+
+export function reservationStatusMeta(value) {
+  const status = typeof value === 'string' ? value.toUpperCase() : reservationStatus(value);
+  return RESERVATION_STATUS[status] || { label: status || 'Không xác định', tone: 'neutral' };
+}
+
+export function reservationDateTime(value, options = {}) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: options.hideYear ? undefined : 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export function reservationDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+export function reservationTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
+export function toDateTimeLocal(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+export function minReservationDateTime(offsetMinutes = 30) {
+  const date = new Date(Date.now() + offsetMinutes * 60000);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+export function canCustomerEdit(status) {
+  return ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(String(status || '').toUpperCase());
+}
+
+export function canCustomerCancel(status) {
+  return ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(String(status || '').toUpperCase());
+}
+
+export function canMarkNoShow(item) {
+  if (reservationStatus(item) !== 'DA_XAC_NHAN' || !item?.ngayGioDen) return false;
+  const allowed = new Date(item.ngayGioDen).getTime() + 15 * 60000;
+  return Date.now() >= allowed;
+}
+
+export function tableLabel(item) {
+  return item?.tenBanThucTe || item?.tenBanDuKien || 'Chưa xếp bàn';
+}
