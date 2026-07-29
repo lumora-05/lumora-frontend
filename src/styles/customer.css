@@ -595,7 +595,7 @@
 .customer-mobile-nav{display:none}
 
 .customer-menu-workspace{
-  width:min(1440px,calc(100% - 40px));
+  width:min(1180px,calc(100% - 40px));
   margin:28px auto 0;
   display:grid;
   grid-template-columns:230px minmax(0,1fr);
