@@ -774,6 +774,24 @@
 .customer-detail-add{height:57px;margin-top:16px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:9px;color:#fff;background:linear-gradient(135deg,#ff7300,#ff4100);box-shadow:0 14px 29px rgba(255,77,0,.23);font-size:15px;font-weight:900;cursor:pointer}
 .customer-detail-add.added{background:linear-gradient(135deg,#159447,#22b75d)}
 .customer-detail-add:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.customer-detail-recommendations{margin:27px 0 48px}
+.customer-detail-recommendations-head{margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.customer-detail-recommendations-head h2{margin:0;color:#1d2736;font-size:18px;line-height:1.25;letter-spacing:-.015em}
+.customer-detail-recommendations-head>a{display:inline-flex;align-items:center;gap:4px;color:#ee5212;font-size:12px;font-weight:900;text-decoration:none}
+.customer-detail-recommendations-head>a:hover{color:#c93e08}
+.customer-detail-recommendations-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.customer-detail-recommendation-card{min-width:0;min-height:112px;display:grid;grid-template-columns:145px minmax(0,1fr);overflow:hidden;border:1px solid #e7ebf0;border-radius:17px;background:#fff;box-shadow:0 9px 24px rgba(15,23,42,.055);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.customer-detail-recommendation-card:hover{transform:translateY(-2px);border-color:#f2c9b5;box-shadow:0 14px 30px rgba(15,23,42,.085)}
+.customer-detail-recommendation-image{min-height:112px;display:grid;place-items:center;overflow:hidden;color:#e85a1a;background:linear-gradient(135deg,#fff0e5,#ffd9c3);text-decoration:none}
+.customer-detail-recommendation-image img{width:100%;height:100%;display:block;object-fit:cover}
+.customer-detail-recommendation-body{min-width:0;padding:12px 12px 11px;display:flex;flex-direction:column}
+.customer-detail-recommendation-body>a{display:-webkit-box;overflow:hidden;color:#202a39;font-size:13px;font-weight:900;line-height:1.35;text-decoration:none;-webkit-box-orient:vertical;-webkit-line-clamp:1}
+.customer-detail-recommendation-body>a:hover{color:#e85011}
+.customer-detail-recommendation-body>p{min-height:31px;margin:6px 0 8px;display:-webkit-box;overflow:hidden;color:#7b8696;font-size:10.5px;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.customer-detail-recommendation-body>div{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.customer-detail-recommendation-body strong{color:#ef4f0e;font-size:13px;white-space:nowrap}
+.customer-detail-recommendation-body button{width:30px;height:30px;min-width:30px;border:1px solid #ffc9ae;border-radius:9px;display:grid;place-items:center;color:#f05a18;background:#fff;cursor:pointer;transition:.15s ease}
+.customer-detail-recommendation-body button:hover{border-color:#f05a18;color:#fff;background:#f05a18}
 
 .customer-page-heading{padding:35px 0 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
 .customer-page-heading>div>span{display:flex;align-items:center;gap:7px;color:#e95414;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
@@ -870,6 +888,7 @@
   .customer-site-header{padding:0 22px}
   .customer-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .customer-detail-card{gap:25px}
+  .customer-detail-recommendations-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:900px){
   .customer-site-brand{min-width:auto}
@@ -925,6 +944,11 @@
   .customer-detail-title-row{display:block}
   .customer-detail-title-row h1{font-size:28px}
   .customer-detail-title-row>strong{display:block;margin-top:9px}
+  .customer-detail-recommendations{margin:22px 0 34px}
+  .customer-detail-recommendations-head{margin-bottom:11px}
+  .customer-detail-recommendations-grid{display:flex;gap:12px;overflow-x:auto;padding:1px 1px 9px;scroll-snap-type:x proximity}
+  .customer-detail-recommendation-card{flex:0 0 min(330px,88vw);grid-template-columns:116px minmax(0,1fr);scroll-snap-align:start}
+  .customer-detail-recommendation-image{min-height:108px}
   .customer-page-heading{padding:25px 0 19px;align-items:flex-start;flex-direction:column}
   .customer-page-heading>strong{height:43px}
   .customer-cart-items-card,.customer-cart-summary-card,.customer-order-info-card,.customer-order-timeline-card{padding:19px 15px;border-radius:20px}

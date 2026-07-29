@@ -537,6 +537,7 @@
 .employee-table tbody tr:hover{background:#fffaf7;}
 .employee-stt{font-weight:800;color:#111827;width:70px;}
 .employee-name{font-weight:900;color:#111827;min-width:190px;}
+.employee-username{font-weight:750;color:#334155;min-width:145px;white-space:nowrap;}
 .employee-role-badge{
   min-width:88px;
   height:30px;
@@ -736,7 +737,7 @@
   .employee-toolbar{grid-template-columns:1fr;align-items:stretch;}
   .employee-add-btn{width:100%;justify-self:auto;}
   .employee-table-card{overflow-x:auto;}
-  .employee-table{min-width:1160px;}
+  .employee-table{min-width:1305px;}
   .employee-modal-grid{grid-template-columns:1fr;}
 }
 

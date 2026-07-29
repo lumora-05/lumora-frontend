@@ -190,7 +190,10 @@ export default function CustomerMenu() {
 
   function handleAdd(food) {
     cart.add(food);
-    toast.success(`Đã thêm ${food.tenMonAn || 'món ăn'} vào giỏ hàng`);
+    toast.success(`Đã thêm ${food.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+      id: 'customer-add-to-cart',
+      duration: 1000
+    });
   }
 
   function handleLoadMore() {

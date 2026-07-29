@@ -263,6 +263,7 @@ export default function EmployeeManage() {
             <tr>
               <th>STT</th>
               <th>Họ tên</th>
+              <th>Tên đăng nhập</th>
               <th>Số điện thoại</th>
               <th>Email</th>
               <th>Vai trò</th>
@@ -276,6 +277,7 @@ export default function EmployeeManage() {
               <tr key={item.maNhanVien || item.id || index}>
                 <td className="employee-stt">{page * size + index + 1}</td>
                 <td className="employee-name">{item.hoTen || 'Chưa cập nhật'}</td>
+                <td className="employee-username">{item.tenDangNhap || item.username || '—'}</td>
                 <td>{item.soDienThoai || '—'}</td>
                 <td>{item.email || '—'}</td>
                 <td>
@@ -314,7 +316,7 @@ export default function EmployeeManage() {
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan="8" className="employee-empty">Không tìm thấy nhân viên phù hợp</td>
+                <td colSpan="9" className="employee-empty">Không tìm thấy nhân viên phù hợp</td>
               </tr>
             )}
           </tbody>

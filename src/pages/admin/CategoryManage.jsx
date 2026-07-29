@@ -148,6 +148,7 @@ export default function CategoryManage() {
             <tr>
               <th>Tên danh mục</th>
               <th>Mô tả</th>
+              <th>Số món</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
@@ -157,6 +158,7 @@ export default function CategoryManage() {
               <tr key={item.maDanhMuc}>
                 <td className="category-name">{item.tenDanhMuc}</td>
                 <td className="category-desc">{item.moTa || 'Không có mô tả'}</td>
+                <td className="category-count">{item.soMon ?? 0}</td>
                 <td>
                   <span className={item.trangThai !== false ? 'status-pill active' : 'status-pill inactive'}>
                     <i />

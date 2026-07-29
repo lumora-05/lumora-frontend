@@ -29,9 +29,6 @@ function getUploadUrl(res) {
   return data?.url || data?.path || data?.fileUrl || data?.hinhAnh || data?.anh || '';
 }
 
-function soldCount(row, index) {
-  return row.daBan ?? row.soLuongDaBan ?? row.totalSold ?? [38, 25, 45, 28, 22, 60, 15, 8][index % 8] ?? 0;
-}
 
 function statusText(row) {
   if (row.trangThai === false) return 'Đã ẩn';
@@ -212,7 +209,6 @@ export default function MenuManage() {
               <th>Món ăn</th>
               <th>Danh mục</th>
               <th>Giá bán</th>
-              <th>Đã bán</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
@@ -235,7 +231,6 @@ export default function MenuManage() {
                 </td>
                 <td><span className="menu-cat-pill">{food.danhMuc?.tenDanhMuc || food.tenDanhMuc || 'Chưa phân loại'}</span></td>
                 <td><b className="menu-price">{formatMoney(food.gia)}</b></td>
-                <td>{soldCount(food, index)}</td>
                 <td><span className={`menu-status-pill ${food.trangThai === false ? 'off' : 'on'}`}>{statusText(food)}</span></td>
                 <td>
                   <div className="menu-actions">
@@ -245,7 +240,7 @@ export default function MenuManage() {
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan="6" className="empty">Không có món ăn phù hợp</td></tr>
+              <tr><td colSpan="5" className="empty">Không có món ăn phù hợp</td></tr>
             )}
           </tbody>
         </table>

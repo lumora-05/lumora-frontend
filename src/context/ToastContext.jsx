@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const ToastContext = createContext(null);
 
@@ -10,22 +10,50 @@ function readMessage(input, fallback) {
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const timersRef = useRef(new Map());
 
   const remove = useCallback((id) => {
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      window.clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
     setToasts((items) => items.filter((item) => item.id !== id));
   }, []);
 
-  const push = useCallback((type, message) => {
-    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const push = useCallback((type, message, options = {}) => {
+    const id = options.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const duration = Math.max(0, Number(options.duration ?? 3200) || 0);
     const text = readMessage(message, type === 'success' ? 'Thao tác thành công' : 'Thao tác thất bại');
-    setToasts((items) => [...items, { id, type, message: text }]);
-    window.setTimeout(() => remove(id), 3200);
+
+    setToasts((items) => {
+      const exists = items.some((item) => item.id === id);
+      if (exists) {
+        return items.map((item) => (item.id === id ? { id, type, message: text } : item));
+      }
+      return [...items, { id, type, message: text }];
+    });
+
+    const currentTimer = timersRef.current.get(id);
+    if (currentTimer) window.clearTimeout(currentTimer);
+
+    if (duration > 0) {
+      const timer = window.setTimeout(() => remove(id), duration);
+      timersRef.current.set(id, timer);
+    } else {
+      timersRef.current.delete(id);
+    }
   }, [remove]);
 
+  useEffect(() => () => {
+    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current.clear();
+  }, []);
+
   const value = useMemo(() => ({
-    success: (message) => push('success', message),
-    error: (message) => push('error', message),
-    info: (message) => push('info', message)
+    success: (message, options) => push('success', message, options),
+    error: (message, options) => push('error', message, options),
+    info: (message, options) => push('info', message, options)
   }), [push]);
 
   return (

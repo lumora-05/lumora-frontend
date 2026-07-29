@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Check,
+  ChevronRight,
   LoaderCircle,
   Minus,
   Plus,
@@ -12,7 +13,9 @@ import {
 } from 'lucide-react';
 import CustomerHeader from '../../components/customer/CustomerHeader';
 import { menuApi } from '../../api/menuApi';
+import { tableApi } from '../../api/tableApi';
 import { useCart } from '../../context/CartContext';
+import { useToast } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 
@@ -24,7 +27,9 @@ export default function FoodDetail() {
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
   const [added, setAdded] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
   const cart = useCart();
+  const toast = useToast();
 
   async function loadFood() {
     try {
@@ -40,8 +45,76 @@ export default function FoodDetail() {
   }
 
   useEffect(() => {
+    setQuantity(1);
+    setNote('');
+    setAdded(false);
+    setRecommendations([]);
+    setFood(null);
     loadFood();
   }, [foodId]);
+
+  useEffect(() => {
+    if (!food || !qrToken) {
+      setRecommendations([]);
+      return undefined;
+    }
+
+    let active = true;
+
+    async function loadRecommendations() {
+      try {
+        const currentId = String(food.maMonAn ?? food.id ?? foodId);
+        const categoryId = food.danhMuc?.maDanhMuc ?? food.danhMuc?.id ?? food.maDanhMuc;
+        const params = { page: 0, size: 8 };
+
+        if (categoryId != null) params.categoryId = Number(categoryId);
+
+        async function getItems(query) {
+          const response = await tableApi.customerMenuByQrToken(qrToken, query);
+          const data = response?.data ?? response;
+          return Array.isArray(data?.content)
+            ? data.content
+            : Array.isArray(data)
+              ? data
+              : [];
+        }
+
+        const sameCategoryItems = await getItems(params);
+        let items = sameCategoryItems;
+
+        const countAvailableRelated = (list) => list.filter((item) => (
+          String(item.maMonAn ?? item.id) !== currentId
+          && item.trangThai !== false
+          && item.trangThai !== 'NGUNG_BAN'
+          && item.conHang !== false
+        )).length;
+
+        if (categoryId != null && countAvailableRelated(items) < 3) {
+          const allItems = await getItems({ page: 0, size: 12 });
+          const merged = new Map();
+          [...sameCategoryItems, ...allItems].forEach((item, index) => {
+            merged.set(String(item.maMonAn ?? item.id ?? index), item);
+          });
+          items = Array.from(merged.values());
+        }
+
+        const related = items
+          .filter((item) => String(item.maMonAn ?? item.id) !== currentId)
+          .filter((item) => item.trangThai !== false && item.trangThai !== 'NGUNG_BAN' && item.conHang !== false)
+          .slice(0, 3);
+
+        if (active) setRecommendations(related);
+      } catch {
+        if (active) setRecommendations([]);
+      }
+    }
+
+    loadRecommendations();
+
+    return () => {
+      active = false;
+    };
+  }, [food, foodId, qrToken]);
 
   const total = useMemo(() => Number(food?.gia || 0) * quantity, [food, quantity]);
   const available = food?.trangThai !== false && food?.trangThai !== 'NGUNG_BAN' && food?.conHang !== false;
@@ -49,8 +122,20 @@ export default function FoodDetail() {
   function addToCart() {
     if (!food || !available) return;
     cart.add({ ...food, ghiChu: note.trim() }, quantity);
+    toast.success(`Đã thêm ${food.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+      id: 'customer-add-to-cart',
+      duration: 1000
+    });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
+  }
+
+  function addRecommendationToCart(item) {
+    cart.add(item);
+    toast.success(`Đã thêm ${item.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+      id: 'customer-add-to-cart',
+      duration: 1000
+    });
   }
 
   return (
@@ -116,6 +201,45 @@ export default function FoodDetail() {
               </button>
             </article>
           </div>
+
+          {recommendations.length ? (
+            <section className="customer-detail-recommendations" aria-labelledby="customer-related-title">
+              <div className="customer-detail-recommendations-head">
+                <h2 id="customer-related-title">Có thể bạn cũng thích</h2>
+                <Link to={`/table/${qrToken}`}>Xem thêm <ChevronRight size={16} /></Link>
+              </div>
+
+              <div className="customer-detail-recommendations-grid">
+                {recommendations.map((item, index) => {
+                  const itemId = item.maMonAn ?? item.id;
+                  return (
+                    <article className="customer-detail-recommendation-card" key={itemId ?? index}>
+                      <Link className="customer-detail-recommendation-image" to={`/table/${qrToken}/foods/${itemId}`}>
+                        {item.hinhAnh
+                          ? <img src={imageUrl(item.hinhAnh)} alt={item.tenMonAn} />
+                          : <span><UtensilsCrossed size={32} /></span>}
+                      </Link>
+
+                      <div className="customer-detail-recommendation-body">
+                        <Link to={`/table/${qrToken}/foods/${itemId}`}>{item.tenMonAn}</Link>
+                        <p>{item.moTa || 'Món ăn được chế biến tươi ngon tại nhà hàng.'}</p>
+                        <div>
+                          <strong>{formatMoney(item.gia)}</strong>
+                          <button
+                            type="button"
+                            aria-label={`Thêm ${item.tenMonAn || 'món ăn'} vào giỏ hàng`}
+                            onClick={() => addRecommendationToCart(item)}
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
         </section>
       )}
     </main>

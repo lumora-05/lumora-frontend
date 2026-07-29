@@ -22,12 +22,12 @@ export default function AdminLayout() {
   const { user } = useAuth();
   const items = [
     { to: '/admin', label: 'Tổng quan', icon: 'dashboard' },
+    { to: '/admin/categories', label: 'Danh mục', icon: 'category' },
     { to: '/admin/menu', label: 'Món ăn', icon: 'menu' },
     { to: '/admin/orders', label: 'Đơn hàng', icon: 'orders' },
     { to: '/admin/tables', label: 'Bàn & Đặt chỗ', icon: 'table' },
     { to: '/admin/employees', label: 'Nhân viên', icon: 'users' },
     { to: '/admin/promotions', label: 'Khuyến mãi', icon: 'gift' },
-    { to: '/admin/categories', label: 'Danh mục', icon: 'category' },
     { to: '/admin/inventory', label: 'Kho nguyên liệu', icon: 'inventory' },
     { to: '/admin/reviews', label: 'Đánh giá', icon: 'review' },
     { to: '/admin/reports', label: 'Thống kê', icon: 'report' },
