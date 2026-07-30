@@ -3554,3 +3554,40 @@
 .waiter-notification-state{min-height:170px;padding:28px 18px;display:grid;place-items:center;color:#64748b;text-align:center;font-size:12px}.waiter-notification-state.error{color:#b91c1c}
 .waiter-notification-panel-footer{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:11px;border-top:1px solid #eef2f7;background:#fbfcfe}.waiter-notification-panel-footer a{min-height:37px;padding:0 9px;border:1px solid #fed7aa;border-radius:9px;background:#fff;color:#c2410c;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;font-size:10px;font-weight:900}
 @media(max-width:680px){.waiter-notification-panel{position:fixed;right:12px;top:76px;width:calc(100vw - 24px);max-height:calc(100vh - 90px)}.waiter-notification-list{max-height:calc(100vh - 270px)}.waiter-notification-panel-footer{grid-template-columns:1fr}}
+
+/* ===== Admin order-item food traceability ===== */
+.order-admin-item-actions .trace{border:1px solid #cfc1ff;color:#6d37cf;background:#f8f5ff;}
+.order-admin-item-actions .trace:hover{border-color:#a98cf5;background:#f1ebff;}
+.order-item-trace-modal{display:grid;gap:14px;padding:18px;}
+.order-item-trace-head{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:12px;padding:14px;border:1px solid #ded4ff;border-radius:11px;background:#faf8ff;}
+.order-item-trace-head>span{width:46px;height:46px;display:grid;place-items:center;border-radius:11px;background:#eee7ff;color:#7441d8;}
+.order-item-trace-head small{display:block;color:#7c3aed;font-size:9px;font-weight:950;letter-spacing:.08em;}
+.order-item-trace-head h3{margin:4px 0 0;color:#1f2937;font-size:17px;font-weight:950;}
+.order-item-trace-head p{margin:5px 0 0;color:#64748b;font-size:11px;font-weight:650;}
+.order-item-trace-notice{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:flex-start;gap:10px;padding:13px;border-radius:10px;}
+.order-item-trace-notice strong{display:block;font-size:12px;font-weight:900;}
+.order-item-trace-notice p{margin:4px 0 0;font-size:11px;line-height:1.45;font-weight:650;}
+.order-item-trace-notice.warning{border:1px solid #f3d28b;background:#fff9e8;color:#8a5a00;}
+.order-item-trace-notice.info{border:1px solid #bcd4f7;background:#f1f7ff;color:#2864b0;}
+.order-item-trace-notice.success{border:1px solid #b9e4c7;background:#effbf3;color:#137d36;}
+.order-item-trace-table-wrap{overflow:auto;border:1px solid #e3e8ef;border-radius:10px;}
+.order-item-trace-table{width:100%;min-width:980px;border-collapse:collapse;}
+.order-item-trace-table th,.order-item-trace-table td{height:56px;padding:9px 12px;border-bottom:1px solid #e9edf3;text-align:left;color:#475569;font-size:11px;vertical-align:middle;}
+.order-item-trace-table th{background:#f8fafc;color:#334155;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.02em;}
+.order-item-trace-table tr:last-child td{border-bottom:0;}
+.order-item-trace-table td strong,.order-item-trace-table td b{display:block;color:#1f2937;font-weight:900;}
+.order-item-trace-table td small{display:block;margin-top:3px;color:#8a96a8;font-size:9px;line-height:1.35;}
+.order-item-trace-safety{display:inline-flex;padding:6px 8px;border-radius:7px;font-size:9px;font-weight:900;white-space:nowrap;}
+.order-item-trace-safety.safe{background:#e9f8ee;color:#168d3b;}
+.order-item-trace-safety.locked{background:#fff5d9;color:#b56d00;}
+.order-item-trace-safety.incident{background:#ffe8e8;color:#d82e2e;}
+.order-item-trace-safety.recalled{background:#f3e8ff;color:#7c3aed;}
+.order-item-trace-safety.disposed{background:#eef1f5;color:#64748b;}
+.order-item-trace-empty{min-height:150px;display:grid;place-items:center;color:#94a3b8;font-size:12px;font-weight:750;text-align:center;}
+.order-item-trace-actions{display:flex;justify-content:flex-end;margin:0 -18px -18px;padding:14px 18px;border-top:1px solid #e8edf4;background:#fbfcfe;}
+.order-item-trace-actions button{min-width:100px;height:40px;border:1px solid #d9e0e8;border-radius:8px;background:#fff;color:#526174;font-size:11px;font-weight:900;cursor:pointer;}
+@media(max-width:620px){
+  .order-item-trace-modal{padding:14px;}
+  .order-item-trace-actions{margin:0 -14px -14px;padding:12px 14px;}
+  .order-item-trace-actions button{width:100%;}
+}

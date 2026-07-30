@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Clock3,
   Eye,
+  PackageSearch,
   Printer,
   Search,
   XCircle,
@@ -21,6 +22,7 @@ import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pa
 import ConfirmActionModal from '../../components/common/ConfirmActionModal';
 import OrderItemCancellationModal from '../../components/order/OrderItemCancellationModal';
 import CancellationRequestsModal from '../../components/order/CancellationRequestsModal';
+import OrderItemTraceModal from '../../components/order/OrderItemTraceModal';
 import {
   canStaffCancelItem,
   cancellationReasonLabel,
@@ -254,6 +256,7 @@ export default function OrderManage() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [itemCancelTarget, setItemCancelTarget] = useState(null);
   const [itemCancelLoading, setItemCancelLoading] = useState(false);
+  const [traceItemTarget, setTraceItemTarget] = useState(null);
   const [cancelRequests, setCancelRequests] = useState([]);
   const [cancelRequestsOpen, setCancelRequestsOpen] = useState(false);
   const [cancelRequestsLoading, setCancelRequestsLoading] = useState(false);
@@ -635,6 +638,7 @@ export default function OrderManage() {
                           ) : canStaffCancelItem(item) ? (
                             <button type="button" className="cancel" onClick={() => setItemCancelTarget(item)}><Ban size={13} /> Hủy món</button>
                           ) : null}
+                          <button type="button" className="trace" onClick={() => setTraceItemTarget(item)}><PackageSearch size={13} /> Truy xuất lô</button>
                         </div>
                       </div>
                       <strong>{cancelled ? 'Không tính tiền' : formatMoney((item?.donGia || item?.monAn?.gia || 0) * (item?.soLuong || 0))}</strong>
@@ -681,6 +685,11 @@ export default function OrderManage() {
           )}
         </aside>
       </div>
+      <OrderItemTraceModal
+        open={Boolean(traceItemTarget)}
+        item={traceItemTarget}
+        onClose={() => setTraceItemTarget(null)}
+      />
       <ConfirmActionModal
         open={Boolean(cancelTarget)}
         onClose={closeCancelModal}

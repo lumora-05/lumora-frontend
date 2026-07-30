@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Edit3, ImageIcon, Plus, Search, Trash2, UploadCloud, X } from 'lucide-react';
+import { BookOpen, Edit3, ImageIcon, Plus, Search, Trash2, UploadCloud, X } from 'lucide-react';
 import { categoryApi, menuApi } from '../../api/menuApi';
 import { uploadApi } from '../../api/uploadApi';
 import Modal from '../../components/common/Modal';
 import ConfirmActionModal from '../../components/common/ConfirmActionModal';
+import FoodRecipeModal from '../../components/menu/FoodRecipeModal';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { useToast, messageOf, errorMessageOf } from '../../context/ToastContext';
@@ -52,6 +53,7 @@ export default function MenuManage() {
   const [numberOfElements, setNumberOfElements] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [recipeTarget, setRecipeTarget] = useState(null);
   const debouncedKeyword = useDebounce(keyword, 350);
 
   async function load() {
@@ -234,6 +236,7 @@ export default function MenuManage() {
                 <td><span className={`menu-status-pill ${food.trangThai === false ? 'off' : 'on'}`}>{statusText(food)}</span></td>
                 <td>
                   <div className="menu-actions">
+                    <button type="button" title="Thiết lập công thức nguyên liệu" className="recipe" onClick={() => setRecipeTarget(food)}><BookOpen size={18} /></button>
                     <button type="button" title="Sửa món" onClick={() => edit(food)}><Edit3 size={18} /></button>
                     <button type="button" title="Xóa món" className="delete" onClick={() => askRemove(food)}><Trash2 size={18} /></button>
                   </div>
@@ -332,6 +335,11 @@ export default function MenuManage() {
           </div>
         </form>
       </Modal>
+      <FoodRecipeModal
+        open={Boolean(recipeTarget)}
+        food={recipeTarget}
+        onClose={() => setRecipeTarget(null)}
+      />
       <ConfirmActionModal
         open={Boolean(deleteTarget)}
         onClose={closeDeleteModal}

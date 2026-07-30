@@ -3487,3 +3487,118 @@
 @media(max-width:700px){.admin-service-page{padding:18px 14px 28px}.admin-service-stats{grid-template-columns:1fr 1fr;gap:10px}.admin-service-stats article{min-height:88px;padding:13px}.admin-service-toolbar{padding:12px}.admin-service-tabs{width:100%}.admin-service-modal footer{display:grid;grid-template-columns:1fr 1fr}.admin-service-modal footer button{width:100%}}
 @media(max-width:430px){.admin-service-stats{grid-template-columns:1fr}.admin-service-stats article{min-height:76px}}
 
+
+/* ===== Food recipe and batch traceability ===== */
+.menu-actions button.recipe{color:#7c3aed;border-color:#ddd0ff;}
+.menu-actions button.recipe:hover{color:#6d28d9!important;border-color:#bda4ff!important;background:#f7f3ff;}
+.food-recipe-form{display:grid;gap:15px;padding:18px;}
+.food-recipe-guide{display:grid;grid-template-columns:40px minmax(0,1fr);gap:11px;padding:13px;border:1px solid #fed7c2;border-radius:11px;background:#fff8f4;}
+.food-recipe-guide>span{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:#ffeadf;color:#e94f0c;}
+.food-recipe-guide strong{display:block;color:#263244;font-size:13px;font-weight:900;}
+.food-recipe-guide p{margin:4px 0 0;color:#64748b;font-size:11px;font-weight:650;line-height:1.5;}
+.food-recipe-lines{display:grid;gap:10px;max-height:390px;overflow:auto;padding-right:3px;}
+.food-recipe-line{display:grid;grid-template-columns:32px minmax(210px,1.4fr) minmax(150px,.8fr) 38px;align-items:end;gap:10px;padding:12px;border:1px solid #e4e9f0;border-radius:11px;background:#fbfcfe;}
+.food-recipe-index{width:30px;height:42px;display:grid;place-items:center;border-radius:9px;background:#fff1e8;color:#e94f0c;font-size:12px;font-weight:950;}
+.food-recipe-line label{display:grid;gap:6px;color:#475569;font-size:11px;font-weight:850;}
+.food-recipe-line select,.food-recipe-line input{width:100%;height:42px;border:1px solid #dfe6ef;border-radius:9px;background:#fff;color:#1f2937;padding:0 11px;outline:0;font-size:12px;font-weight:700;}
+.food-recipe-line select:focus,.food-recipe-line input:focus{border-color:#ff8a52;box-shadow:0 0 0 3px rgba(255,90,18,.1);}
+.food-recipe-quantity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border:1px solid #dfe6ef;border-radius:9px;overflow:hidden;background:#fff;}
+.food-recipe-quantity:focus-within{border-color:#ff8a52;box-shadow:0 0 0 3px rgba(255,90,18,.1);}
+.food-recipe-quantity input{border:0!important;border-radius:0;box-shadow:none!important;}
+.food-recipe-quantity b{padding:0 11px;color:#64748b;font-size:11px;white-space:nowrap;}
+.food-recipe-remove{width:38px;height:42px;display:grid;place-items:center;border:1px solid #ffd3d3;border-radius:9px;background:#fff;color:#e33b3b;cursor:pointer;}
+.food-recipe-remove:hover{background:#fff2f2;border-color:#f79a9a;}
+.food-recipe-empty{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px;border:1px dashed #d8e0ea;border-radius:11px;background:#fafbfd;color:#94a3b8;text-align:center;}
+.food-recipe-empty strong{color:#475569;font-size:13px;}
+.food-recipe-empty span{font-size:11px;line-height:1.45;}
+.food-recipe-add{height:42px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed #ffab82;border-radius:9px;background:#fff7f2;color:#e94f0c;font-size:12px;font-weight:900;cursor:pointer;}
+.food-recipe-add:disabled{opacity:.5;cursor:not-allowed;}
+.food-recipe-actions{display:flex;justify-content:flex-end;gap:10px;margin:0 -18px -18px;padding:15px 18px;border-top:1px solid #e8edf4;background:#fbfcfe;}
+.food-recipe-actions button{min-width:112px;height:42px;border-radius:9px;font-size:12px;font-weight:900;cursor:pointer;}
+.food-recipe-actions .secondary{border:1px solid #dce3ec;background:#fff;color:#526174;}
+.food-recipe-actions .primary{border:0;background:#ff5a12;color:#fff;box-shadow:0 8px 18px rgba(255,90,18,.18);}
+.food-recipe-actions button:disabled{opacity:.6;cursor:not-allowed;}
+
+.inventory-batch-status-stack{display:grid;justify-items:start;gap:5px;}
+.inventory-safety-status,.food-safety-state{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border-radius:7px;font-size:10px;font-weight:900;white-space:nowrap;}
+.inventory-safety-status.safe,.food-safety-state.safe{background:#e9f8ee;color:#168d3b;}
+.inventory-safety-status.locked,.food-safety-state.locked{background:#fff5d9;color:#b56d00;}
+.inventory-safety-status.incident,.food-safety-state.incident{background:#ffe8e8;color:#d82e2e;}
+.inventory-safety-status.recalled,.food-safety-state.recalled{background:#f3e8ff;color:#7c3aed;}
+.inventory-safety-status.disposed,.food-safety-state.disposed{background:#eef1f5;color:#64748b;}
+.inventory-actions button.safety{color:#7c3aed;border-color:#ddd0ff;}
+.inventory-actions button.safety:hover:not(:disabled){border-color:#bda4ff;background:#f7f3ff;color:#6d28d9;}
+
+.food-safety-workspace{display:grid;gap:16px;}
+.food-safety-guide{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:13px;padding:15px 17px;border:1px solid #d9ccff;border-radius:12px;background:linear-gradient(135deg,#faf8ff,#fff);}
+.food-safety-guide>span{width:46px;height:46px;display:grid;place-items:center;border-radius:12px;background:#efe8ff;color:#7441d8;}
+.food-safety-guide strong{display:block;color:#2b2340;font-size:14px;font-weight:950;}
+.food-safety-guide p{margin:5px 0 0;color:#6f6580;font-size:11px;font-weight:650;line-height:1.5;}
+.food-safety-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 180px minmax(230px,1fr) auto auto;align-items:center;gap:10px;padding:14px;border:1px solid #e5eaf2;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(15,23,42,.04);}
+.food-safety-toolbar select{width:100%;height:44px;border:1px solid #dce3ec;border-radius:9px;background:#fff;color:#334155;padding:0 11px;outline:0;font-size:12px;font-weight:750;}
+.food-safety-toolbar select:focus{border-color:#9e83ef;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.food-safety-search{height:44px;}
+.food-safety-trace-btn,.food-safety-report-btn{height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 14px;border-radius:9px;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;}
+.food-safety-trace-btn{border:0;background:#7047d9;color:#fff;box-shadow:0 8px 18px rgba(112,71,217,.18);}
+.food-safety-report-btn{border:1px solid #f4a3a3;background:#fff4f4;color:#c92b2b;}
+.food-safety-trace-btn:disabled,.food-safety-report-btn:disabled{opacity:.48;cursor:not-allowed;}
+.food-safety-batch-card{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:17px 19px;border:1px solid #e3e8f0;border-radius:12px;background:#fff;box-shadow:0 5px 18px rgba(15,23,42,.04);}
+.food-safety-batch-card>div>span{color:#7c3aed;font-size:9px;font-weight:950;letter-spacing:.1em;}
+.food-safety-batch-card h3{margin:5px 0 0;color:#172033;font-size:18px;font-weight:950;}
+.food-safety-batch-card p{margin:6px 0 0;color:#64748b;font-size:11px;font-weight:650;}
+.food-safety-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;}
+.food-safety-summary article{min-width:0;display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:9px;padding:12px;border:1px solid #e5eaf2;border-radius:11px;background:#fff;box-shadow:0 4px 14px rgba(15,23,42,.035);}
+.food-safety-summary article>span{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#f1ebff;color:#7242d6;}
+.food-safety-summary small{display:block;color:#7b8798;font-size:9px;font-weight:850;text-transform:uppercase;}
+.food-safety-summary strong{display:block;margin-top:4px;color:#172033;font-size:16px;font-weight:950;overflow-wrap:anywhere;}
+.food-safety-section-head{min-height:65px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 17px;border-bottom:1px solid #e8edf4;}
+.food-safety-section-head strong{display:block;color:#253044;font-size:13px;font-weight:950;}
+.food-safety-section-head p{margin:4px 0 0;color:#8a96a8;font-size:10px;font-weight:650;}
+.food-safety-section-head>button{height:36px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:1px solid #dce3ec;border-radius:8px;background:#fff;color:#526174;font-size:10px;font-weight:850;cursor:pointer;}
+.food-safety-impact-table{min-width:1120px;}
+.food-safety-incidents-table{min-width:1380px;}
+.food-safety-item-status{display:inline-flex;padding:6px 8px;border-radius:7px;background:#edf4ff;color:#286cd1;font-size:10px;font-weight:900;white-space:nowrap;}
+.food-safety-empty-state{min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;border:1px dashed #d9dfea;border-radius:12px;background:#fbfcfe;color:#9aa5b5;text-align:center;}
+.food-safety-empty-state strong{color:#475569;font-size:14px;}
+.food-safety-empty-state span{max-width:560px;font-size:11px;line-height:1.5;}
+.food-safety-severity,.food-safety-incident-status{display:inline-flex;padding:6px 9px;border-radius:7px;font-size:10px;font-weight:900;white-space:nowrap;}
+.food-safety-severity.emergency{background:#7f1d1d;color:#fff;}
+.food-safety-severity.high{background:#ffe8e8;color:#d82e2e;}
+.food-safety-severity.medium{background:#fff5d9;color:#b56d00;}
+.food-safety-severity.low{background:#eaf2ff;color:#286cd1;}
+.food-safety-incident-status.new{background:#ffe8e8;color:#d82e2e;}
+.food-safety-incident-status.processing{background:#fff5d9;color:#b56d00;}
+.food-safety-incident-status.closed{background:#e9f8ee;color:#168d3b;}
+.food-safety-incident-status.recalled{background:#f3e8ff;color:#7c3aed;}
+.food-safety-incident-status.disposed{background:#eef1f5;color:#64748b;}
+.food-safety-reason{max-width:310px;line-height:1.4;}
+.food-safety-reason strong{display:block;color:#334155;font-size:10px;text-transform:lowercase;}
+.food-safety-reason small{display:block;margin-top:4px;color:#64748b;font-size:11px;}
+.food-safety-resolve-btn{min-width:80px;height:34px;border:1px solid #cbbcff;border-radius:8px;background:#f8f5ff;color:#6f3bd2;font-size:10px;font-weight:900;cursor:pointer;}
+.food-safety-resolve-btn:disabled{border-color:#dfe4ea;background:#f3f5f7;color:#8b96a5;cursor:not-allowed;}
+.food-safety-modal{width:min(760px,100%);}
+.food-safety-danger-action{background:linear-gradient(135deg,#e34242,#c92828)!important;box-shadow:0 8px 18px rgba(201,40,40,.2)!important;}
+
+@media(max-width:1450px){
+  .food-safety-toolbar{grid-template-columns:minmax(220px,1fr) 180px minmax(220px,1fr);}
+  .food-safety-trace-btn,.food-safety-report-btn{width:100%;}
+  .food-safety-summary{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:900px){
+  .food-safety-toolbar{grid-template-columns:1fr 1fr;}
+  .food-safety-search{grid-column:1/-1;}
+  .food-safety-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:620px){
+  .food-recipe-line{grid-template-columns:30px minmax(0,1fr) 38px;align-items:end;}
+  .food-recipe-line label:nth-of-type(2){grid-column:2/3;}
+  .food-recipe-remove{grid-column:3;grid-row:1/3;align-self:center;}
+  .food-recipe-actions{display:grid;grid-template-columns:1fr 1fr;}
+  .food-recipe-actions button{width:100%;min-width:0;}
+  .food-safety-toolbar{grid-template-columns:1fr;}
+  .food-safety-search{grid-column:auto;}
+  .food-safety-summary{grid-template-columns:1fr;}
+  .food-safety-batch-card,.food-safety-section-head{align-items:flex-start;flex-direction:column;}
+  .food-safety-guide{grid-template-columns:40px minmax(0,1fr);}
+  .food-safety-guide>span{width:40px;height:40px;}
+}

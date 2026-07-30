@@ -30,6 +30,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import { formatDate } from '../../utils/formatDate';
 import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pagination';
 import ConfirmActionModal from '../../components/common/ConfirmActionModal';
+import FoodSafetyWorkspace from '../../components/inventory/FoodSafetyWorkspace';
 
 const emptyIngredient = {
   tenNguyenLieu: '',
@@ -131,6 +132,21 @@ function expiryStatus(row) {
   }
 }
 
+function safetyStatus(row) {
+  switch (String(row?.trangThaiAnToan || 'AN_TOAN').toUpperCase()) {
+    case 'KHOA_TAM_THOI':
+      return { label: 'Khóa tạm thời', className: 'locked' };
+    case 'CO_SU_CO':
+      return { label: 'Có sự cố', className: 'incident' };
+    case 'THU_HOI':
+      return { label: 'Đang thu hồi', className: 'recalled' };
+    case 'DA_TIEU_HUY':
+      return { label: 'Đã tiêu hủy', className: 'disposed' };
+    default:
+      return { label: 'An toàn', className: 'safe' };
+  }
+}
+
 function transactionMeta(type) {
   if (type === 'XUAT') return { label: 'Xuất kho', className: 'export', Icon: ArrowUp };
   if (type === 'DIEU_CHINH') return { label: 'Điều chỉnh', className: 'adjust', Icon: RefreshCcw };
@@ -210,6 +226,7 @@ export default function InventoryManage() {
   const [saving, setSaving] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [traceBatchId, setTraceBatchId] = useState(null);
 
   const [rows, setRows] = useState([]);
   const [statistics, setStatistics] = useState({
@@ -968,6 +985,9 @@ export default function InventoryManage() {
         <button type="button" className={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>
           <History size={18} /> Lịch sử nhập xuất
         </button>
+        <button type="button" className={tab === 'traceability' ? 'active' : ''} onClick={() => setTab('traceability')}>
+          <ShieldAlert size={18} /> Truy xuất & sự cố
+        </button>
       </div>
 
       {tab === 'ingredients' && (
@@ -1110,9 +1130,15 @@ export default function InventoryManage() {
                         </td>
                         <td>{row.donGiaNhap == null ? '—' : formatMoney(row.donGiaNhap)}</td>
                         <td className="inventory-supplier">{row.nhaCungCap || '—'}</td>
-                        <td><span className={`inventory-expiry-status ${status.className}`}>{status.label}</span></td>
+                        <td>
+                          <div className="inventory-batch-status-stack">
+                            <span className={`inventory-expiry-status ${status.className}`}>{status.label}</span>
+                            <span className={`inventory-safety-status ${safetyStatus(row).className}`}>{safetyStatus(row).label}</span>
+                          </div>
+                        </td>
                         <td>
                           <div className="inventory-actions">
+                            <button type="button" title="Truy xuất và xử lý sự cố lô" className="safety" onClick={() => { setTraceBatchId(row.maLo); setTab('traceability'); }}><ShieldAlert size={17} /></button>
                             <button type="button" title="Nhập, xuất hoặc kiểm kho lô" onClick={() => openStock(ingredient, 'DIEU_CHINH', row)} disabled={row.trangThai === false}><RefreshCcw size={17} /></button>
                             <button type="button" title={row.trangThaiHanSuDung === 'HET_HAN' ? 'Tiêu hủy lô hết hạn' : 'Ghi nhận hao hụt của lô'} className="waste" onClick={() => openWaste(ingredient, row)} disabled={Number(row.soLuongConLai || 0) <= 0 || row.choPhepTieuHuy === false}><Recycle size={17} /></button>
                             <button type="button" title="Sửa thông tin lô" onClick={() => openEditBatch(row)}><Pencil size={17} /></button>
@@ -1252,6 +1278,18 @@ export default function InventoryManage() {
             <Pagination page={transactionPage} totalPages={transactionTotalPages} size={transactionSize} numberOfElements={transactionNumberOfElements} totalElements={transactionTotalElements} onPage={setTransactionPage} onSize={(nextSize) => { setTransactionSize(nextSize); setTransactionPage(0); }} noun="giao dịch" />
           </div>
         </>
+      )}
+
+      {tab === 'traceability' && (
+        <FoodSafetyWorkspace
+          ingredientOptions={ingredientOptions}
+          initialBatchId={traceBatchId}
+          onDataChanged={() => Promise.all([
+            loadStatistics(),
+            loadBatches(),
+            loadBatchStatistics(),
+          ])}
+        />
       )}
 
       {ingredientModal && (

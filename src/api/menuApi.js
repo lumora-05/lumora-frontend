@@ -7,6 +7,8 @@ export const menuApi = {
   byCategory: (id) => axiosClient.get(`/menu/category/${id}`),
   create: (data) => axiosClient.post('/menu', data),
   update: (id, data) => axiosClient.put(`/menu/${id}`, data),
+  getRecipe: (id) => axiosClient.get(`/menu/${id}/recipe`),
+  updateRecipe: (id, data) => axiosClient.put(`/menu/${id}/recipe`, data),
   remove: (id) => axiosClient.delete(`/menu/${id}`)
 };
 export const categoryApi = {
