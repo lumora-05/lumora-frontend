@@ -54,6 +54,7 @@ export default function MenuManage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [recipeTarget, setRecipeTarget] = useState(null);
+  const [recipeConfigured, setRecipeConfigured] = useState({});
   const debouncedKeyword = useDebounce(keyword, 350);
 
   async function load() {
@@ -87,6 +88,48 @@ export default function MenuManage() {
   useEffect(() => {
     load();
   }, [page, size, debouncedKeyword, catFilter]);
+
+  useEffect(() => {
+    const foodIds = foods
+      .map((food) => Number(food.maMonAn))
+      .filter((id) => Number.isFinite(id));
+
+    if (!foodIds.length) return undefined;
+
+    let cancelled = false;
+
+    setRecipeConfigured((current) => {
+      const next = { ...current };
+      foodIds.forEach((id) => {
+        if (typeof next[id] !== 'boolean') next[id] = false;
+      });
+      return next;
+    });
+
+    Promise.allSettled(
+      foodIds.map(async (id) => {
+        const response = await menuApi.getRecipe(id);
+        const recipe = response?.data ?? response ?? {};
+        return {
+          id,
+          configured: Array.isArray(recipe?.nguyenLieu) && recipe.nguyenLieu.length > 0,
+        };
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      setRecipeConfigured((current) => {
+        const next = { ...current };
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            next[result.value.id] = result.value.configured;
+          }
+        });
+        return next;
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, [foods]);
 
   const pageItems = paginationItems(page, totalPages);
   const displayRange = pageDisplayRange(page, size, numberOfElements, totalElements);
@@ -212,6 +255,7 @@ export default function MenuManage() {
               <th>Danh mục</th>
               <th>Giá bán</th>
               <th>Trạng thái</th>
+              <th>Công thức</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -235,6 +279,11 @@ export default function MenuManage() {
                 <td><b className="menu-price">{formatMoney(food.gia)}</b></td>
                 <td><span className={`menu-status-pill ${food.trangThai === false ? 'off' : 'on'}`}>{statusText(food)}</span></td>
                 <td>
+                  <span className={`menu-recipe-pill ${recipeConfigured[food.maMonAn] ? 'configured' : 'missing'}`}>
+                    {recipeConfigured[food.maMonAn] ? 'Đã thiết lập' : 'Chưa thiết lập'}
+                  </span>
+                </td>
+                <td>
                   <div className="menu-actions">
                     <button type="button" title="Thiết lập công thức nguyên liệu" className="recipe" onClick={() => setRecipeTarget(food)}><BookOpen size={18} /></button>
                     <button type="button" title="Sửa món" onClick={() => edit(food)}><Edit3 size={18} /></button>
@@ -243,7 +292,7 @@ export default function MenuManage() {
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan="5" className="empty">Không có món ăn phù hợp</td></tr>
+              <tr><td colSpan="6" className="empty">Không có món ăn phù hợp</td></tr>
             )}
           </tbody>
         </table>
@@ -339,6 +388,9 @@ export default function MenuManage() {
         open={Boolean(recipeTarget)}
         food={recipeTarget}
         onClose={() => setRecipeTarget(null)}
+        onSaved={({ foodId, hasRecipe }) => {
+          setRecipeConfigured((current) => ({ ...current, [foodId]: hasRecipe }));
+        }}
       />
       <ConfirmActionModal
         open={Boolean(deleteTarget)}

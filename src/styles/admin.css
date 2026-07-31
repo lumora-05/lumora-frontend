@@ -351,6 +351,28 @@
   vertical-align:middle;
 }
 .modern-menu-table tr:last-child td{border-bottom:0;}
+.menu-recipe-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:112px;
+  height:30px;
+  padding:0 11px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.menu-recipe-pill.configured{
+  border:1px solid #bbf7d0;
+  background:#f0fdf4;
+  color:#15803d;
+}
+.menu-recipe-pill.missing{
+  border:1px solid #fed7aa;
+  background:#fff7ed;
+  color:#c2410c;
+}
 .menu-food-info{
   display:flex;
   align-items:center;
@@ -538,7 +560,7 @@
 @media(max-width:760px){
   .menu-list-page{padding:18px;}
   .menu-toolbar-card,.menu-table-footer{grid-template-columns:1fr;}
-  .modern-menu-table{min-width:900px;}
+  .modern-menu-table{min-width:1030px;}
   .menu-table-card{overflow:auto;}
 }
 

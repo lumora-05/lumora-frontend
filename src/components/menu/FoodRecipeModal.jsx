@@ -23,7 +23,7 @@ function emptyLine(ingredients, usedIds = new Set()) {
   };
 }
 
-export default function FoodRecipeModal({ open, food, onClose }) {
+export default function FoodRecipeModal({ open, food, onClose, onSaved }) {
   const toast = useToast();
   const [ingredients, setIngredients] = useState([]);
   const [lines, setLines] = useState([]);
@@ -107,6 +107,7 @@ export default function FoodRecipeModal({ open, food, onClose }) {
         })),
       });
       toast.success(messageOf(response, 'Cập nhật công thức món ăn thành công'));
+      onSaved?.({ foodId: food.maMonAn, hasRecipe: lines.length > 0 });
       onClose();
     } catch (error) {
       toast.error(errorMessageOf(error, 'Cập nhật công thức món ăn thất bại'));
