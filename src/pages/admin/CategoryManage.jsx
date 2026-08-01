@@ -119,12 +119,6 @@ export default function CategoryManage() {
 
   return (
     <section className="category-page">
-      <div className="category-header">
-        <div>
-          <h1>Danh mục</h1>
-          <p>Quản lý danh sách danh mục món ăn, đồ uống</p>
-        </div>
-      </div>
 
       <div className="category-toolbar">
         <label className="category-search">
