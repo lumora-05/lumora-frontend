@@ -26,23 +26,53 @@ const RESTAURANT = {
   phone: import.meta.env.VITE_RESTAURANT_PHONE || 'Số điện thoại nhà hàng',
 };
 
+function mergeReceiptItems(items) {
+  const groupedItems = new Map();
+
+  items.forEach((item) => {
+    const normalizedName = String(item.name || '').trim().toLocaleLowerCase('vi-VN');
+    const normalizedNote = String(item.note || '').trim();
+    const dishKey = item.dishId ?? normalizedName;
+    const groupKey = `${dishKey}|${item.unitPrice}|${normalizedNote.toLocaleLowerCase('vi-VN')}`;
+    const existingItem = groupedItems.get(groupKey);
+
+    if (existingItem) {
+      existingItem.quantity += item.quantity;
+      existingItem.lineTotal += item.lineTotal;
+      return;
+    }
+
+    groupedItems.set(groupKey, {
+      ...item,
+      key: item.key || groupKey,
+      note: normalizedNote || null,
+    });
+  });
+
+  return Array.from(groupedItems.values());
+}
+
 function slipItemsOf(slip) {
-  return (slip?.items || []).map((item) => ({
+  const items = (slip?.items || []).map((item) => ({
     key: item?.maChiTiet,
-    name: item?.tenMonAn || 'Món ăn',
+    dishId: item?.maMonAn ?? item?.monAn?.maMonAn,
+    name: item?.tenMonAn || item?.monAn?.tenMonAn || 'Món ăn',
     quantity: Number(item?.soLuong || 0),
     unitPrice: Number(item?.donGia || 0),
     lineTotal: Number(item?.thanhTien ?? Number(item?.donGia || 0) * Number(item?.soLuong || 0)),
     note: item?.ghiChu,
   }));
+
+  return mergeReceiptItems(items);
 }
 
 function orderItemsOf(order) {
-  return (order?.chiTietDonHang || []).filter((item) => item?.trangThaiMon !== 'DA_HUY').map((item) => {
+  const items = (order?.chiTietDonHang || []).filter((item) => item?.trangThaiMon !== 'DA_HUY').map((item) => {
     const unitPrice = Number(item?.donGia ?? item?.monAn?.gia ?? 0);
     const quantity = Number(item?.soLuong || 0);
     return {
       key: item?.maChiTiet,
+      dishId: item?.monAn?.maMonAn ?? item?.maMonAn,
       name: item?.monAn?.tenMonAn || item?.tenMonAn || 'Món ăn',
       quantity,
       unitPrice,
@@ -50,6 +80,8 @@ function orderItemsOf(order) {
       note: item?.ghiChu,
     };
   });
+
+  return mergeReceiptItems(items);
 }
 
 function Receipt({ order, payment, slip, preview }) {
