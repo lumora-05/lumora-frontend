@@ -44,6 +44,7 @@ import CustomerOrders from '../pages/customer/CustomerOrders';
 import CustomerReviews from '../pages/customer/CustomerReviews';
 import ReviewManage from '../pages/admin/ReviewManage';
 import InventoryManage from '../pages/admin/InventoryManage';
+import CustomerLoyaltyManage from '../pages/admin/CustomerLoyaltyManage';
 import AdminAccount from '../pages/admin/Account';
 import WaiterReservations from '../pages/waiter/WaiterReservations';
 import ProtectedRoute from './ProtectedRoute';
@@ -54,7 +55,7 @@ export default function AppRoutes(){return <Routes>
   <Route path="/forgot-password" element={<ForgotPasswordOtp/>}/>
   <Route path="/reset-password" element={<Navigate to="/forgot-password" replace/>}/>
   <Route path="/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminLayout/></ProtectedRoute>}>
-    <Route index element={<AdminDashboard/>}/><Route path="employees" element={<EmployeeManage/>}/><Route path="tables" element={<TableManage/>}/><Route path="categories" element={<CategoryManage/>}/><Route path="menu" element={<MenuManage/>}/><Route path="inventory" element={<InventoryManage/>}/><Route path="promotions" element={<PromotionManage/>}/><Route path="orders" element={<AdminOrderManage/>}/><Route path="reviews" element={<ReviewManage/>}/><Route path="reports" element={<Report/>}/><Route path="service-requests" element={<Navigate to="/admin" replace/>}/><Route path="cashier-shifts" element={<Navigate to="/admin" replace/>}/><Route path="reservations" element={<Navigate to="/admin/tables?tab=reservations" replace/>}/><Route path="account" element={<AdminAccount/>}/>
+    <Route index element={<AdminDashboard/>}/><Route path="employees" element={<EmployeeManage/>}/><Route path="tables" element={<TableManage/>}/><Route path="categories" element={<CategoryManage/>}/><Route path="menu" element={<MenuManage/>}/><Route path="inventory" element={<InventoryManage/>}/><Route path="promotions" element={<PromotionManage/>}/><Route path="orders" element={<AdminOrderManage/>}/><Route path="customers" element={<CustomerLoyaltyManage/>}/><Route path="reviews" element={<ReviewManage/>}/><Route path="reports" element={<Report/>}/><Route path="service-requests" element={<Navigate to="/admin" replace/>}/><Route path="cashier-shifts" element={<Navigate to="/admin" replace/>}/><Route path="reservations" element={<Navigate to="/admin/tables?tab=reservations" replace/>}/><Route path="account" element={<AdminAccount/>}/>
   </Route>
   <Route path="/waiter" element={<ProtectedRoute roles={['WAITER','ADMIN']}><WaiterLayout/></ProtectedRoute>}>
     <Route index element={<Navigate to="orders" replace/>}/>

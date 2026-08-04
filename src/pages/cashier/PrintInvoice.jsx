@@ -22,8 +22,8 @@ const METHOD_LABELS = {
 
 const RESTAURANT = {
   name: import.meta.env.VITE_RESTAURANT_NAME || 'NHÀ HÀNG LUMORA',
-  address: import.meta.env.VITE_RESTAURANT_ADDRESS || 'Địa chỉ nhà hàng',
-  phone: import.meta.env.VITE_RESTAURANT_PHONE || 'Số điện thoại nhà hàng',
+  address: import.meta.env.VITE_RESTAURANT_ADDRESS || '139 Nguyễn Thị Thập, Thanh Khê, Đà Nẵng',
+  phone: import.meta.env.VITE_RESTAURANT_PHONE || '0979792909',
 };
 
 function mergeReceiptItems(items) {
@@ -91,8 +91,11 @@ function Receipt({ order, payment, slip, preview }) {
     : Number(payment?.tamTinh ?? subtotalOf(order));
   const serviceFee = preview ? 0 : serviceFeeOf(order);
   const discount = preview
-    ? Number(slip?.tienGiam ?? Math.max(0, subtotal - Number(slip?.tongTien || 0)))
+    ? Number(slip?.tienGiam ?? Math.max(0, subtotal - Number(slip?.tongTienTruocDiem ?? slip?.tongTien ?? 0)))
     : Number(payment?.tienGiam ?? discountOf(order));
+  const pointDiscount = preview
+    ? Number(slip?.tienGiamTuDiem || 0)
+    : Number(payment?.tienGiamTuDiem ?? order?.tienGiamTuDiem ?? 0);
   const total = preview ? Number(slip?.tongTien || 0) : Number(payment?.tongTien ?? totalOf(order));
   const promotionCode = preview
     ? slip?.maCodeKhuyenMai
@@ -108,13 +111,24 @@ function Receipt({ order, payment, slip, preview }) {
   const employee = preview
     ? (slip?.nhanVienPhucVu || '—')
     : (payment?.nhanVien?.hoTen || payment?.tenNhanVien || order?.nhanVien?.hoTen || '—');
+  const customer = preview ? slip?.khachHang : (payment?.khachHang || order?.khachHang);
+  const pointsUsed = preview
+    ? Number(slip?.diemDaSuDung || 0)
+    : Number(payment?.diemDaSuDung ?? order?.diemDaSuDung ?? 0);
+  const pointsEarned = preview
+    ? Number(slip?.diemDuKienCong || 0)
+    : Number(payment?.diemDuocCong ?? order?.diemDuocCong ?? 0);
+  const pointsAfter = preview
+    ? Number(slip?.diemConLaiSauThanhToan || 0)
+    : Number(customer?.diemTichLuy || 0);
+  const hasLoyalty = Boolean(customer?.soDienThoai || pointsUsed || pointsEarned);
 
   return (
     <article className={`cashier-receipt ${preview ? 'cashier-payment-slip' : ''}`}>
       <header>
         <h2>{RESTAURANT.name}</h2>
-        <p>Địa chỉ: 139 Nguyễn Thị Thập, Thanh Khê, Đà Nẵng</p>
-        <p>Điện thoại: 0979792909</p>
+        <p>Địa chỉ: {RESTAURANT.address}</p>
+        <p>Điện thoại: {RESTAURANT.phone}</p>
         <strong>{preview ? 'PHIẾU TẠM TÍNH' : 'HÓA ĐƠN THANH TOÁN'}</strong>
       </header>
 
@@ -123,6 +137,8 @@ function Receipt({ order, payment, slip, preview }) {
         <p><span>Bàn</span><b>{tableName}</b></p>
         <p><span>Thời gian</span><b>{dateTimeText(time)}</b></p>
         <p><span>Nhân viên</span><b>{employee}</b></p>
+        {customer?.hoTen ? <p><span>Khách hàng</span><b>{customer.hoTen}</b></p> : null}
+        {customer?.soDienThoai ? <p><span>Số điện thoại</span><b>{customer.soDienThoai}</b></p> : null}
         {!preview && <p><span>Thanh toán</span><b>{METHOD_LABELS[payment?.phuongThucThanhToan || payment?.phuongThuc] || 'Đã thanh toán'}</b></p>}
       </div>
 
@@ -148,8 +164,17 @@ function Receipt({ order, payment, slip, preview }) {
         <p><span>Tạm tính</span><b>{formatMoney(subtotal)}</b></p>
         {!preview && <p><span>Phí phục vụ</span><b>{formatMoney(serviceFee)}</b></p>}
         {discount > 0 && <p><span>Khuyến mãi{promotionCode ? ` (${promotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p>}
+        {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><b>-{formatMoney(pointDiscount)}</b></p>}
         <p className="grand"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></p>
       </div>
+
+      {hasLoyalty ? (
+        <div className="cashier-receipt-loyalty">
+          {pointsUsed > 0 ? <p><span>Điểm đã sử dụng</span><b>{pointsUsed} điểm</b></p> : null}
+          <p><span>Điểm được cộng</span><b>+{pointsEarned} điểm</b></p>
+          <p><span>{preview ? 'Điểm sau thanh toán' : 'Điểm hiện có'}</span><b>{pointsAfter} điểm</b></p>
+        </div>
+      ) : null}
 
       {preview && qr ? (
         <section className="cashier-receipt-qr">
@@ -199,7 +224,11 @@ function Receipt({ order, payment, slip, preview }) {
 export default function PrintInvoice() {
   const { orderId } = useParams();
   const location = useLocation();
-  const preview = new URLSearchParams(location.search).get('preview') === '1';
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const preview = searchParams.get('preview') === '1';
+  const previewPhone = String(searchParams.get('phone') || '').trim();
+  const previewName = String(searchParams.get('name') || '').trim();
+  const previewPoints = Math.max(0, Number.parseInt(searchParams.get('points') || '0', 10) || 0);
   const [order, setOrder] = useState(null);
   const [payment, setPayment] = useState(null);
   const [slip, setSlip] = useState(null);
@@ -214,10 +243,37 @@ export default function PrintInvoice() {
     setError('');
 
     const request = preview
-      ? paymentApi.paymentSlipByOrder(orderId).then((response) => {
-        if (!active) return;
-        setSlip(response?.data || response);
-      })
+      ? (previewPhone
+        ? Promise.all([
+          paymentApi.paymentSlipByOrder(orderId),
+          paymentApi.loyaltyPreview(orderId, { phone: previewPhone, pointsToUse: previewPoints }),
+          paymentApi.vietQrByOrder(orderId, { phone: previewPhone, pointsToUse: previewPoints }),
+        ]).then(([slipResponse, loyaltyResponse, qrResponse]) => {
+          if (!active) return;
+          const slipData = slipResponse?.data || slipResponse;
+          const loyaltyData = loyaltyResponse?.data || loyaltyResponse;
+          const qrData = qrResponse?.data || qrResponse;
+          setSlip({
+            ...slipData,
+            tongTienTruocDiem: loyaltyData?.tongTienTruocDiem,
+            tongTien: loyaltyData?.tongThanhToan,
+            tienGiamTuDiem: loyaltyData?.tienGiamTuDiem,
+            diemDaSuDung: loyaltyData?.diemSuDung,
+            diemDuKienCong: loyaltyData?.diemDuKienCong,
+            diemConLaiSauThanhToan: loyaltyData?.diemConLaiSauThanhToan,
+            khachHang: {
+              maKhachHang: loyaltyData?.maKhachHang,
+              hoTen: loyaltyData?.hoTen || previewName || null,
+              soDienThoai: loyaltyData?.soDienThoai || previewPhone,
+            },
+            loyaltyPreview: loyaltyData,
+            vietQr: qrData,
+          });
+        })
+        : paymentApi.paymentSlipByOrder(orderId).then((response) => {
+          if (!active) return;
+          setSlip(response?.data || response);
+        }))
       : Promise.all([
         orderApi.getById(orderId),
         paymentApi.byOrder(orderId).catch(() => null),
@@ -234,7 +290,7 @@ export default function PrintInvoice() {
     });
 
     return () => { active = false; };
-  }, [orderId, preview]);
+  }, [orderId, preview, previewName, previewPhone, previewPoints]);
 
   const printableCopies = useMemo(() => Array.from({ length: copies }, (_, index) => index), [copies]);
   const hasData = preview ? Boolean(slip) : Boolean(order);
@@ -275,7 +331,7 @@ export default function PrintInvoice() {
           {preview ? (
             <div className="cashier-print-flow-note">
               <strong>Phiếu dành cho khách tại bàn</strong>
-              <p>Phiếu có VietQR đúng số tiền và nội dung đơn. In phiếu rồi giao cho phục vụ mang ra bàn.</p>
+              <p>Phiếu có VietQR đúng số tiền sau khuyến mãi và sau khi đổi điểm.</p>
               <p>Việc in phiếu không làm đơn chuyển sang đã thanh toán.</p>
             </div>
           ) : null}

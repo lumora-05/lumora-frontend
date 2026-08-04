@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Printer, TicketPercent, WalletCards, X } from 'lucide-react';
+import { ArrowLeft, Award, Printer, TicketPercent, WalletCards, X } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { paymentApi } from '../../api/paymentApi';
@@ -56,7 +56,8 @@ export default function Invoice() {
   const subtotal = useMemo(() => subtotalOf(order), [order]);
   const serviceFee = useMemo(() => serviceFeeOf(order), [order]);
   const discount = useMemo(() => discountOf(order), [order]);
-  const total = useMemo(() => totalOf(order), [order]);
+  const total = useMemo(() => Number(payment?.tongTien ?? totalOf(order)), [order, payment]);
+  const pointDiscount = useMemo(() => Number(payment?.tienGiamTuDiem ?? order?.tienGiamTuDiem ?? 0), [order, payment]);
 
   if (loading || !order) {
     return <section className="page cashier-page"><div className="cashier-table-empty cashier-loading-card">Đang tải chi tiết hóa đơn...</div></section>;
@@ -69,6 +70,9 @@ export default function Invoice() {
   const appliedPromotionCode = payment?.maCodeKhuyenMai || order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
   const canEditPromotion = !paid && PROMOTION_EDITABLE_STATUSES.includes(order?.trangThai);
   const visibleItems = (order?.chiTietDonHang || []).filter((item) => item?.trangThaiMon !== 'DA_HUY');
+  const loyaltyCustomer = payment?.khachHang || order?.khachHang;
+  const pointsUsed = Number(payment?.diemDaSuDung ?? order?.diemDaSuDung ?? 0);
+  const pointsEarned = Number(payment?.diemDuocCong ?? order?.diemDuocCong ?? 0);
 
   async function applyPromotion() {
     const code = promotionCode.trim().toUpperCase();
@@ -124,6 +128,8 @@ export default function Invoice() {
           <p><span>Số khách</span><strong>{guestCountOf(order)}</strong></p>
           <p><span>Thời gian</span><strong>{dateTimeText(orderTimeOf(order))}</strong></p>
           <p><span>Nhân viên phục vụ</span><strong>{order?.nhanVien?.hoTen || order?.tenNhanVien || '—'}</strong></p>
+          {paid && loyaltyCustomer?.hoTen ? <p><span>Khách hàng</span><strong>{loyaltyCustomer.hoTen}</strong></p> : null}
+          {paid && loyaltyCustomer?.soDienThoai ? <p><span>Số điện thoại</span><strong>{loyaltyCustomer.soDienThoai}</strong></p> : null}
           {!paid ? <p><span>Thời gian chờ</span><strong className={`cashier-wait-text ${wait.tone}`}>{wait.label}</strong></p> : null}
         </div>
 
@@ -192,12 +198,22 @@ export default function Invoice() {
               ) : null}
               <small>{paid ? 'Mã đã được lưu trên hóa đơn.' : 'Mã mới sẽ thay thế mã đang áp dụng.'}</small>
             </div>
+
+            {paid && loyaltyCustomer ? (
+              <div className="cashier-detail-loyalty-card">
+                <div><Award size={18} /><strong>Điểm khách hàng</strong></div>
+                <p><span>Đã sử dụng</span><b>{pointsUsed} điểm</b></p>
+                <p><span>Được cộng</span><b>+{pointsEarned} điểm</b></p>
+                <p><span>Điểm hiện có</span><b>{Number(loyaltyCustomer.diemTichLuy || 0)} điểm</b></p>
+              </div>
+            ) : null}
           </div>
 
           <div className="cashier-detail-summary">
             <p><span>Tạm tính</span><strong>{formatMoney(subtotal)}</strong></p>
             <p><span>Phí phục vụ{serviceFee ? '' : ' (nếu có)'}</span><strong>{formatMoney(serviceFee)}</strong></p>
             {discount > 0 && <p><span>Khuyến mãi {appliedPromotionCode ? `(${appliedPromotionCode})` : ''}</span><strong>-{formatMoney(discount)}</strong></p>}
+            {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><strong>-{formatMoney(pointDiscount)}</strong></p>}
             <p className="grand"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></p>
           </div>
         </div>
