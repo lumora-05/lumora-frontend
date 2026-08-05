@@ -6,6 +6,7 @@ import { orderApi } from '../../api/orderApi';
 import TableArrangementModal from '../../components/common/TableArrangementModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useToast, errorMessageOf, messageOf } from '../../context/ToastContext';
+import { fetchReservationHoldMap, reservationHoldTime } from '../../utils/reservationHolds';
 import {
   formatClock,
   isActiveOrder,
@@ -25,6 +26,7 @@ const STATUS_META = {
   new: { label: 'Có đơn mới', tone: 'new' },
   serving: { label: 'Đang phục vụ', tone: 'serving' },
   payment: { label: 'Chờ thanh toán', tone: 'payment' },
+  reserved: { label: 'Sắp có lịch', tone: 'reserved' },
 };
 
 function tableId(table) {
@@ -49,12 +51,13 @@ function primaryTableId(table) {
   return table?.maBanChinh ?? tableId(table);
 }
 
-function tableVisualStatus(table, orders) {
+function tableVisualStatus(table, orders, reservationHold) {
   if (orders?.some((order) => orderGroup(order) === 'NEW')) return 'new';
   if (orders?.some((order) => orderGroup(order) === 'PAYMENT')) return 'payment';
   if (orders?.length) return 'serving';
   if (table?.trangThai === 'DANG_THANH_TOAN') return 'payment';
   if (table?.trangThai === 'DANG_SU_DUNG') return 'serving';
+  if (reservationHold) return 'reserved';
   return 'empty';
 }
 
@@ -82,23 +85,26 @@ function primaryTableName(table, tables) {
 
 export default function WaiterHome() {
   const toast = useToast();
-  const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/tables']);
+  const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/tables', '/topic/reservations']);
   const [tables, setTables] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [reservationHolds, setReservationHolds] = useState(() => new Map());
   const [selectedTable, setSelectedTable] = useState('ALL');
-  const [filters, setFilters] = useState({ empty: true, new: true, serving: true, payment: true });
+  const [filters, setFilters] = useState({ empty: true, new: true, serving: true, payment: true, reserved: true });
   const [arrangementMode, setArrangementMode] = useState(null);
   const [arrangementLoading, setArrangementLoading] = useState(false);
 
   async function load(preferredTable) {
     try {
-      const [tableResponse, orderResponse] = await Promise.all([
+      const [tableResponse, orderResponse, holdMap] = await Promise.all([
         tableApi.getAll(),
         orderApi.getAll().catch(() => []),
+        fetchReservationHoldMap().catch(() => new Map()),
       ]);
       const nextTables = unwrapList(tableResponse);
       setTables(nextTables);
       setOrders(unwrapList(orderResponse));
+      setReservationHolds(holdMap);
       if (preferredTable !== undefined && preferredTable !== null) {
         setSelectedTable(String(preferredTable));
       } else if (selectedTable !== 'ALL' && !nextTables.some((table) => String(tableId(table)) === String(selectedTable))) {
@@ -111,7 +117,7 @@ export default function WaiterHome() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (['/topic/orders', '/topic/kitchen', '/topic/tables'].includes(event?.topic)) load();
+    if (['/topic/orders', '/topic/kitchen', '/topic/tables', '/topic/reservations'].includes(event?.topic)) load();
   }, [event]);
 
   const activeOrders = useMemo(() => orders.filter(isActiveOrder), [orders]);
@@ -132,11 +138,13 @@ export default function WaiterHome() {
   );
 
   const selectedOrderTableId = selectedTableRow ? primaryTableId(selectedTableRow) : 'ALL';
+  const selectedReservationHold = selectedTableRow ? reservationHolds.get(String(tableId(selectedTableRow))) || null : null;
+  const selectedTableHasOrders = selectedTableRow ? (ordersByTable.get(String(selectedOrderTableId)) || []).length > 0 : false;
 
   const shownTables = useMemo(() => tables.filter((table) => {
     const rows = ordersByTable.get(String(primaryTableId(table))) || [];
-    return filters[tableVisualStatus(table, rows)];
-  }), [tables, ordersByTable, filters]);
+    return filters[tableVisualStatus(table, rows, reservationHolds.get(String(tableId(table))))];
+  }), [tables, ordersByTable, filters, reservationHolds]);
 
   const shownOrders = useMemo(() => activeOrders
     .filter((order) => selectedTable === 'ALL' || String(tableIdOfOrder(order)) === String(selectedOrderTableId))
@@ -182,7 +190,7 @@ export default function WaiterHome() {
           <div className="waiter-table-map-tools">
             <div className="waiter-table-arrangement-actions">
               <button type="button" disabled={!selectedTableRow || !canTransfer(selectedTableRow)} title={selectedTableRow && !canTransfer(selectedTableRow) ? 'Chỉ chuyển bàn đang có đơn phục vụ' : ''} onClick={() => setArrangementMode('transfer')}><ArrowRightLeft size={16} /> Chuyển bàn</button>
-              <button type="button" disabled={!selectedTableRow || !canMerge(selectedTableRow)} title={selectedTableRow && !canMerge(selectedTableRow) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={16} /> Ghép bàn</button>
+              <button type="button" disabled={!selectedTableRow || !canMerge(selectedTableRow) || Boolean(selectedReservationHold && !selectedTableHasOrders)} title={selectedTableRow && selectedReservationHold && !selectedTableHasOrders ? `Bàn đã được giữ lúc ${reservationHoldTime(selectedReservationHold)}` : selectedTableRow && !canMerge(selectedTableRow) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={16} /> Ghép bàn</button>
               <button type="button" disabled={!selectedTableRow || !canUnmerge(selectedTableRow)} title={selectedTableRow && !canUnmerge(selectedTableRow) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={16} /> Tách bàn</button>
             </div>
             <div className="waiter-map-filters">
@@ -200,7 +208,8 @@ export default function WaiterHome() {
           {shownTables.map((table) => {
             const id = tableId(table);
             const tableOrders = ordersByTable.get(String(primaryTableId(table))) || [];
-            const statusKey = tableVisualStatus(table, tableOrders);
+            const hold = reservationHolds.get(String(id));
+            const statusKey = tableVisualStatus(table, tableOrders, hold);
             const meta = STATUS_META[statusKey];
             const count = tableOrders.reduce((sum, order) => sum + itemCount(order), 0);
             return (
@@ -209,8 +218,8 @@ export default function WaiterHome() {
                 {isGrouped(table) ? <span className={`waiter-table-group-tag ${isPrimaryTable(table) ? 'primary' : 'secondary'}`}>{groupRole(table)}</span> : null}
                 <Table2 size={22} />
                 <strong>{displayTableName(table)}</strong>
-                <small>{tableOrders.length ? `${tableOrders.length} đơn · ${count} món` : isGrouped(table) ? `Dùng chung với ${primaryTableName(table, tables)}` : 'Chưa có đơn'}</small>
-                <em>{meta.label}</em>
+                <small>{tableOrders.length ? `${tableOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}` : hold ? `Đã đặt lúc ${reservationHoldTime(hold)}` : isGrouped(table) ? `Dùng chung với ${primaryTableName(table, tables)}` : 'Chưa có đơn'}</small>
+                <em>{hold && !tableOrders.length ? `Đã đặt ${reservationHoldTime(hold)}` : meta.label}</em>
               </button>
             );
           })}
@@ -253,6 +262,7 @@ export default function WaiterHome() {
         sourceTable={selectedTableRow}
         tables={tables}
         loading={arrangementLoading}
+        reservationHolds={reservationHolds}
         onClose={() => !arrangementLoading && setArrangementMode(null)}
         onSubmit={submitArrangement}
       />

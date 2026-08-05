@@ -3,6 +3,7 @@ import {
   CalendarClock,
   CalendarDays,
   CheckCircle2,
+  ChefHat,
   Clock3,
   Eye,
   LoaderCircle,
@@ -18,6 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { reservationApi } from '../../api/reservationApi';
+import { StaffReservationPreorderModal, preorderStatus, preorderStatusMeta } from './ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pagination';
@@ -69,6 +71,8 @@ function DetailModal({ item, onClose }) {
     ['Người xác nhận', item?.tenNguoiXacNhan || '—'],
     ['Người check-in', item?.tenNguoiCheckIn || '—'],
     ['Người xếp bàn', item?.tenNguoiXepBan || '—'],
+    ['Món đặt trước', Number(item?.soMonDatTruoc || 0) ? `${item.soMonDatTruoc} loại món` : 'Chưa đặt'],
+    ['Trạng thái món trước', preorderStatusMeta(item?.trangThaiDatMonTruoc).label],
   ];
   return (
     <section className="reservation-manage-modal reservation-detail-modal" role="dialog" aria-modal="true">
@@ -323,9 +327,10 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
-                      <td><span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>{item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}</td>
+                      <td><span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>{preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small> : null}{item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}</td>
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
+                        {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone="preorder" onClick={() => openAction('preorder', item)}><ChefHat size={15} /> Món đặt trước</ActionButton> : null}
                         {statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
                         {statusValue === 'DA_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('check-in', item)}><UserCheck size={15} /> Check-in</ActionButton>{canMarkNoShow(item) ? <ActionButton tone="warning" onClick={() => openAction('no-show', item)}><CalendarClock size={15} /> Không đến</ActionButton> : null}</> : null}
                         {statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> Xếp bàn</ActionButton> : null}
@@ -351,6 +356,7 @@ export default function ReservationManagement({ role = 'admin' }) {
           {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
+          {modal?.action === 'preorder' ? <StaffReservationPreorderModal item={modal.item} onClose={() => setModal(null)} onUpdated={load} /> : null}
         </div>,
         document.body,
       ) : null}

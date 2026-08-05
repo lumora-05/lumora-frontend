@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
 import LumoraChatbot from '../../components/customer/LumoraChatbot';
+import { CustomerReservationPreorder } from '../../components/reservation/ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import {
@@ -284,7 +285,7 @@ export default function PublicReservation() {
         <div className="reservation-public-hero-card">
           <CalendarCheck2 size={30} />
           <strong>Quy trình nhanh gọn</strong>
-          <p>Gửi yêu cầu → Nhà hàng xác nhận → Check-in → Xếp bàn</p>
+          <p>Gửi yêu cầu → Nhà hàng xác nhận → Chọn món trước → Check-in</p>
         </div>
       </section>
 
@@ -327,6 +328,12 @@ export default function PublicReservation() {
               <>
                 <button type="button" className="reservation-public-copy" onClick={copyCode}><Copy size={16} /> Sao chép mã {reservation.maTraCuu}</button>
                 <ReservationDetail item={reservation} onEdit={startEdit} onCancel={() => setCancelOpen(true)} />
+                <CustomerReservationPreorder
+                  reservation={reservation}
+                  code={lookup.code}
+                  phone={lookup.phone}
+                  onChanged={() => loadReservation(true)}
+                />
               </>
             ) : <div className="reservation-public-lookup-empty"><CalendarCheck2 size={42} /><strong>Thông tin đặt bàn sẽ hiển thị tại đây</strong><p>Nhà hàng cập nhật trạng thái theo thời gian thực sau khi nhận yêu cầu.</p></div>}
           </div>

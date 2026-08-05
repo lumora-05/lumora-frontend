@@ -3652,3 +3652,19 @@
   .cashier-loyalty-customer-line{align-items:flex-start;flex-direction:column}
   .cashier-loyalty-customer-line small{text-align:left}
 }
+
+/* ===== Upcoming reservation hold indicators ===== */
+.waiter-order-table-list em.reserved{color:#b45309}
+.waiter-order-mode-banner.reserved{border-color:#fde68a;background:#fffbeb}
+.waiter-order-mode-banner.reserved>span{background:#fef3c7;color:#b45309}
+.waiter-order-mode-banner.reserved strong{color:#92400e}
+.waiter-room-table.reserved{border-color:#fbbf24;background:#fffbeb}
+.waiter-room-table.reserved em{background:#fef3c7;color:#a16207}
+.waiter-map-filters .reserved i{background:#d97706}
+.restaurant-table-tile.has-reservation{border-color:#fbbf24;background:#fffbeb}
+.table-reservation-hold-detail{display:inline-flex;padding:4px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:850}
+.table-arrangement-select .reservation-hold-note{color:#92400e}
+.table-arrangement-option-list>label.unavailable{border-color:#fde68a;background:#fffbeb;cursor:not-allowed;opacity:.78}
+.table-arrangement-option-list>label.unavailable:hover{border-color:#fde68a;background:#fffbeb}
+.table-arrangement-option-list>label.unavailable label,
+.table-arrangement-option-list>label.unavailable input{cursor:not-allowed}

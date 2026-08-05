@@ -28,6 +28,7 @@ import ConfirmActionModal from '../../components/common/ConfirmActionModal';
 import TableArrangementModal from '../../components/common/TableArrangementModal';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import ReservationManagement from '../../components/reservation/ReservationManagement';
+import { fetchReservationHoldMap, reservationHoldDateTime, reservationHoldTime } from '../../utils/reservationHolds';
 
 const EMPTY_FORM = {
   tenBan: '',
@@ -340,6 +341,7 @@ export default function TableManage() {
   const requestedTab = searchParams.get('tab');
   const initialTab = ['tables', 'qr', 'reservations'].includes(requestedTab) ? requestedTab : 'tables';
   const [rows, setRows] = useState([]);
+  const [reservationHolds, setReservationHolds] = useState(() => new Map());
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedId, setSelectedId] = useState(null);
   const [keyword, setKeyword] = useState('');
@@ -352,13 +354,17 @@ export default function TableManage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [arrangementMode, setArrangementMode] = useState(null);
   const [arrangementLoading, setArrangementLoading] = useState(false);
-  const tableEvent = useWebSocket(['/topic/tables']);
+  const tableEvent = useWebSocket(['/topic/tables', '/topic/admin/reservations', '/topic/reservations']);
 
   async function load(preferredId) {
     try {
-      const response = await tableApi.getAll();
+      const [response, holdMap] = await Promise.all([
+        tableApi.getAll(),
+        fetchReservationHoldMap().catch(() => new Map()),
+      ]);
       const list = unwrapList(response);
       setRows(list);
+      setReservationHolds(holdMap);
       const nextId = preferredId ?? selectedId;
       if (list.length && !list.some((item) => tableId(item) === nextId)) {
         setSelectedId(tableId(list[0]));
@@ -375,7 +381,7 @@ export default function TableManage() {
   }, []);
 
   useEffect(() => {
-    if (tableEvent?.topic === '/topic/tables') load();
+    if (['/topic/tables', '/topic/admin/reservations', '/topic/reservations'].includes(tableEvent?.topic)) load();
   }, [tableEvent]);
 
   useEffect(() => {
@@ -606,18 +612,19 @@ export default function TableManage() {
                   <div className="table-map-grid">
                     {items.map((row) => {
                       const status = getTableStatus(row);
+                      const hold = reservationHolds.get(String(tableId(row)));
                       const isSelected = tableId(row) === tableId(selected);
                       return (
                         <button
                           key={tableId(row)}
                           type="button"
-                          className={`restaurant-table-tile ${status.tone} ${isSelected ? 'selected' : ''}`}
+                          className={`restaurant-table-tile ${status.tone} ${hold ? 'has-reservation' : ''} ${isSelected ? 'selected' : ''}`}
                           onClick={() => setSelectedId(tableId(row))}
                         >
                           <span className="table-tile-icon"><Table2 size={20} /></span>
                           {isGrouped(row) ? <span className={`table-group-tag ${isPrimaryTable(row) ? 'primary' : 'secondary'}`}>{groupRoleLabel(row)}</span> : null}
                           <strong>{row.tenBan || `Bàn ${tableId(row)}`}</strong>
-                          <small>{getCapacity(row)} khách</small>
+                          <small>{getCapacity(row)} khách{hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}</small>
                           <em>{status.label}</em>
                         </button>
                       );
@@ -657,6 +664,7 @@ export default function TableManage() {
                     <div><dt>Khu vực</dt><dd>{getArea(selected)}</dd></div>
                     <div><dt>Sức chứa</dt><dd>{getCapacity(selected)} khách</dd></div>
                     <div><dt>Trạng thái</dt><dd><span className={`inline-dot ${getTableStatus(selected).tone}`} />{getTableStatus(selected).label}</dd></div>
+                    {reservationHolds.get(String(tableId(selected))) ? <div><dt>Lịch sắp tới</dt><dd><span className="table-reservation-hold-detail">Đã giữ lúc {reservationHoldDateTime(reservationHolds.get(String(tableId(selected))))}</span></dd></div> : null}
                     {isGrouped(selected) ? <div><dt>Ghép bàn</dt><dd><span className={`table-group-inline ${isPrimaryTable(selected) ? 'primary' : 'secondary'}`}>{groupRoleLabel(selected)}</span></dd></div> : null}
                     {isGrouped(selected) ? <div><dt>Bàn chính</dt><dd>{groupPrimaryName(selected, rows)}</dd></div> : null}
                     <div><dt>Ghi chú</dt><dd>{selected.ghiChu || 'Không có'}</dd></div>
@@ -669,7 +677,7 @@ export default function TableManage() {
                     <a href={customerPath(selected)} target="_blank" rel="noreferrer"><Eye size={17} /> Xem menu QR</a>
                     <button onClick={() => downloadQr(selected, toast)}><Download size={17} /> Tải mã QR</button>
                     {!isGrouped(selected) ? <button disabled={!canTransfer(selected)} title={!canTransfer(selected) ? 'Chỉ chuyển bàn đang có đơn phục vụ' : ''} onClick={() => setArrangementMode('transfer')}><ArrowRightLeft size={17} /> Chuyển bàn</button> : null}
-                    {!isGrouped(selected) ? <button disabled={!canMerge(selected)} title={!canMerge(selected) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={17} /> Ghép bàn</button> : null}
+                    {!isGrouped(selected) ? <button disabled={!canMerge(selected) || Boolean(reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG')} title={reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG' ? `Bàn đã được giữ lúc ${reservationHoldTime(reservationHolds.get(String(tableId(selected))))}` : !canMerge(selected) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={17} /> Ghép bàn</button> : null}
                     {isGrouped(selected) ? <button disabled={!canUnmerge(selected)} title={!canUnmerge(selected) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
                     <button onClick={() => openEdit(selected)}><Pencil size={17} /> Chỉnh sửa</button>
                     {!qrSrc(selected) && <button className="primary" onClick={() => generateQr(selected)}><QrCode size={17} /> Tạo QR</button>}
@@ -803,6 +811,7 @@ export default function TableManage() {
         sourceTable={selected}
         tables={rows}
         loading={arrangementLoading}
+        reservationHolds={reservationHolds}
         onClose={() => !arrangementLoading && setArrangementMode(null)}
         onSubmit={submitArrangement}
       />

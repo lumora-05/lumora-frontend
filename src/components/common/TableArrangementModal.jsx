@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRightLeft, Link2, Table2, Unlink2, X } from 'lucide-react';
+import { reservationHoldTime } from '../../utils/reservationHolds';
 
 function tableId(table) {
   return table?.maBan ?? table?.id;
@@ -52,6 +53,7 @@ export default function TableArrangementModal({
   sourceTable,
   tables = [],
   loading = false,
+  reservationHolds = new Map(),
   onClose,
   onSubmit,
 }) {
@@ -77,6 +79,11 @@ export default function TableArrangementModal({
       .sort((a, b) => tableName(a).localeCompare(tableName(b), 'vi'));
   }, [tables, sourceTable, mode]);
 
+
+  function holdFor(table) {
+    return reservationHolds?.get?.(String(tableId(table))) || null;
+  }
+
   if (!open || !sourceTable) return null;
 
   function close() {
@@ -84,6 +91,7 @@ export default function TableArrangementModal({
   }
 
   function toggleTable(id) {
+    if (reservationHolds?.has?.(String(id))) return;
     setSelectedIds((current) => current.includes(id)
       ? current.filter((value) => value !== id)
       : [...current, id]);
@@ -138,13 +146,16 @@ export default function TableArrangementModal({
             <span>Bàn đích</span>
             <select value={targetId} onChange={(event) => setTargetId(event.target.value)} required>
               <option value="">Chọn bàn trống</option>
-              {candidates.map((table) => (
-                <option key={tableId(table)} value={tableId(table)}>
-                  {tableName(table)} · {tableArea(table)}
-                </option>
-              ))}
+              {candidates.map((table) => {
+                const hold = holdFor(table);
+                return (
+                  <option key={tableId(table)} value={tableId(table)} disabled={Boolean(hold)}>
+                    {tableName(table)} · {tableArea(table)}{hold ? ` · Đã đặt ${reservationHoldTime(hold)}` : ''}
+                  </option>
+                );
+              })}
             </select>
-            {!candidates.length ? <small>Không có bàn trống độc lập để chuyển đến.</small> : null}
+            {!candidates.length ? <small>Không có bàn trống độc lập để chuyển đến.</small> : candidates.some(holdFor) ? <small className="reservation-hold-note">Bàn có lịch đặt sắp tới được khóa để tránh trùng giờ.</small> : null}
           </label>
         ) : null}
 
@@ -158,11 +169,12 @@ export default function TableArrangementModal({
               {candidates.map((table) => {
                 const id = tableId(table);
                 const checked = selectedIds.includes(id);
+                const hold = holdFor(table);
                 return (
-                  <label key={id} className={checked ? 'selected' : ''}>
-                    <input type="checkbox" checked={checked} onChange={() => toggleTable(id)} />
+                  <label key={id} className={`${checked ? 'selected' : ''} ${hold ? 'unavailable' : ''}`.trim()}>
+                    <input type="checkbox" checked={checked} disabled={Boolean(hold)} onChange={() => toggleTable(id)} />
                     <span><Table2 size={17} /></span>
-                    <div><strong>{tableName(table)}</strong><small>{tableArea(table)}</small></div>
+                    <div><strong>{tableName(table)}</strong><small>{hold ? `Đã đặt lúc ${reservationHoldTime(hold)} · Không thể ghép` : tableArea(table)}</small></div>
                   </label>
                 );
               })}

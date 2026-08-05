@@ -8,6 +8,7 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { useToast, errorMessageOf, messageOf } from '../../context/ToastContext';
+import { fetchReservationHoldMap, reservationHoldMessage, reservationHoldTime } from '../../utils/reservationHolds';
 
 function unwrap(response) {
   return Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
@@ -95,6 +96,7 @@ export default function WaiterOrderEntry() {
   const initialDraft = useMemo(() => readDraft(), []);
   const [tables, setTables] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [reservationHolds, setReservationHolds] = useState(() => new Map());
   const [foods, setFoods] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedTable, setSelectedTable] = useState(params.get('table') || initialDraft.selectedTable || '');
@@ -103,17 +105,19 @@ export default function WaiterOrderEntry() {
   const [cart, setCart] = useState(Array.isArray(initialDraft.cart) ? initialDraft.cart : []);
   const [note, setNote] = useState(initialDraft.note || '');
   const [submitting, setSubmitting] = useState(false);
-  const event = useWebSocket(['/topic/orders', '/topic/kitchen']);
+  const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/reservations']);
 
   const loadOrderingContext = useCallback(async ({ selectFirstTable = false, showError = true } = {}) => {
     try {
-      const [tableResponse, orderResponse] = await Promise.all([
+      const [tableResponse, orderResponse, holdMap] = await Promise.all([
         tableApi.getAll(),
         orderApi.getAll(),
+        fetchReservationHoldMap().catch(() => new Map()),
       ]);
       const tableRows = unwrap(tableResponse);
       setTables(tableRows);
       setOrders(unwrap(orderResponse));
+      setReservationHolds(holdMap);
       if (selectFirstTable) {
         setSelectedTable((current) => current || (tableRows[0] ? String(tableId(tableRows[0])) : ''));
       }
@@ -134,7 +138,7 @@ export default function WaiterOrderEntry() {
   }, [loadOrderingContext, toast]);
 
   useEffect(() => {
-    if (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen') {
+    if (['/topic/orders', '/topic/kitchen', '/topic/reservations'].includes(event?.topic)) {
       loadOrderingContext({ showError: false });
     }
   }, [event, loadOrderingContext]);
@@ -163,11 +167,13 @@ export default function WaiterOrderEntry() {
   const selectedTableObject = tables.find((table) => String(tableId(table)) === String(selectedTable));
   const selectedTableName = selectedTableObject?.tenBan || (selectedTable ? `Bàn ${selectedTable}` : 'bàn');
   const currentOrder = selectedTable ? openOrdersByTable.get(String(selectedTable)) || null : null;
+  const selectedReservationHold = selectedTable ? reservationHolds.get(String(selectedTable)) || null : null;
   const currentStatus = normalizeStatus(currentOrder?.trangThai);
   const tablePaymentStatus = normalizeStatus(selectedTableObject?.trangThai) === 'DANG_THANH_TOAN';
   const paymentPending = PAYMENT_PENDING_STATUSES.has(currentStatus) || tablePaymentStatus;
   const waitingConfirmation = currentStatus === 'CHO_XAC_NHAN';
-  const orderMode = paymentPending ? 'payment' : currentOrder ? 'add' : 'new';
+  const reservationBlocked = Boolean(selectedReservationHold && !currentOrder);
+  const orderMode = paymentPending ? 'payment' : reservationBlocked ? 'reserved' : currentOrder ? 'add' : 'new';
   const total = cart.reduce((sum, item) => sum + Number(item.gia || 0) * item.soLuong, 0);
 
   const modeCopy = useMemo(() => {
@@ -184,6 +190,13 @@ export default function WaiterOrderEntry() {
         title: `Đơn #${id || '—'} đang chờ thanh toán`,
         description: 'Không thể gọi thêm món cho đến khi thu ngân hoàn tất thanh toán.',
         button: 'Đang chờ thanh toán',
+      };
+    }
+    if (reservationBlocked) {
+      return {
+        title: `${selectedTableName} đã có lịch đặt sắp tới`,
+        description: `Bàn được giữ lúc ${reservationHoldTime(selectedReservationHold)}. Vui lòng chọn bàn khác để tạo lượt phục vụ mới.`,
+        button: 'Bàn đã được giữ',
       };
     }
     if (currentOrder) {
@@ -205,7 +218,7 @@ export default function WaiterOrderEntry() {
       description: 'Bàn chưa có đơn đang phục vụ. Món sẽ được chuyển trực tiếp xuống bếp.',
       button: 'Gửi đơn xuống bếp',
     };
-  }, [currentOrder, paymentPending, selectedTable, selectedTableName, waitingConfirmation]);
+  }, [currentOrder, paymentPending, reservationBlocked, selectedReservationHold, selectedTable, selectedTableName, waitingConfirmation]);
 
   function add(food) {
     if (paymentPending) return toast.error('Bàn đang chờ thanh toán, không thể gọi thêm món');
@@ -234,6 +247,7 @@ export default function WaiterOrderEntry() {
   async function submitOrder() {
     if (!selectedTable) return toast.error('Vui lòng chọn bàn');
     if (paymentPending) return toast.error('Đơn hàng đang chờ thanh toán, không thể gọi thêm món');
+    if (reservationBlocked) return toast.error(reservationHoldMessage(selectedReservationHold, selectedTableName));
     if (!cart.length) return toast.error('Vui lòng chọn ít nhất một món');
     const payload = {
       maBan: Number(selectedTable),
@@ -275,6 +289,8 @@ export default function WaiterOrderEntry() {
       return { label: 'Chờ thanh toán', tone: 'payment' };
     }
     if (order) return { label: statusLabel(status), tone: 'busy' };
+    const hold = reservationHolds.get(String(tableId(table)));
+    if (hold) return { label: `Đã đặt ${reservationHoldTime(hold)}`, tone: 'reserved' };
     return { label: 'Trống', tone: 'empty' };
   }
 
@@ -302,7 +318,7 @@ export default function WaiterOrderEntry() {
             <label className="waiter-search"><Search size={18} /><input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Tìm món..." /></label>
           </div>
           <div className={`waiter-order-mode-banner ${orderMode}`}>
-            <span>{orderMode === 'payment' ? <AlertCircle size={20} /> : <CirclePlus size={20} />}</span>
+            <span>{['payment', 'reserved'].includes(orderMode) ? <AlertCircle size={20} /> : <CirclePlus size={20} />}</span>
             <div><strong>{modeCopy.title}</strong><p>{modeCopy.description}</p></div>
             {currentOrder && !paymentPending ? <em>{statusLabel(currentOrder.trangThai)}</em> : null}
           </div>
@@ -342,7 +358,7 @@ export default function WaiterOrderEntry() {
           </div>
           <textarea disabled={paymentPending} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ghi chú chung cho bếp..." />
           <div className="waiter-cart-summary"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></div>
-          <button className="waiter-send-order" disabled={submitting || !cart.length || !selectedTable || paymentPending} onClick={submitOrder}><Send size={19} />{submitting ? 'Đang gửi...' : modeCopy.button}</button>
+          <button className="waiter-send-order" disabled={submitting || !cart.length || !selectedTable || paymentPending || reservationBlocked} onClick={submitOrder}><Send size={19} />{submitting ? 'Đang gửi...' : modeCopy.button}</button>
           <button className="waiter-secondary-action" onClick={saveDraft}><ShoppingCart size={18} />Lưu tạm</button>
         </aside>
       </div>
