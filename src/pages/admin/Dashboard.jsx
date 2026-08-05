@@ -20,7 +20,8 @@ import { formatMoney } from '../../utils/formatMoney';
 import { useWebSocket } from '../../hooks/useWebSocket';
 
 const STATUS_LABEL = {
-  CHO_XAC_NHAN: 'Chờ xác nhận',
+  CHO_XAC_NHAN: 'Đang chuyển xuống bếp',
+  DA_XAC_NHAN: 'Đã chuyển xuống bếp',
   DANG_CHE_BIEN: 'Đang chuẩn bị',
   DA_PHUC_VU: 'Đang phục vụ',
   SAN_SANG_THANH_TOAN: 'Đang phục vụ',
@@ -198,7 +199,7 @@ export default function Dashboard() {
   }, [orderStatus]);
 
   const pendingOrders = useMemo(() => {
-    const item = normalizedStatus.find((row) => row.name === 'Chờ xác nhận');
+    const item = normalizedStatus.find((row) => row.name === 'Đã chuyển xuống bếp');
     return item?.value ?? summary?.donChoXacNhan ?? 12;
   }, [normalizedStatus, summary]);
 
@@ -231,9 +232,9 @@ export default function Dashboard() {
         <StatisticCard
           icon={Clock3}
           tone="yellow"
-          label="Đơn chờ xác nhận"
+          label="Đã chuyển xuống bếp"
           value={pendingOrders}
-          note="Cần xử lý"
+          note="Đang chờ bếp xử lý"
           
           trendTone="warning"
         />

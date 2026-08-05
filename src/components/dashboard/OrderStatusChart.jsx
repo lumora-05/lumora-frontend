@@ -2,7 +2,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 const COLORS = ['#ff4d00', '#2f80ed', '#31b957', '#9b5de5', '#b8c0cc'];
 const FALLBACK = [
-  { name: 'Chờ xác nhận', value: 12 },
+  { name: 'Đã chuyển xuống bếp', value: 12 },
   { name: 'Đang chuẩn bị', value: 18 },
   { name: 'Đang phục vụ', value: 20 },
   { name: 'Hoàn thành', value: 15 },

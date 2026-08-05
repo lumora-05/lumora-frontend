@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Ban, Check, CheckCircle2, Clock3, ClipboardCheck, CreditCard, Loader2, UtensilsCrossed, XCircle } from 'lucide-react';
+import { ArrowLeft, Ban, Check, CheckCircle2, Clock3, CreditCard, Loader2, UtensilsCrossed, XCircle } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import OrderItemCancellationModal from '../../components/order/OrderItemCancellationModal';
@@ -41,15 +41,15 @@ const ITEM_STATUS_LABELS = {
 };
 
 const STEPS = [
-  { label: 'Mới', icon: ClipboardCheck },
-  { label: 'Đã xác nhận', icon: Check },
+  { label: 'Đã chuyển xuống bếp', icon: UtensilsCrossed },
+  { label: 'Đang chế biến', icon: Clock3 },
   { label: 'Sẵn sàng phục vụ', icon: UtensilsCrossed },
   { label: 'Đã phục vụ', icon: CheckCircle2 },
 ];
 
 function orderStep(status) {
-  if (status === 'CHO_XAC_NHAN') return 0;
-  if (['DA_XAC_NHAN', 'DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 1;
+  if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return 0;
+  if (['DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 1;
   if (['SAN_SANG', 'SAN_SANG_PHUC_VU'].includes(status)) return 2;
   if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN', 'DA_THANH_TOAN'].includes(status)) return 3;
   return 0;
@@ -69,7 +69,6 @@ export default function OrderDetail() {
   const { orderId } = useParams();
   const readOnly = new URLSearchParams(location.search).get('readonly') === '1';
   const [order, setOrder] = useState(null);
-  const [savingOrder, setSavingOrder] = useState(false);
   const [requestingPayment, setRequestingPayment] = useState(false);
   const [servingIds, setServingIds] = useState(new Set());
   const [cancelTarget, setCancelTarget] = useState(null);
@@ -97,21 +96,6 @@ export default function OrderDetail() {
   const currentStep = useMemo(() => orderStep(order?.trangThai), [order?.trangThai]);
   const callGroups = useMemo(() => order ? groupItemsByCall(order) : [], [order]);
 
-  async function confirmOrder() {
-    try {
-      setSavingOrder(true);
-      const response = await orderApi.updateStatus(orderId, {
-        trangThai: 'DA_XAC_NHAN',
-        maNhanVien: user?.maNhanVien || user?.id || null,
-      });
-      toast.success(messageOf(response, 'Đã xác nhận đơn hàng'));
-      await load();
-    } catch (error) {
-      toast.error(errorMessageOf(error, 'Xác nhận đơn thất bại'));
-    } finally {
-      setSavingOrder(false);
-    }
-  }
 
   async function requestPayment() {
     if (order?.trangThai !== 'DA_PHUC_VU') {
@@ -190,7 +174,6 @@ export default function OrderDetail() {
   if (!order) return <section className="waiter-page"><div className="waiter-card waiter-loading">Đang tải đơn...</div></section>;
 
   const items = order.chiTietDonHang || [];
-  const isNew = order.trangThai === 'CHO_XAC_NHAN';
   const meta = statusMeta(order.trangThai);
   const allReady = items.filter((item) => READY_ITEM_STATUSES.has(itemStatus(item)));
   const createdAt = orderCreatedAt(order);
@@ -201,7 +184,7 @@ export default function OrderDetail() {
         <div className="waiter-service-head">
           <div>
             <Link to={readOnly ? '/waiter/history' : '/waiter/orders'} className="waiter-back-link"><ArrowLeft size={17} />Quay lại</Link>
-            <h2>{readOnly ? 'Chi tiết đơn đã xử lý' : isNew ? 'Chi tiết đơn hàng' : 'Cập nhật trạng thái phục vụ'}</h2>
+            <h2>{readOnly ? 'Chi tiết đơn đã xử lý' : 'Cập nhật trạng thái phục vụ'}</h2>
             <div className="waiter-order-identifiers">
               <span><small>Bàn</small><strong>{tableNameOfOrder(order)}</strong></span>
               <span><small>Mã đơn</small><strong>#{readOrderId(order)}</strong></span>
@@ -212,8 +195,7 @@ export default function OrderDetail() {
           <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
         </div>
 
-        {!isNew ? (
-          <div className="waiter-service-stepper">
+        <div className="waiter-service-stepper">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               return (
@@ -224,7 +206,6 @@ export default function OrderDetail() {
               );
             })}
           </div>
-        ) : null}
 
         <div className="waiter-call-groups">
           {callGroups.map((group) => {
@@ -236,7 +217,7 @@ export default function OrderDetail() {
                     <span>{group.number === 1 ? 'Lượt gọi ban đầu' : `Lượt gọi thêm #${group.number}`}</span>
                     <small><Clock3 size={14} /> {formatClock(group.time || callTime(group.items[0], createdAt))} · {group.items.length} dòng món</small>
                   </div>
-                  {!readOnly && !isNew && readyInGroup.length > 1 ? (
+                  {!readOnly && readyInGroup.length > 1 ? (
                     <button type="button" onClick={() => markItemsServed(readyInGroup)} disabled={readyInGroup.some((item) => servingIds.has(String(itemId(item))))}>
                       <CheckCircle2 size={17} /> Phục vụ cả lượt
                     </button>
@@ -317,9 +298,7 @@ export default function OrderDetail() {
             <span>Ghi chú của đơn</span>
             <textarea value={order.ghiChu || ''} readOnly placeholder="Không có ghi chú" />
           </label>
-          {!readOnly && isNew ? (
-            <button className="waiter-service-primary" disabled={savingOrder} onClick={confirmOrder}><Check size={18} />{savingOrder ? 'Đang xác nhận...' : 'Xác nhận đơn hàng'}</button>
-          ) : !readOnly && order.trangThai === 'DA_PHUC_VU' ? (
+          {!readOnly && order.trangThai === 'DA_PHUC_VU' ? (
             <button className="waiter-service-primary waiter-payment-request" disabled={requestingPayment} onClick={requestPayment}>
               {requestingPayment ? <Loader2 size={18} className="spin" /> : <CreditCard size={18} />}
               {requestingPayment ? 'Đang gửi yêu cầu...' : 'Khách yêu cầu thanh toán'}

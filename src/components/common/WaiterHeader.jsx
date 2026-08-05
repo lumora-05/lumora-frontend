@@ -15,6 +15,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { serviceRequestApi } from '../../api/serviceRequestApi';
 import { useAuth } from '../../hooks/useAuth';
+import { useToast } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
@@ -36,11 +37,11 @@ import {
 } from '../../utils/waiterData';
 
 const ORDER_NOTIFICATION_META = {
-  NEW: {
+  KITCHEN: {
     icon: ReceiptText,
     tone: 'blue',
-    title: 'Đơn mới cần xác nhận',
-    description: 'Khách vừa gửi đơn mới.',
+    title: 'Đơn đã chuyển xuống bếp',
+    description: 'Khách vừa gửi đơn và đơn đã được chuyển đến bếp.',
   },
   READY: {
     icon: CheckCircle2,
@@ -76,8 +77,19 @@ function serviceRequestTime(item) {
     || null;
 }
 
+function orderNotificationGroup(order) {
+  const status = String(order?.trangThai || '').toUpperCase();
+  if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return 'KITCHEN';
+  return orderGroup(order);
+}
+
+function realtimeOrderData(event) {
+  return event?.body?.data || event?.body || {};
+}
+
 export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
+  const toast = useToast();
   const location = useLocation();
   const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests']);
   const [orders, setOrders] = useState([]);
@@ -114,7 +126,25 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
     if (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen' || event?.topic === '/topic/service-requests') {
       loadNotifications({ silent: true });
     }
-  }, [event, loadNotifications]);
+
+    if (event?.topic === '/topic/orders') {
+      const type = event?.body?.type;
+      const data = realtimeOrderData(event);
+      const id = data?.maDonHang ?? data?.id;
+      const tableName = data?.banAn?.tenBan || data?.tenBan || (data?.maBan ? `Bàn ${data.maBan}` : 'Một bàn');
+      if (type === 'NEW_ORDER') {
+        toast.info(`${tableName} vừa gửi đơn${id ? ` #${id}` : ''}. Đơn đã chuyển xuống bếp.`, {
+          id: `waiter-new-order-${id || event?.body?.createdAt || 'latest'}`,
+          duration: 5000,
+        });
+      } else if (type === 'ORDER_ITEMS_ADDED') {
+        toast.info(`${tableName} vừa gọi thêm món${id ? ` cho đơn #${id}` : ''}. Món mới đã chuyển xuống bếp.`, {
+          id: `waiter-added-items-${id || 'latest'}-${data?.lanGoi || event?.body?.createdAt || ''}`,
+          duration: 5000,
+        });
+      }
+    }
+  }, [event, loadNotifications, toast]);
 
   useEffect(() => {
     setNotificationOpen(false);
@@ -149,7 +179,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
   const notifications = useMemo(() => {
     const orderNotifications = orders
       .map((order) => {
-        const group = orderGroup(order);
+        const group = orderNotificationGroup(order);
         const meta = ORDER_NOTIFICATION_META[group];
         const id = orderId(order);
         if (!meta || !id) return null;
@@ -189,7 +219,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
   }, [notificationTab, orders, serviceRequests]);
 
   const orderCount = useMemo(
-    () => orders.filter((order) => ORDER_NOTIFICATION_META[orderGroup(order)]).length,
+    () => orders.filter((order) => ORDER_NOTIFICATION_META[orderNotificationGroup(order)]).length,
     [orders],
   );
   const newServiceCount = useMemo(
@@ -284,7 +314,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
               </div>
 
               <div className="waiter-notification-panel-footer">
-                <Link to="/waiter/orders" onClick={() => setNotificationOpen(false)}>Xem đơn cần xử lý</Link>
+                <Link to="/waiter/orders" onClick={() => setNotificationOpen(false)}>Xem đơn đang phục vụ</Link>
                 <Link to="/waiter/requests" onClick={() => setNotificationOpen(false)}>Xem yêu cầu tại bàn</Link>
               </div>
             </section>

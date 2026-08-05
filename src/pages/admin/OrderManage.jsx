@@ -33,8 +33,8 @@ import {
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'Tất cả trạng thái' },
-  { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
-  { value: 'DA_XAC_NHAN', label: 'Đã xác nhận' },
+  { value: 'CHO_XAC_NHAN', label: 'Đang chuyển xuống bếp' },
+  { value: 'DA_XAC_NHAN', label: 'Đã chuyển xuống bếp' },
   { value: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị' },
   { value: 'DANG_CHE_BIEN', label: 'Đang chế biến' },
   { value: 'SAN_SANG', label: 'Sẵn sàng' },
@@ -122,9 +122,9 @@ function formatDateTime(value) {
 function statusMeta(code) {
   switch (code) {
     case 'CHO_XAC_NHAN':
-      return { label: 'Chờ xác nhận', tone: 'pending' };
+      return { label: 'Đang chuyển xuống bếp', tone: 'pending' };
     case 'DA_XAC_NHAN':
-      return { label: 'Đã xác nhận', tone: 'preparing' };
+      return { label: 'Đã chuyển xuống bếp', tone: 'preparing' };
     case 'DANG_CHUAN_BI':
       return { label: 'Đang chuẩn bị', tone: 'preparing' };
     case 'DANG_CHE_BIEN':
@@ -289,7 +289,7 @@ export default function OrderManage() {
 
       if (statusFilter === 'ALL') {
         const [pendingResponse, servingResponse, completedResponse] = await Promise.all([
-          orderApi.getPage({ ...commonParams, page: 0, size: 1, status: 'CHO_XAC_NHAN' }),
+          orderApi.getPage({ ...commonParams, page: 0, size: 1, status: 'DA_XAC_NHAN' }),
           orderApi.getPage({ ...commonParams, page: 0, size: 1, status: 'DA_PHUC_VU' }),
           orderApi.getPage({ ...commonParams, page: 0, size: 1, status: 'DA_THANH_TOAN' }),
         ]);
@@ -302,7 +302,7 @@ export default function OrderManage() {
       } else {
         setStats({
           total: result.totalElements,
-          pending: statusFilter === 'CHO_XAC_NHAN' ? result.totalElements : 0,
+          pending: statusFilter === 'DA_XAC_NHAN' ? result.totalElements : 0,
           serving: statusFilter === 'DA_PHUC_VU' ? result.totalElements : 0,
           completed: statusFilter === 'DA_THANH_TOAN' ? result.totalElements : 0,
         });
@@ -482,9 +482,9 @@ export default function OrderManage() {
         <article className="order-admin-stat-card">
           <div className="icon pending"><Clock3 size={24} /></div>
           <div>
-            <span>Chờ xác nhận</span>
+            <span>Đã chuyển xuống bếp</span>
             <strong>{stats.pending}</strong>
-            <small>Đơn chờ xử lý</small>
+            <small>Đơn đang chờ bếp xử lý</small>
           </div>
         </article>
 

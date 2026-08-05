@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Ban, Check, ChevronRight, Clock3, Search, UtensilsCrossed } from 'lucide-react';
+import { Ban, ChevronRight, Clock3, Search, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import CancellationRequestsModal from '../../components/order/CancellationRequestsModal';
@@ -27,7 +27,6 @@ import {
 
 const TAB_GROUPS = [
   ['ACTION', 'Cần xử lý'],
-  ['NEW', 'Đơn mới'],
   ['READY', 'Món sẵn sàng'],
   ['PREPARING', 'Đang chế biến'],
   ['PAYMENT', 'Chờ thanh toán'],
@@ -35,7 +34,7 @@ const TAB_GROUPS = [
 
 function matchesTab(order, tab) {
   const group = orderGroup(order);
-  if (tab === 'ACTION') return ['NEW', 'READY', 'PAYMENT'].includes(group);
+  if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(group);
   return group === tab;
 }
 
@@ -52,7 +51,6 @@ export default function TableStatus() {
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState('ACTION');
   const [keyword, setKeyword] = useState('');
-  const [confirmingId, setConfirmingId] = useState(null);
   const [cancelRequests, setCancelRequests] = useState([]);
   const [cancelRequestsOpen, setCancelRequestsOpen] = useState(false);
   const [cancelRequestsLoading, setCancelRequestsLoading] = useState(false);
@@ -113,23 +111,6 @@ export default function TableStatus() {
       });
   }, [activeOrders, keyword, tab]);
 
-  async function confirmOrder(order) {
-    const id = orderId(order);
-    if (confirmingId) return;
-    try {
-      setConfirmingId(id);
-      const response = await orderApi.updateStatus(id, {
-        trangThai: 'DA_XAC_NHAN',
-        maNhanVien: user?.maNhanVien || user?.id || null,
-      });
-      toast.success(messageOf(response, 'Đã xác nhận đơn hàng'));
-      await load();
-    } catch (error) {
-      toast.error(errorMessageOf(error, 'Xác nhận đơn thất bại'));
-    } finally {
-      setConfirmingId(null);
-    }
-  }
 
   async function processCancellation(request, action, note) {
     const id = request?.maChiTiet;
@@ -176,7 +157,7 @@ export default function TableStatus() {
         </div>
 
         <div className="waiter-action-note">
-          <strong>Thứ tự ưu tiên:</strong> món đã sẵn sàng → đơn mới → bàn chờ thanh toán → món đang chế biến.
+          <strong>Thứ tự ưu tiên:</strong> món đã sẵn sàng → bàn chờ thanh toán → món đang chế biến.
         </div>
 
         <div className="waiter-order-feed">
@@ -212,13 +193,7 @@ export default function TableStatus() {
                     <Clock3 size={15} />
                     <span><b>{waitLabel(createdAt)}</b><small>Từ {formatClock(createdAt)}</small></span>
                   </div>
-                  {group === 'NEW' ? (
-                    <button className="waiter-confirm-button" disabled={Boolean(confirmingId)} onClick={() => confirmOrder(order)}>
-                      <Check size={17} />{String(confirmingId) === String(id) ? 'Đang xác nhận...' : 'Xác nhận'}
-                    </button>
-                  ) : (
-                    <Link className="waiter-view-button" to={`/waiter/orders/${id}`}>{buttonLabel} <ChevronRight size={17} /></Link>
-                  )}
+                  <Link className="waiter-view-button" to={`/waiter/orders/${id}`}>{buttonLabel} <ChevronRight size={17} /></Link>
                 </div>
               </article>
             );

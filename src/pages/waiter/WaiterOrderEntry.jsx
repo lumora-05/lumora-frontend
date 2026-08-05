@@ -75,8 +75,8 @@ function nextCallNumber(order) {
 
 function statusLabel(status) {
   const labels = {
-    CHO_XAC_NHAN: 'Đơn mới chờ xác nhận',
-    DA_XAC_NHAN: 'Đã xác nhận',
+    CHO_XAC_NHAN: 'Đang chuyển xuống bếp',
+    DA_XAC_NHAN: 'Đã chuyển xuống bếp',
     DANG_CHUAN_BI: 'Đang chuẩn bị',
     DANG_CHE_BIEN: 'Đang chế biến',
     SAN_SANG: 'Có món sẵn sàng',
@@ -190,8 +190,8 @@ export default function WaiterOrderEntry() {
       if (waitingConfirmation) {
         return {
           title: `Bổ sung món cho ${selectedTableName}`,
-          description: `Đơn #${id} đang chờ xác nhận · Lượt gọi ${nextCallNumber(currentOrder)}.`,
-          button: 'Thêm món và xác nhận',
+          description: `Đơn #${id} đang được chuyển xuống bếp · Lượt gọi ${nextCallNumber(currentOrder)}.`,
+          button: 'Thêm món vào đơn',
         };
       }
       return {
@@ -202,8 +202,8 @@ export default function WaiterOrderEntry() {
     }
     return {
       title: `Gọi món cho ${selectedTableName}`,
-      description: 'Bàn chưa có đơn đang phục vụ. Hãy kiểm tra món trước khi xác nhận.',
-      button: 'Xác nhận gọi món',
+      description: 'Bàn chưa có đơn đang phục vụ. Món sẽ được chuyển trực tiếp xuống bếp.',
+      button: 'Gửi đơn xuống bếp',
     };
   }, [currentOrder, paymentPending, selectedTable, selectedTableName, waitingConfirmation]);
 
@@ -245,14 +245,14 @@ export default function WaiterOrderEntry() {
       const response = await orderApi.create(payload);
       const fallbackMessage = currentOrder
         ? `Đã thêm món vào đơn #${orderId(currentOrder)}`
-        : 'Đã xác nhận gọi món';
+        : 'Đã gửi đơn xuống bếp';
       toast.success(messageOf(response, fallbackMessage));
       setCart([]);
       setNote('');
       localStorage.removeItem(DRAFT_KEY);
       await loadOrderingContext({ showError: false });
     } catch (error) {
-      toast.error(errorMessageOf(error, currentOrder ? 'Thêm món vào đơn thất bại' : 'Xác nhận gọi món thất bại'));
+      toast.error(errorMessageOf(error, currentOrder ? 'Thêm món vào đơn thất bại' : 'Gửi đơn xuống bếp thất bại'));
       await loadOrderingContext({ showError: false });
     } finally {
       setSubmitting(false);

@@ -11,7 +11,7 @@ const pageMeta = {
   '/waiter/requests': ['Yêu cầu tại bàn', 'Tiếp nhận và hoàn thành yêu cầu hỗ trợ của khách'],
   '/waiter/reservations': ['Đặt bàn', 'Xác nhận, check-in và xếp bàn trong khu vực phụ trách'],
   '/waiter/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
-  '/waiter/orders': ['Đơn cần xử lý', 'Ưu tiên đơn mới, món sẵn sàng và yêu cầu thanh toán'],
+  '/waiter/orders': ['Đơn cần xử lý', 'Theo dõi đơn đã chuyển bếp, món sẵn sàng và yêu cầu thanh toán'],
 };
 
 const items = [

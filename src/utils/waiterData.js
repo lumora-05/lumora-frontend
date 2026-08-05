@@ -1,6 +1,6 @@
 export const WAITER_STATUS_META = {
-  CHO_XAC_NHAN: { label: 'Mới', tone: 'new', group: 'NEW', priority: 2 },
-  DA_XAC_NHAN: { label: 'Đã xác nhận', tone: 'confirmed', group: 'PREPARING', priority: 4 },
+  CHO_XAC_NHAN: { label: 'Đang chuyển xuống bếp', tone: 'confirmed', group: 'PREPARING', priority: 4 },
+  DA_XAC_NHAN: { label: 'Đã chuyển xuống bếp', tone: 'confirmed', group: 'PREPARING', priority: 4 },
   DANG_CHUAN_BI: { label: 'Đang chuẩn bị', tone: 'confirmed', group: 'PREPARING', priority: 4 },
   DANG_CHE_BIEN: { label: 'Đang chế biến', tone: 'preparing', group: 'PREPARING', priority: 4 },
   SAN_SANG: { label: 'Sẵn sàng phục vụ', tone: 'ready', group: 'READY', priority: 1 },

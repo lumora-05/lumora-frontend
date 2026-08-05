@@ -38,7 +38,8 @@ const FILTER_OPTIONS = [
 ];
 
 const STATUS_ITEMS = [
-  { code: 'CHO_XAC_NHAN', label: 'Chờ xác nhận', color: '#ff8a3d' },
+  { code: 'CHO_XAC_NHAN', label: 'Đang chuyển xuống bếp', color: '#ff8a3d' },
+  { code: 'DA_XAC_NHAN', label: 'Đã chuyển xuống bếp', color: '#f5b82e' },
   { code: 'DANG_CHE_BIEN', label: 'Đang chuẩn bị', color: '#2f80ed' },
   { code: 'DA_PHUC_VU', label: 'Đang phục vụ', color: '#31b957' },
   { code: 'SAN_SANG_THANH_TOAN', label: 'Chờ thanh toán', color: '#f5b82e' },
