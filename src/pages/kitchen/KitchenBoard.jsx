@@ -16,6 +16,7 @@ import {
   kitchenOrderedAt,
   kitchenStatusMeta,
   kitchenTableName,
+  kitchenUnitPosition,
   kitchenWaitMinutes,
   unwrapList,
 } from '../../utils/kitchenData';
@@ -220,7 +221,7 @@ export default function KitchenBoard() {
                 <div className="kitchen-table-scroll">
                   <table className="kitchen-compact-table kitchen-action-table">
                     <thead>
-                      <tr><th>STT</th><th>Tên món</th><th>Số lượng</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                      <tr><th>STT</th><th>Tên món</th><th>Suất</th><th>Trạng thái</th><th>Thao tác</th></tr>
                     </thead>
                     <tbody>
                       {list.map((item, index) => {
@@ -228,6 +229,7 @@ export default function KitchenBoard() {
                         const current = canonicalKitchenStatus(item);
                         const meta = kitchenStatusMeta(current);
                         const busy = busyIds.has(id);
+                        const unit = kitchenUnitPosition(list, index);
                         return (
                           <tr key={id || `${key}-${index}`}>
                             <td data-label="STT">{index + 1}</td>
@@ -235,7 +237,7 @@ export default function KitchenBoard() {
                               <b>{kitchenItemName(item)}</b>
                               {item?.ghiChu ? <small className="kitchen-item-note">Ghi chú: {item.ghiChu}</small> : null}
                             </td>
-                            <td data-label="Số lượng"><strong className="kitchen-quantity">×{item?.soLuong || 1}</strong></td>
+                            <td data-label="Suất"><strong className="kitchen-quantity">{unit.total > 1 ? `${unit.position}/${unit.total}` : '1'}</strong></td>
                             <td data-label="Trạng thái"><span className={`kitchen-state-pill ${meta.tone}`}>{meta.label}</span></td>
                             <td data-label="Thao tác">
                               {current === 'HOAN_THANH' ? (

@@ -79,6 +79,38 @@ export function kitchenItemName(item) {
   return item?.monAn?.tenMonAn || item?.tenMonAn || item?.tenMon || 'Món ăn';
 }
 
+function kitchenItemUnitGroupKey(item) {
+  const foodId = item?.monAn?.maMonAn ?? item?.maMonAn ?? kitchenItemName(item);
+  const note = String(item?.ghiChu || '').trim();
+  return `${foodId}::${kitchenCallNumber(item)}::${note}`;
+}
+
+/**
+ * Trả về vị trí của một suất trong nhóm các suất cùng món.
+ * Backend mới lưu mỗi suất thành một chi tiết riêng (soLuong = 1), vì vậy
+ * 10 suất cùng món sẽ luôn được hiển thị thành 10 dòng độc lập.
+ */
+export function kitchenUnitPosition(items, currentIndex) {
+  const list = Array.isArray(items) ? items : [];
+  const current = list[currentIndex];
+  if (!current) return { position: 1, total: 1 };
+
+  const key = kitchenItemUnitGroupKey(current);
+  let position = 0;
+  let total = 0;
+
+  list.forEach((item, index) => {
+    if (kitchenItemUnitGroupKey(item) !== key) return;
+    total += 1;
+    if (index <= currentIndex) position += 1;
+  });
+
+  return {
+    position: Math.max(1, position),
+    total: Math.max(1, total),
+  };
+}
+
 export function flattenKitchenOrders(orders, { includeClosed = false } = {}) {
   return orders
     .filter((order) => includeClosed || !CLOSED_ORDER_STATUSES.has(String(order?.trangThai || '').toUpperCase()))

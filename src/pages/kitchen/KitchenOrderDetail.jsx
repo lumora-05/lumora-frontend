@@ -14,6 +14,7 @@ import {
   kitchenOrderedAt,
   kitchenStatusMeta,
   kitchenTableName,
+  kitchenUnitPosition,
   unwrapObject,
   HIDDEN_KITCHEN_ITEM_STATUSES,
 } from '../../utils/kitchenData';
@@ -148,7 +149,7 @@ export default function KitchenOrderDetail() {
         <div className="kitchen-table-scroll">
           <table className="kitchen-detail-table-modern kitchen-action-table">
             <thead>
-              <tr><th>STT</th><th>Tên món</th><th>Số lượng</th><th>Trạng thái</th>{!readOnly ? <th>Thao tác</th> : null}</tr>
+              <tr><th>STT</th><th>Tên món</th><th>Suất</th><th>Trạng thái</th>{!readOnly ? <th>Thao tác</th> : null}</tr>
             </thead>
             <tbody>
               {items.map((item, index) => {
@@ -156,6 +157,7 @@ export default function KitchenOrderDetail() {
                 const current = canonicalKitchenStatus(item);
                 const meta = kitchenStatusMeta(current);
                 const busy = busyIds.has(id);
+                const unit = kitchenUnitPosition(items, index);
                 return (
                   <tr key={id || index}>
                     <td data-label="STT">{index + 1}</td>
@@ -163,7 +165,7 @@ export default function KitchenOrderDetail() {
                       <b>{kitchenItemName(item)}</b>
                       {item?.ghiChu ? <small className="kitchen-item-note">Ghi chú: {item.ghiChu}</small> : null}
                     </td>
-                    <td data-label="Số lượng"><strong className="kitchen-quantity">×{item?.soLuong || 1}</strong></td>
+                    <td data-label="Suất"><strong className="kitchen-quantity">{unit.total > 1 ? `${unit.position}/${unit.total}` : '1'}</strong></td>
                     <td data-label="Trạng thái"><span className={`kitchen-state-pill ${meta.tone}`}>{meta.label}</span></td>
                     {!readOnly ? (
                       <td data-label="Thao tác">
