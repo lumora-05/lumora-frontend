@@ -33,6 +33,11 @@ export function kitchenOrderId(orderOrItem) {
 }
 
 export function kitchenTableName(orderOrItem) {
+  const delivery = orderOrItem?.giaoHang || orderOrItem?.donHang?.giaoHang;
+  const type = String(orderOrItem?.loaiDon || orderOrItem?.donHang?.loaiDon || '').toUpperCase();
+  if (type === 'GIAO_HANG' || delivery) {
+    return `Giao hàng${delivery?.tenNguoiNhan ? ` · ${delivery.tenNguoiNhan}` : ''}`;
+  }
   return orderOrItem?.banAn?.tenBan || orderOrItem?.tenBan || orderOrItem?.donHang?.banAn?.tenBan || `Bàn ${orderOrItem?.maBan || '—'}`;
 }
 
@@ -125,6 +130,9 @@ export function flattenKitchenOrders(orders, { includeClosed = false } = {}) {
         thoiGianDat: item?.thoiGianThem || order?.thoiGianDat || order?.createdAt,
         trangThaiDon: order?.trangThai,
         ghiChuDon: order?.ghiChu,
+        loaiDon: order?.loaiDon,
+        giaoHang: order?.giaoHang,
+        nguonDon: order?.nguonDon,
       })));
 }
 

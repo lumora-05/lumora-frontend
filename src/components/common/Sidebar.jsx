@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { AlertTriangle, BarChart3, Bell, BellRing, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils, UtensilsCrossed } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bell, BellRing, Bike, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils, UtensilsCrossed } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const iconMap = {
@@ -26,6 +26,7 @@ const iconMap = {
   printer: Printer,
   receipt: ReceiptText,
   reservation: CalendarCheck2,
+  delivery: Bike,
 };
 
 export default function Sidebar({ title, items }) {

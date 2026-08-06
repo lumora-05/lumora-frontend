@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  Bike,
   CalendarCheck2,
   ChefHat,
   ChevronRight,
@@ -254,6 +255,7 @@ export default function Home() {
             <a href="#about" onClick={scrollTo('about')}>Giới thiệu</a>
             <a href="#offers" onClick={scrollTo('offers')}>Ưu đãi</a>
             <a href="#contact" onClick={scrollTo('contact')}>Liên hệ</a>
+            <Link to="/delivery">Giao tận nơi</Link>
             <Link className="home-book-link" to="/login">
               Đăng nhập
               <ArrowRight size={17} />
@@ -283,6 +285,10 @@ export default function Home() {
               <Link className="home-secondary-button" to="/reservations">
                 <CalendarCheck2 size={18} />
                 Đặt bàn ngay
+              </Link>
+              <Link className="home-delivery-button" to="/delivery">
+                <Bike size={18} />
+                Đặt món giao tận nơi
               </Link>
             </div>
 
@@ -587,6 +593,7 @@ export default function Home() {
               <strong>Hỗ trợ</strong>
               <Link to="/reservations">Đặt bàn</Link>
               <a href="#contact" onClick={scrollTo('contact')}>Liên hệ</a>
+            <Link to="/delivery">Giao tận nơi</Link>
               <Link to="/login">Đăng nhập nhân viên</Link>
             </div>
 

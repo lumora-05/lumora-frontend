@@ -8,4 +8,5 @@ import './styles/customer.css';
 import './styles/responsive.css';
 import './styles/reservation.css';
 import './styles/chatbot.css';
+import './styles/delivery.css';
 export default function App(){return <BrowserRouter><AuthProvider><ToastProvider><AppRoutes/></ToastProvider></AuthProvider></BrowserRouter>}

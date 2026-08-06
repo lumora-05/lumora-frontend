@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, History, ReceiptText, UserRound, X } from 'lucide-react';
+import { Bell, Bike, History, ReceiptText, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
@@ -7,6 +7,7 @@ import CashierHeader from '../components/common/CashierHeader';
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
   { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },
+  { to: '/cashier/delivery-orders', label: 'Đơn giao hàng', icon: 'delivery', mobileIcon: Bike },
   { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
   { to: '/cashier/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
 ];
