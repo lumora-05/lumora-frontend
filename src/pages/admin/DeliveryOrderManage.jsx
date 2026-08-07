@@ -48,9 +48,6 @@ function initialActionForm() {
     transactionCode: '',
     paymentNote: '',
     reason: '',
-    provider: 'GrabExpress',
-    driverName: '',
-    driverPhone: '',
     handoverNote: '',
   };
 }
@@ -172,7 +169,7 @@ export default function DeliveryOrderManage() {
     total: orders.length,
     pending: orders.filter((item) => selectedStatus(item) === 'CHO_XAC_NHAN').length,
     preparing: orders.filter((item) => selectedStatus(item) === 'DANG_CHUAN_BI').length,
-    delivery: orders.filter((item) => ['CHO_BAN_GIAO', 'DANG_GIAO'].includes(selectedStatus(item))).length,
+    delivery: orders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO'].includes(selectedStatus(item))).length,
   }), [orders]);
 
   async function runAction(key, action, successMessage) {
@@ -209,7 +206,7 @@ export default function DeliveryOrderManage() {
       </div>
 
       <div className="delivery-manage-toolbar">
-        <label><Search size={19} /><input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm mã đơn, mã vận chuyển, khách nhận..." /></label>
+        <label><Search size={19} /><input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm mã đơn, mã vận đơn, khách nhận..." /></label>
         <select value={status} onChange={(event) => setStatus(event.target.value)}>
           {DELIVERY_ORDER_STATUSES.map((item) => <option key={item} value={item}>{deliveryStatusLabel(item)}</option>)}
         </select>
@@ -222,7 +219,7 @@ export default function DeliveryOrderManage() {
         {!loading && !error ? (
           <div className="delivery-manage-table-wrap">
             <table className="delivery-manage-table">
-              <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Địa chỉ</th><th>Thanh toán</th><th>Tổng tiền</th><th>Trạng thái</th><th>Mã vận chuyển</th><th></th></tr></thead>
+              <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Địa chỉ</th><th>Thanh toán</th><th>Tổng tiền</th><th>Trạng thái</th><th>Mã vận đơn</th><th></th></tr></thead>
               <tbody>
                 {!filteredOrders.length ? <tr><td colSpan="8"><div className="delivery-table-empty">Không có đơn giao hàng phù hợp.</div></td></tr> : null}
                 {filteredOrders.map((order) => {
@@ -287,10 +284,10 @@ export default function DeliveryOrderManage() {
                       <section className="delivery-detail-section">
                         <h3><Truck size={19} /> Vận chuyển</h3>
                         <div className="delivery-detail-info-grid">
-                          <p><small>Mã vận chuyển</small><strong>{selectedDelivery.maVanChuyen}</strong></p>
-                          <p><small>Đơn vị giao</small><strong>{selectedDelivery.donViVanChuyen || 'Chưa bàn giao'}</strong></p>
-                          <p><small>Người giao</small><strong>{selectedDelivery.tenNguoiGiao || 'Chưa nhập'}</strong></p>
-                          <p><small>Số điện thoại</small><strong>{selectedDelivery.soDienThoaiNguoiGiao || 'Chưa nhập'}</strong></p>
+                          <p><small>Mã vận đơn đối tác</small><strong>{selectedDelivery.maVanChuyen}</strong></p>
+                          <p><small>Đơn vị vận chuyển</small><strong>{selectedDelivery.donViVanChuyen || 'Đang chờ điều phối'}</strong></p>
+                          <p><small>Tài xế được điều phối</small><strong>{selectedDelivery.tenNguoiGiao || 'Đang chờ điều phối'}</strong></p>
+                          <p><small>Số điện thoại tài xế</small><strong>{selectedDelivery.soDienThoaiNguoiGiao || '—'}</strong></p>
                           {selectedDelivery.ghiChuBanGiao ? <p className="wide"><small>Ghi chú bàn giao</small><strong>{selectedDelivery.ghiChuBanGiao}</strong></p> : null}
                           {selectedDelivery.lyDoGiaoThatBai ? <p className="wide"><small>Lý do giao thất bại</small><strong>{selectedDelivery.lyDoGiaoThatBai}</strong></p> : null}
                         </div>
@@ -321,8 +318,20 @@ export default function DeliveryOrderManage() {
                           <div className="delivery-action-block danger"><label>Lý do từ chối *<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Ngoài khu vực giao hàng, món tạm hết..." /></label><button type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('reject', () => deliveryApi.rejectOrder(deliveryOrderId(selected), { lyDo: form.reason.trim() }), 'Đã từ chối đơn giao hàng')}><XCircle size={17} />{actionLoading === 'reject' ? 'Đang xử lý...' : 'Từ chối đơn'}</button></div>
                         ) : null}
 
-                        {currentStatus === 'CHO_BAN_GIAO' ? (
-                          <div className="delivery-action-block"><label>Đơn vị vận chuyển *<input value={form.provider} onChange={(event) => setForm((current) => ({ ...current, provider: event.target.value }))} maxLength={120} placeholder="GrabExpress, Ahamove..." /></label><label>Tên người giao *<input value={form.driverName} onChange={(event) => setForm((current) => ({ ...current, driverName: event.target.value }))} maxLength={120} placeholder="Trần Văn B" /></label><label>Số điện thoại người giao *<input value={form.driverPhone} onChange={(event) => setForm((current) => ({ ...current, driverPhone: event.target.value }))} maxLength={20} inputMode="tel" placeholder="0987654321" /></label><label>Ghi chú bàn giao<textarea value={form.handoverNote} onChange={(event) => setForm((current) => ({ ...current, handoverNote: event.target.value }))} maxLength={500} placeholder="Đã bàn giao đủ số túi..." /></label><button type="button" disabled={Boolean(actionLoading) || !form.provider.trim() || !form.driverName.trim() || !form.driverPhone.trim()} onClick={() => runAction('handover', () => deliveryApi.handover(deliveryOrderId(selected), { donViVanChuyen: form.provider.trim(), tenNguoiGiao: form.driverName.trim(), soDienThoaiNguoiGiao: form.driverPhone.trim(), ghiChuBanGiao: form.handoverNote.trim() || null }), 'Đã bàn giao cho người giao hàng')}><Truck size={17} />{actionLoading === 'handover' ? 'Đang xử lý...' : 'Bàn giao đơn'}</button></div>
+                        {['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO'].includes(currentStatus) ? (
+                          <div className="delivery-action-block">
+                            <div className="delivery-assignment-card">
+                              <span><Truck size={21} /></span>
+                              <div>
+                                <strong>{selectedDelivery.donViVanChuyen || 'GrabExpress (Demo) đang điều phối'}</strong>
+                                <small>{selectedDelivery.maVanChuyen ? `Mã vận đơn: ${selectedDelivery.maVanChuyen}` : 'Đang chờ cấp mã vận đơn'}</small>
+                                <small>{selectedDelivery.tenNguoiGiao ? `Tài xế: ${selectedDelivery.tenNguoiGiao}${selectedDelivery.soDienThoaiNguoiGiao ? ` · ${selectedDelivery.soDienThoaiNguoiGiao}` : ''}` : 'Đang chờ thông tin tài xế'}</small>
+                              </div>
+                            </div>
+                            <label>Ghi chú bàn giao<textarea value={form.handoverNote} onChange={(event) => setForm((current) => ({ ...current, handoverNote: event.target.value }))} maxLength={500} placeholder="Ví dụ: Đã bàn giao đủ món và đồ uống" /></label>
+                            <small>Thông tin mã vận đơn và tài xế được GrabExpress (Demo) mô phỏng điều phối tự động, thu ngân không cần nhập thủ công.</small>
+                            <button type="button" disabled={Boolean(actionLoading) || !selectedDelivery.maVanChuyen || !selectedDelivery.tenNguoiGiao} onClick={() => runAction('handover', () => deliveryApi.handover(deliveryOrderId(selected), { ghiChuBanGiao: form.handoverNote.trim() || null }), 'Đã bàn giao đơn cho tài xế')}><Truck size={17} />{actionLoading === 'handover' ? 'Đang xử lý...' : 'Bàn giao cho tài xế'}</button>
+                          </div>
                         ) : null}
 
                         {currentStatus === 'DANG_GIAO' ? (
@@ -330,10 +339,10 @@ export default function DeliveryOrderManage() {
                         ) : null}
 
                         {currentStatus === 'GIAO_THAT_BAI' ? (
-                          <div className="delivery-action-block"><button type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('retry', () => deliveryApi.retry(deliveryOrderId(selected)), 'Đơn đã chuyển về chờ bàn giao lại')}><RefreshCw size={17} />{actionLoading === 'retry' ? 'Đang xử lý...' : 'Chuẩn bị giao lại'}</button></div>
+                          <div className="delivery-action-block"><button type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('retry', () => deliveryApi.retry(deliveryOrderId(selected)), 'Đã yêu cầu GrabExpress (Demo) điều phối lại tài xế')}><RefreshCw size={17} />{actionLoading === 'retry' ? 'Đang xử lý...' : 'Điều phối lại tài xế'}</button></div>
                         ) : null}
 
-                        {!['CHO_XAC_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'GIAO_THAT_BAI'].includes(currentStatus) && !(isVietQr && paymentStatus !== 'DA_THANH_TOAN') ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
+                        {!['CHO_XAC_NHAN', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'GIAO_THAT_BAI'].includes(currentStatus) && !(isVietQr && paymentStatus !== 'DA_THANH_TOAN') ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
                       </section>
                     ) : <section className="delivery-detail-section"><h3>Chế độ theo dõi</h3><p className="delivery-no-action">Bếp theo dõi thông tin giao hàng tại đây và cập nhật từng suất món trên Bảng chế biến. Thu ngân hoặc quản trị viên xử lý xác nhận, bàn giao và kết quả giao.</p></section>}
                   </aside>

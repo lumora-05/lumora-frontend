@@ -38,7 +38,7 @@ import { formatMoney } from '../../utils/formatMoney';
 const NORMAL_STEPS = [
   { code: 'CHO_XAC_NHAN', label: 'Chờ xác nhận', icon: Store },
   { code: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị', icon: ChefHat },
-  { code: 'CHO_BAN_GIAO', label: 'Chờ bàn giao', icon: PackageCheck },
+  { code: 'CHO_TAI_XE_NHAN', label: 'Chờ tài xế nhận', icon: PackageCheck },
   { code: 'DANG_GIAO', label: 'Đang giao', icon: Truck },
   { code: 'HOAN_THANH', label: 'Hoàn thành', icon: Check },
 ];
@@ -102,7 +102,8 @@ export default function DeliveryTracking() {
   }, [loadOrder, order]);
 
   const currentStep = useMemo(() => {
-    const code = String(order?.trangThaiGiaoHang || '').toUpperCase();
+    const rawCode = String(order?.trangThaiGiaoHang || '').toUpperCase();
+    const code = rawCode === 'CHO_BAN_GIAO' ? 'CHO_TAI_XE_NHAN' : rawCode;
     return NORMAL_STEPS.findIndex((step) => step.code === code);
   }, [order?.trangThaiGiaoHang]);
 
@@ -232,12 +233,12 @@ export default function DeliveryTracking() {
 
             {order.maVanChuyen ? (
               <section className="delivery-info-card">
-                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>Mã được tạo sau khi bếp hoàn thành toàn bộ món</p></div></div>
+                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>GrabExpress (Demo) mô phỏng điều phối tài xế sau khi bếp hoàn thành toàn bộ món</p></div></div>
                 <div className="delivery-recipient-grid">
-                  <p><PackageCheck size={17} /><span><small>Mã vận chuyển</small><strong><button type="button" onClick={() => copyText(order.maVanChuyen, 'Đã sao chép mã vận chuyển.')}>{order.maVanChuyen} <Copy size={14} /></button></strong></span></p>
-                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'Chưa bàn giao'}</strong></span></p>
-                  {order.tenNguoiGiao ? <p><UserRound size={17} /><span><small>Người giao</small><strong>{order.tenNguoiGiao}</strong></span></p> : null}
-                  {order.soDienThoaiNguoiGiaoChe ? <p><Phone size={17} /><span><small>Liên hệ người giao</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></p> : null}
+                  <p><PackageCheck size={17} /><span><small>Mã vận đơn</small><strong><button type="button" onClick={() => copyText(order.maVanChuyen, 'Đã sao chép mã vận đơn.')}>{order.maVanChuyen} <Copy size={14} /></button></strong></span></p>
+                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'GrabExpress (Demo) đang điều phối'}</strong></span></p>
+                  {order.tenNguoiGiao ? <p><UserRound size={17} /><span><small>Tài xế</small><strong>{order.tenNguoiGiao}</strong></span></p> : null}
+                  {order.soDienThoaiNguoiGiaoChe ? <p><Phone size={17} /><span><small>Liên hệ tài xế</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></p> : null}
                 </div>
               </section>
             ) : null}
