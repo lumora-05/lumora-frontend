@@ -4,18 +4,17 @@ import {
   CalendarCheck2,
   ChefHat,
   ChevronRight,
-  Clock3,
+  CircleCheck,
+  CreditCard,
   Gift,
-  Heart,
-  Leaf,
   MapPin,
   Menu,
   Phone,
   Quote,
+  QrCode,
   Sparkles,
   Star,
   UtensilsCrossed,
-  Users,
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -23,13 +22,12 @@ import { Link } from 'react-router-dom';
 import { menuApi } from '../api/menuApi';
 import { promotionApi } from '../api/promotionApi';
 import { reviewApi } from '../api/reviewApi';
+import LumoraChatbot from '../components/customer/LumoraChatbot';
 import { formatMoney } from '../utils/formatMoney';
 import { imageUrl } from '../utils/imageUrl';
-import LumoraChatbot from '../components/customer/LumoraChatbot';
 import '../styles/home.css';
 
 const RESTAURANT = {
-  name: import.meta.env.VITE_RESTAURANT_NAME || 'NHÀ HÀNG LUMORA',
   address: import.meta.env.VITE_RESTAURANT_ADDRESS || '139 Nguyễn Thị Thập, Thanh Khê, Đà Nẵng',
   phone: import.meta.env.VITE_RESTAURANT_PHONE || '0979792909',
 };
@@ -38,51 +36,64 @@ const FEATURED_FOOD_LIMIT = 4;
 
 const menuFallback = [
   {
-    id: 'starter',
-    emoji: '🥗',
-    name: 'Món khai vị',
-    category: 'Bắt đầu bữa ăn',
-    description: 'Những lựa chọn nhẹ nhàng giúp đánh thức vị giác trước món chính.',
-  },
-  {
-    id: 'main',
-    emoji: '🍽️',
+    id: 'main-1',
     name: 'Món chính',
-    category: 'Hương vị đặc trưng',
-    description: 'Thực đơn đa dạng, được chuẩn bị chỉn chu và phục vụ nóng tại bàn.',
+    category: 'Hương vị LUMORA',
+    description: 'Các món chính được chuẩn bị chỉn chu và phục vụ nóng tại bàn.',
+    image: '/lumora-home/dish-bo-luc-lac.png',
   },
   {
-    id: 'drink',
-    emoji: '🥤',
-    name: 'Đồ uống',
-    category: 'Tươi mát',
-    description: 'Các loại thức uống phù hợp để dùng kèm trong suốt bữa ăn.',
+    id: 'main-2',
+    name: 'Món đặc sắc',
+    category: 'Gợi ý từ căn bếp',
+    description: 'Những lựa chọn nổi bật dành cho một bữa ăn trọn vẹn tại LUMORA.',
+    image: '/lumora-home/dish-ca-hoi.png',
+  },
+  {
+    id: 'fresh',
+    name: 'Món thanh nhẹ',
+    category: 'Tươi mới',
+    description: 'Lựa chọn cân bằng với rau xanh và nguyên liệu được chuẩn bị trong ngày.',
+    image: '/lumora-home/dish-salad.png',
   },
   {
     id: 'dessert',
-    emoji: '🍰',
-    name: 'Món tráng miệng',
+    name: 'Tráng miệng',
     category: 'Kết thúc ngọt ngào',
-    description: 'Một điểm kết nhẹ nhàng và trọn vẹn cho trải nghiệm tại LUMORA.',
+    description: 'Một điểm kết nhẹ nhàng để hoàn thiện trải nghiệm dùng bữa.',
+    image: '/lumora-home/dish-dessert.png',
   },
 ];
 
-const restaurantValues = [
+const experienceItems = [
   {
-    icon: Leaf,
-    title: 'Nguyên liệu chọn lọc',
-    text: 'Món ăn được chuẩn bị từ nguyên liệu phù hợp với tiêu chuẩn phục vụ của nhà hàng.',
+    icon: QrCode,
+    title: 'Quét QR tại bàn',
+    text: 'Xem thực đơn và gửi món ngay tại bàn mà không cần chờ lấy menu giấy.',
+  },
+  {
+    icon: CalendarCheck2,
+    title: 'Đặt bàn trực tuyến',
+    text: 'Chọn ngày, giờ và số khách; nhà hàng tiếp nhận và xác nhận yêu cầu.',
   },
   {
     icon: ChefHat,
-    title: 'Chế biến chỉn chu',
-    text: 'Mỗi món được hoàn thiện cẩn thận từ hương vị đến cách trình bày.',
+    title: 'Theo dõi quá trình phục vụ',
+    text: 'Đơn được chuyển đến khu vực xử lý để khách theo dõi trạng thái thuận tiện hơn.',
   },
   {
-    icon: Heart,
-    title: 'Phục vụ tận tâm',
-    text: 'Không gian và quy trình phục vụ hướng đến sự thoải mái của từng thực khách.',
+    icon: CreditCard,
+    title: 'Thanh toán tiện lợi',
+    text: 'Hỗ trợ quy trình thanh toán tại nhà hàng theo thông tin đơn thực tế.',
   },
+];
+
+const dineInSteps = [
+  { icon: QrCode, step: '01', title: 'Quét QR', text: 'Quét mã QR trên bàn để mở đúng thực đơn và phiên phục vụ.' },
+  { icon: UtensilsCrossed, step: '02', title: 'Chọn món', text: 'Xem món, số lượng và gửi đơn trực tiếp từ thiết bị của khách.' },
+  { icon: ChefHat, step: '03', title: 'Bếp chế biến', text: 'Đơn được tiếp nhận để bếp chuẩn bị món theo trạng thái thực tế.' },
+  { icon: CircleCheck, step: '04', title: 'Phục vụ tại bàn', text: 'Món hoàn thành được nhân viên phục vụ mang đến đúng bàn.' },
+  { icon: CreditCard, step: '05', title: 'Thanh toán', text: 'Khách gửi yêu cầu thanh toán khi kết thúc bữa ăn.' },
 ];
 
 function unwrapCollection(response) {
@@ -106,6 +117,7 @@ function foodCategory(food) {
   return food?.danhMuc?.tenDanhMuc
     ?? food?.tenDanhMuc
     ?? food?.categoryName
+    ?? food?.category
     ?? 'Món ăn';
 }
 
@@ -117,12 +129,13 @@ function foodDescription(food) {
 
 function FoodImage({ src, alt, className = '' }) {
   const [failed, setFailed] = useState(false);
-  const resolved = src ? imageUrl(src) : '';
+  const localAsset = typeof src === 'string' && src.startsWith('/lumora-home/');
+  const resolved = src ? (localAsset ? src : imageUrl(src)) : '';
 
   if (!resolved || failed) {
     return (
       <span className={`home-food-placeholder ${className}`} aria-hidden="true">
-        <UtensilsCrossed size={42} />
+        <UtensilsCrossed size={38} />
       </span>
     );
   }
@@ -152,7 +165,7 @@ function Stars({ value = 5 }) {
 function promotionValue(promotion) {
   const value = Number(promotion?.giaTriGiam ?? promotion?.discountValue ?? 0);
   const type = String(promotion?.loaiGiam ?? promotion?.discountType ?? '').toUpperCase();
-  if (!value) return 'Ưu đãi';
+  if (!value) return 'Ưu đãi LUMORA';
   if (type === 'PERCENT' || type === 'PERCENTAGE') return `Giảm ${value}%`;
   return `Giảm ${formatMoney(value)}`;
 }
@@ -203,7 +216,11 @@ export default function Home() {
         );
       }
       if (promotionResult.status === 'fulfilled') {
-        setPromotions(unwrapCollection(promotionResult.value).filter((item) => item?.trangThai !== false).slice(0, 3));
+        setPromotions(
+          unwrapCollection(promotionResult.value)
+            .filter((item) => item?.trangThai !== false)
+            .slice(0, 3),
+        );
       }
       if (reviewResult.status === 'fulfilled') {
         setReviews(unwrapCollection(reviewResult.value).slice(0, 3));
@@ -215,7 +232,6 @@ export default function Home() {
     };
   }, []);
 
-  const heroFood = foods[0] ?? null;
   const displayedMenu = useMemo(
     () => (foods.length ? foods : menuFallback).slice(0, FEATURED_FOOD_LIMIT),
     [foods],
@@ -232,10 +248,10 @@ export default function Home() {
       <header className="home-header">
         <div className="home-header-inner">
           <a className="home-brand" href="#top" onClick={scrollTo('top')} aria-label="LUMORA - Trang chủ">
-            <span className="home-brand-mark"><UtensilsCrossed size={23} strokeWidth={2.35} /></span>
+            <span className="home-brand-mark"><Sparkles size={24} strokeWidth={1.8} /></span>
             <span className="home-brand-copy">
               <strong>LUMORA</strong>
-              <small>Nhà hàng &amp; Ẩm thực</small>
+              <small>Restaurant</small>
             </span>
           </a>
 
@@ -250,128 +266,84 @@ export default function Home() {
           </button>
 
           <nav className={`home-nav ${menuOpen ? 'open' : ''}`} aria-label="Điều hướng trang chủ">
-            <a href="#top" onClick={scrollTo('top')}>Trang chủ</a>
+            <a className="active" href="#top" onClick={scrollTo('top')}>Trang chủ</a>
             <a href="#menu" onClick={scrollTo('menu')}>Thực đơn</a>
+            <Link to="/reservations" onClick={() => setMenuOpen(false)}>Đặt bàn</Link>
+            <a href="#offers" onClick={scrollTo('offers')}>Khuyến mãi</a>
             <a href="#about" onClick={scrollTo('about')}>Giới thiệu</a>
-            <a href="#offers" onClick={scrollTo('offers')}>Ưu đãi</a>
             <a href="#contact" onClick={scrollTo('contact')}>Liên hệ</a>
-            <Link to="/delivery">Giao tận nơi</Link>
-            <Link className="home-book-link" to="/login">
-              Đăng nhập
-              <ArrowRight size={17} />
-            </Link>
+            <Link className="home-nav-utility" to="/delivery" onClick={() => setMenuOpen(false)}>Giao tận nơi</Link>
+            <Link className="home-nav-utility" to="/login" onClick={() => setMenuOpen(false)}>Đăng nhập</Link>
           </nav>
+
+          <div className="home-header-actions">
+            <Link className="home-delivery-link" to="/delivery"><Bike size={17} /> Giao tận nơi</Link>
+            <Link className="home-login-link" to="/login">Đăng nhập</Link>
+          </div>
         </div>
       </header>
 
       <section className="home-hero" id="top">
-        <div className="home-hero-glow home-hero-glow-one" />
-        <div className="home-hero-glow home-hero-glow-two" />
-
-        <div className="home-container home-hero-grid">
+        <img className="home-hero-bg" src="/lumora-home/hero.png" alt="Không gian nhà hàng LUMORA" />
+        <div className="home-hero-overlay" />
+        <div className="home-container home-hero-content">
           <div className="home-hero-copy">
-            <span className="home-kicker"><Sparkles size={15} /> Ẩm thực tinh tế · Không gian ấm cúng</span>
-            <h1>Thưởng thức hương vị đặc biệt tại <em>LUMORA.</em></h1>
+            <span className="home-hero-script">Trải nghiệm</span>
+            <h1>Những khoảnh khắc<br />đáng nhớ tại <em>LUMORA</em></h1>
             <p>
-              Khám phá thực đơn đa dạng được chuẩn bị chỉn chu, tận hưởng không gian gần gũi
-              và đặt bàn thuận tiện chỉ trong vài bước.
+              Không gian ấm cúng, món ăn được chuẩn bị chỉn chu và những tiện ích số
+              giúp hành trình dùng bữa trở nên thuận tiện hơn.
             </p>
-
             <div className="home-hero-actions">
               <a className="home-primary-button" href="#menu" onClick={scrollTo('menu')}>
-                Xem thực đơn
-                <ArrowRight size={18} />
+                Xem thực đơn <UtensilsCrossed size={17} />
               </a>
               <Link className="home-secondary-button" to="/reservations">
-                <CalendarCheck2 size={18} />
-                Đặt bàn ngay
-              </Link>
-              <Link className="home-delivery-button" to="/delivery">
-                <Bike size={18} />
-                Đặt món giao tận nơi
+                Đặt bàn ngay <CalendarCheck2 size={17} />
               </Link>
             </div>
-
-            <div className="home-hero-notes" aria-label="Điểm nổi bật">
-              <span><Leaf size={17} /> Nguyên liệu chọn lọc</span>
-              <span><ChefHat size={17} /> Chế biến chỉn chu</span>
-              <span><Heart size={17} /> Phục vụ tận tâm</span>
+            <div className="home-hero-meta">
+              <span><MapPin size={16} /> {RESTAURANT.address}</span>
+              <span><QrCode size={16} /> Gọi món bằng QR tại bàn</span>
             </div>
           </div>
 
-          <div className="home-hero-visual" aria-label="Món ăn nổi bật của nhà hàng">
-            <div className="home-hero-image-card">
-              {heroFood ? (
-                <FoodImage src={heroFood.hinhAnh ?? heroFood.image} alt={foodName(heroFood)} />
-              ) : (
-                <span className="home-hero-dish-placeholder" aria-hidden="true">
-                  <span>🍽️</span>
-                </span>
-              )}
-              <div className="home-hero-image-overlay" />
-              <div className="home-hero-food-copy">
-                <small>{heroFood ? foodCategory(heroFood) : 'Trải nghiệm tại LUMORA'}</small>
-                <strong>{heroFood ? foodName(heroFood) : 'Hương vị được chuẩn bị cho từng khoảnh khắc'}</strong>
-                {heroFood?.gia != null ? <span>{formatMoney(heroFood.gia)}</span> : null}
-              </div>
-            </div>
-
-            <div className="home-floating-card home-floating-card-top">
-              <span><CalendarCheck2 size={20} /></span>
-              <div><strong>Đặt bàn trực tuyến</strong><small>Gửi yêu cầu nhanh chóng</small></div>
-            </div>
-            <div className="home-floating-card home-floating-card-bottom">
-              <span><Users size={20} /></span>
-              <div><strong>Không gian gần gũi</strong><small>Phù hợp cho những buổi gặp gỡ</small></div>
-            </div>
-          </div>
+          <aside className="home-hero-feature" aria-label="Gọi món bằng mã QR">
+            <span className="home-hero-feature-icon"><QrCode size={32} /></span>
+            <small>TẠI NHÀ HÀNG</small>
+            <strong>Quét QR trên bàn</strong>
+            <p>Xem menu, gửi món và theo dõi đơn ngay trên điện thoại.</p>
+            <span className="home-hero-feature-note">Nhanh chóng · Đúng bàn · Thuận tiện</span>
+          </aside>
         </div>
-      </section>
-
-      <section className="home-experience-strip" aria-label="Giá trị của nhà hàng">
-        <div className="home-container home-experience-grid">
-          {restaurantValues.map(({ icon: Icon, title, text }) => (
-            <article key={title}>
-              <span><Icon size={22} /></span>
-              <div>
-                <strong>{title}</strong>
-                <small>{text}</small>
-              </div>
-            </article>
-          ))}
-        </div>
+        <div className="home-hero-dots" aria-hidden="true"><span className="active" /><span /><span /></div>
       </section>
 
       <section className="home-section home-menu-section" id="menu">
         <div className="home-container">
           <div className="home-section-heading">
             <div>
-              <span className="home-section-kicker"><UtensilsCrossed size={15} /> Hương vị LUMORA</span>
-              <h2>Món ngon được yêu thích</h2>
-              <p>
-                Một số món ăn nổi bật được lựa chọn để giới thiệu trên trang chủ.
-              </p>
+              <span className="home-section-kicker">Thực đơn</span>
+              <h2>Món ăn nổi bật</h2>
+              <p>Một số lựa chọn được lấy trực tiếp từ thực đơn đang hoạt động của nhà hàng.</p>
             </div>
-            <Link className="home-heading-action" to="/reservations">
-              Đặt bàn để trải nghiệm <ChevronRight size={18} />
+            <Link className="home-heading-action" to="/delivery">
+              Xem thực đơn giao tận nơi <ChevronRight size={18} />
             </Link>
           </div>
 
-          <div className={`home-food-grid ${foods.length ? '' : 'fallback'}`}>
+          <div className="home-food-grid">
             {displayedMenu.map((item, index) => {
               const isFood = foods.length > 0;
-              const name = isFood ? foodName(item) : item.name;
-              const category = isFood ? foodCategory(item) : item.category;
-              const description = isFood ? foodDescription(item) : item.description;
+              const name = foodName(item);
+              const category = foodCategory(item);
+              const description = foodDescription(item);
+              const image = isFood ? (item.hinhAnh ?? item.image) : item.image;
 
               return (
-                <article className="home-food-card" key={isFood ? foodId(item, index) : item.id}>
+                <article className="home-food-card" key={foodId(item, index)}>
                   <div className="home-food-image">
-                    {isFood ? (
-                      <FoodImage src={item.hinhAnh ?? item.image} alt={name} />
-                    ) : (
-                      <span className="home-food-emoji" aria-hidden="true">{item.emoji}</span>
-                    )}
+                    <FoodImage src={image} alt={name} />
                     <span className="home-food-category">{category}</span>
                   </div>
                   <div className="home-food-content">
@@ -380,8 +352,8 @@ export default function Home() {
                     <div className="home-food-bottom">
                       {isFood && item.gia != null
                         ? <strong>{formatMoney(item.gia)}</strong>
-                        : <strong>Khám phá tại nhà hàng</strong>}
-                      <span aria-hidden="true"><ArrowRight size={17} /></span>
+                        : <span>Khám phá tại LUMORA</span>}
+                      <span className="home-food-arrow"><ArrowRight size={17} /></span>
                     </div>
                   </div>
                 </article>
@@ -390,57 +362,19 @@ export default function Home() {
           </div>
 
           <div className="home-menu-note">
-            <span><Sparkles size={18} /></span>
-            <p>
-              Khi dùng bữa tại nhà hàng, bạn có thể quét mã QR tại bàn để xem đầy đủ thực đơn,
-              tình trạng món và gửi yêu cầu gọi món.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="home-section home-about-section" id="about">
-        <div className="home-container home-about-grid">
-          <div className="home-about-visual" aria-hidden="true">
-            <div className="home-about-card home-about-card-main">
-              <span><UtensilsCrossed size={34} /></span>
-              <strong>Mỗi bữa ăn là một trải nghiệm đáng nhớ.</strong>
-              <small>LUMORA Restaurant</small>
-            </div>
-            <div className="home-about-card home-about-card-small">
-              <ChefHat size={28} />
-              <span>Chỉn chu trong từng món ăn</span>
-            </div>
-          </div>
-
-          <div className="home-about-copy">
-            <span className="home-section-kicker"><Heart size={15} /> Câu chuyện LUMORA</span>
-            <h2>Nơi hương vị và những khoảnh khắc đáng nhớ gặp nhau.</h2>
-            <p>
-              LUMORA hướng đến một không gian ẩm thực hiện đại nhưng gần gũi, nơi thực khách
-              có thể thoải mái thưởng thức món ăn cùng gia đình, bạn bè và đồng nghiệp.
-            </p>
-            <p>
-              Từ khâu lựa chọn món, đặt bàn đến phục vụ tại bàn, mọi điểm chạm đều được
-              sắp xếp để trải nghiệm của bạn thuận tiện và trọn vẹn hơn.
-            </p>
-
-            <div className="home-about-points">
-              <div><span>01</span><strong>Thực đơn đa dạng</strong><small>Nhiều lựa chọn cho từng khẩu vị và dịp gặp gỡ.</small></div>
-              <div><span>02</span><strong>Không gian ấm cúng</strong><small>Phù hợp cho bữa ăn gia đình, bạn bè và nhóm nhỏ.</small></div>
-              <div><span>03</span><strong>Phục vụ thuận tiện</strong><small>Đặt bàn trực tuyến và gọi món bằng mã QR tại bàn.</small></div>
-            </div>
+            <QrCode size={21} />
+            <p><strong>Dùng bữa tại nhà hàng?</strong> Quét mã QR trên bàn để xem đầy đủ thực đơn và gửi món cho đúng bàn của bạn.</p>
           </div>
         </div>
       </section>
 
       <section className="home-section home-offers-section" id="offers">
         <div className="home-container">
-          <div className="home-section-heading home-section-heading-centered">
+          <div className="home-section-heading">
             <div>
-              <span className="home-section-kicker"><Gift size={15} /> Dành cho thực khách</span>
-              <h2>Ưu đãi tại LUMORA</h2>
-              <p>Các chương trình đang áp dụng sẽ được cập nhật trực tiếp từ hệ thống nhà hàng.</p>
+              <span className="home-section-kicker">Ưu đãi</span>
+              <h2>Khuyến mãi đang áp dụng</h2>
+              <p>Thông tin được cập nhật từ các chương trình đang hoạt động trong hệ thống.</p>
             </div>
           </div>
 
@@ -448,25 +382,24 @@ export default function Home() {
             <div className="home-offer-grid">
               {promotions.map((promotion, index) => (
                 <article className="home-offer-card" key={promotion.maKhuyenMai ?? promotion.id ?? index}>
-                  <span className="home-offer-icon"><Gift size={24} /></span>
-                  <small>{promotionValue(promotion)}</small>
+                  <div className="home-offer-top">
+                    <span><Gift size={22} /></span>
+                    <small>{promotionValue(promotion)}</small>
+                  </div>
                   <h3>{promotion.tenKhuyenMai ?? promotion.name ?? 'Ưu đãi LUMORA'}</h3>
-                  <p>{promotion.moTa ?? promotion.description ?? 'Chương trình ưu đãi dành cho thực khách tại nhà hàng.'}</p>
+                  <p>{promotion.moTa ?? promotion.description ?? 'Chương trình ưu đãi dành cho thực khách tại LUMORA.'}</p>
                   {(promotion.maCode ?? promotion.code) ? (
-                    <div className="home-offer-code">
-                      <span>Mã ưu đãi</span>
-                      <strong>{promotion.maCode ?? promotion.code}</strong>
-                    </div>
+                    <div className="home-offer-code"><span>Mã ưu đãi</span><strong>{promotion.maCode ?? promotion.code}</strong></div>
                   ) : null}
                 </article>
               ))}
             </div>
           ) : (
             <div className="home-offer-empty">
-              <span><Gift size={30} /></span>
+              <span><Gift size={28} /></span>
               <div>
-                <h3>Chương trình ưu đãi đang được cập nhật</h3>
-                <p>Vui lòng theo dõi trang chủ hoặc liên hệ nhà hàng để biết chương trình mới nhất.</p>
+                <h3>Ưu đãi mới sẽ xuất hiện tại đây</h3>
+                <p>Hệ thống hiện chưa có chương trình khuyến mãi công khai đang áp dụng.</p>
               </div>
               <Link to="/reservations">Đặt bàn <ArrowRight size={17} /></Link>
             </div>
@@ -474,24 +407,61 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="home-section home-about-section" id="about">
+        <div className="home-container home-about-grid">
+          <div className="home-about-copy">
+            <span className="home-section-kicker">Về LUMORA</span>
+            <h2>Ẩm thực và công nghệ trong một trải nghiệm liền mạch.</h2>
+            <p>
+              LUMORA hướng đến không gian dùng bữa hiện đại, nơi thực khách có thể đặt bàn,
+              gọi món tại bàn và tương tác với nhà hàng thuận tiện hơn mà vẫn giữ trọn cảm giác ấm cúng.
+            </p>
+            <Link className="home-text-link" to="/reservations">Đặt bàn tại LUMORA <ArrowRight size={17} /></Link>
+          </div>
+
+          <div className="home-about-visual">
+            <img src="/lumora-home/dish-ca-hoi.png" alt="Món ăn được trình bày tại LUMORA" />
+            <div className="home-about-badge"><ChefHat size={22} /><span><strong>Chỉn chu trong từng món</strong><small>Trải nghiệm hướng đến sự thuận tiện của thực khách</small></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section home-experience-section">
+        <div className="home-container">
+          <div className="home-section-heading home-section-heading-centered">
+            <div>
+              <span className="home-section-kicker">Trải nghiệm tại LUMORA</span>
+              <h2>Thuận tiện từ lúc đặt bàn đến khi thanh toán</h2>
+              <p>Các tiện ích được tổ chức theo đúng hành trình dùng bữa tại nhà hàng.</p>
+            </div>
+          </div>
+          <div className="home-experience-grid">
+            {experienceItems.map(({ icon: Icon, title, text }) => (
+              <article key={title}>
+                <span><Icon size={24} /></span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="home-reservation-banner">
         <div className="home-container home-reservation-grid">
-          <div>
-            <span className="home-section-kicker light"><CalendarCheck2 size={15} /> Đặt bàn trực tuyến</span>
-            <h2>Chuẩn bị cho một bữa ăn trọn vẹn tại LUMORA.</h2>
-            <p>
-              Chọn ngày, thời gian và số lượng khách. Nhà hàng sẽ tiếp nhận yêu cầu
-              và phản hồi thông tin đặt bàn của bạn.
-            </p>
+          <div className="home-reservation-copy">
+            <span className="home-section-kicker light">Đặt bàn trực tuyến</span>
+            <h2>Chọn trước thời gian, sẵn sàng cho một bữa ăn trọn vẹn.</h2>
+            <p>Gửi yêu cầu đặt bàn theo ngày, giờ và số lượng khách. Nhà hàng sẽ tiếp nhận và phản hồi trạng thái đặt bàn.</p>
+            <div className="home-reservation-actions">
+              <Link className="home-primary-button" to="/reservations">Đặt bàn ngay <CalendarCheck2 size={17} /></Link>
+              <a className="home-reservation-phone" href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}><Phone size={17} /> {RESTAURANT.phone}</a>
+            </div>
           </div>
-          <div className="home-reservation-actions">
-            <Link className="home-reservation-button" to="/reservations">
-              Đặt bàn ngay <ArrowRight size={18} />
-            </Link>
-            <a className="home-reservation-phone" href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}>
-              <Phone size={18} />
-              <span><small>Liên hệ đặt bàn</small><strong>{RESTAURANT.phone}</strong></span>
-            </a>
+          <div className="home-reservation-benefits">
+            <div><CalendarCheck2 size={21} /><span><strong>Gửi yêu cầu nhanh</strong><small>Thao tác trực tuyến trên website</small></span></div>
+            <div><CircleCheck size={21} /><span><strong>Theo dõi trạng thái</strong><small>Tra cứu thông tin đặt bàn đã gửi</small></span></div>
+            <div><Bike size={21} /><span><strong>Cần giao tận nơi?</strong><small>Có luồng đặt món giao hàng riêng</small></span></div>
           </div>
         </div>
       </section>
@@ -500,9 +470,9 @@ export default function Home() {
         <div className="home-container">
           <div className="home-section-heading">
             <div>
-              <span className="home-section-kicker"><Quote size={15} /> Chia sẻ từ thực khách</span>
-              <h2>Trải nghiệm tại LUMORA</h2>
-              <p>Những phản hồi công khai được gửi từ khách hàng sau khi dùng bữa tại nhà hàng.</p>
+              <span className="home-section-kicker">Đánh giá</span>
+              <h2>Khách hàng nói gì về LUMORA</h2>
+              <p>Những phản hồi công khai được gửi sau trải nghiệm dùng bữa.</p>
             </div>
           </div>
 
@@ -510,60 +480,53 @@ export default function Home() {
             <div className="home-review-grid">
               {reviews.map((review, index) => (
                 <article className="home-review-card" key={review.maDanhGia ?? review.id ?? index}>
-                  <Quote className="home-review-quote" size={29} />
-                  <Stars value={review.rating ?? review.soSao ?? review.star ?? 5} />
+                  <div className="home-review-head"><span>{String(reviewName(review)).trim().charAt(0).toUpperCase() || 'L'}</span><div><strong>{reviewName(review)}</strong><Stars value={review.rating ?? review.soSao ?? review.star ?? 5} /></div><Quote size={25} /></div>
                   <p>{reviewText(review)}</p>
-                  <div>
-                    <span>{String(reviewName(review)).trim().charAt(0).toUpperCase() || 'L'}</span>
-                    <strong>{reviewName(review)}</strong>
-                  </div>
                 </article>
               ))}
             </div>
           ) : (
             <div className="home-review-empty">
-              <Quote size={30} />
-              <h3>Trải nghiệm của bạn là điều LUMORA trân trọng</h3>
-              <p>Sau khi dùng bữa, khách hàng có thể gửi đánh giá trực tiếp trên trang dành cho bàn.</p>
+              <Quote size={29} />
+              <div><h3>Trải nghiệm của bạn là điều LUMORA trân trọng</h3><p>Khách dùng bữa có thể gửi đánh giá từ trang dành cho bàn sau khi sử dụng dịch vụ.</p></div>
             </div>
           )}
         </div>
       </section>
 
-      <section className="home-section home-contact-section" id="contact">
-        <div className="home-container home-contact-grid">
-          <div className="home-contact-copy">
-            <span className="home-section-kicker"><MapPin size={15} /> Ghé thăm LUMORA</span>
-            <h2>Chúng tôi sẵn sàng đón bạn.</h2>
-            <p>
-              Liên hệ nhà hàng hoặc gửi yêu cầu đặt bàn trực tuyến để chuẩn bị tốt hơn
-              cho buổi gặp gỡ của bạn.
-            </p>
-
-            <div className="home-contact-list">
-              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(RESTAURANT.address)}`} target="_blank" rel="noreferrer">
-                <span><MapPin size={21} /></span>
-                <div><small>Địa chỉ</small><strong>{RESTAURANT.address}</strong></div>
-              </a>
-              <a href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}>
-                <span><Phone size={21} /></span>
-                <div><small>Số điện thoại</small><strong>{RESTAURANT.phone}</strong></div>
-              </a>
-              <Link to="/reservations">
-                <span><Clock3 size={21} /></span>
-                <div><small>Đặt bàn</small><strong>Gửi yêu cầu trực tuyến</strong></div>
-              </Link>
+      <section className="home-section home-order-flow-section">
+        <div className="home-container">
+          <div className="home-section-heading home-section-heading-centered">
+            <div>
+              <span className="home-section-kicker">Gọi món tại bàn</span>
+              <h2>Trải nghiệm gọi món tại LUMORA</h2>
+              <p>Một quy trình rõ ràng từ lúc khách quét QR đến khi hoàn tất thanh toán.</p>
             </div>
           </div>
+          <div className="home-flow-grid">
+            {dineInSteps.map(({ icon: Icon, step, title, text }, index) => (
+              <article key={step}>
+                <span className="home-flow-number">{step}</span>
+                <span className="home-flow-icon"><Icon size={25} /></span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+                {index < dineInSteps.length - 1 ? <ArrowRight className="home-flow-arrow" size={18} /> : null}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="home-contact-card">
-            <span className="home-contact-card-icon"><CalendarCheck2 size={30} /></span>
-            <small>LUMORA RESTAURANT</small>
-            <h3>Đặt chỗ cho buổi gặp gỡ tiếp theo</h3>
-            <p>Hoàn tất thông tin trong vài bước để nhà hàng tiếp nhận yêu cầu của bạn.</p>
-            <Link to="/reservations">
-              Bắt đầu đặt bàn <ArrowRight size={18} />
-            </Link>
+      <section className="home-section home-contact-section" id="contact">
+        <div className="home-container home-contact-grid">
+          <div>
+            <span className="home-section-kicker">Liên hệ</span>
+            <h2>Hẹn bạn tại LUMORA.</h2>
+            <p>Thông tin dưới đây được lấy từ cấu hình nhà hàng của frontend và có thể thay đổi theo môi trường triển khai.</p>
+          </div>
+          <div className="home-contact-cards">
+            <div><span><MapPin size={21} /></span><div><small>Địa chỉ</small><strong>{RESTAURANT.address}</strong></div></div>
+            <a href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}><span><Phone size={21} /></span><div><small>Điện thoại</small><strong>{RESTAURANT.phone}</strong></div></a>
           </div>
         </div>
       </section>
@@ -573,43 +536,19 @@ export default function Home() {
           <div className="home-footer-main">
             <div className="home-footer-brand">
               <a className="home-brand" href="#top" onClick={scrollTo('top')}>
-                <span className="home-brand-mark"><UtensilsCrossed size={23} /></span>
-                <span className="home-brand-copy">
-                  <strong>LUMORA</strong>
-                  <small>Nhà hàng &amp; Ẩm thực</small>
-                </span>
+                <span className="home-brand-mark"><Sparkles size={23} /></span>
+                <span className="home-brand-copy"><strong>LUMORA</strong><small>Restaurant</small></span>
               </a>
-              <p>Nơi hương vị và những khoảnh khắc đáng nhớ gặp nhau.</p>
+              <p>Không gian ẩm thực hiện đại, ấm cúng và thuận tiện cho từng trải nghiệm dùng bữa.</p>
             </div>
-
-            <div className="home-footer-links">
-              <strong>Khám phá</strong>
-              <a href="#menu" onClick={scrollTo('menu')}>Thực đơn</a>
-              <a href="#about" onClick={scrollTo('about')}>Giới thiệu</a>
-              <a href="#offers" onClick={scrollTo('offers')}>Ưu đãi</a>
-            </div>
-
-            <div className="home-footer-links">
-              <strong>Hỗ trợ</strong>
-              <Link to="/reservations">Đặt bàn</Link>
-              <a href="#contact" onClick={scrollTo('contact')}>Liên hệ</a>
-            <Link to="/delivery">Giao tận nơi</Link>
-              <Link to="/login">Đăng nhập nhân viên</Link>
-            </div>
-
-            <div className="home-footer-contact">
-              <strong>Liên hệ</strong>
-              <span><MapPin size={16} /> {RESTAURANT.address}</span>
-              <a href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}><Phone size={16} /> {RESTAURANT.phone}</a>
-            </div>
+            <div className="home-footer-links"><strong>Khám phá</strong><a href="#menu" onClick={scrollTo('menu')}>Thực đơn</a><a href="#offers" onClick={scrollTo('offers')}>Khuyến mãi</a><a href="#about" onClick={scrollTo('about')}>Giới thiệu</a></div>
+            <div className="home-footer-links"><strong>Dịch vụ</strong><Link to="/reservations">Đặt bàn</Link><Link to="/delivery">Giao tận nơi</Link><Link to="/login">Đăng nhập nhân viên</Link></div>
+            <div className="home-footer-contact"><strong>Thông tin liên hệ</strong><span><MapPin size={15} /> {RESTAURANT.address}</span><a href={`tel:${RESTAURANT.phone.replace(/\s/g, '')}`}><Phone size={15} /> {RESTAURANT.phone}</a></div>
           </div>
-
-          <div className="home-footer-bottom">
-            <p>© {new Date().getFullYear()} LUMORA. Tất cả quyền được bảo lưu.</p>
-            <a href="#top" onClick={scrollTo('top')}>Về đầu trang <ArrowRight size={14} /></a>
-          </div>
+          <div className="home-footer-bottom"><p>© {new Date().getFullYear()} LUMORA Restaurant. Tất cả quyền được bảo lưu.</p><a href="#top" onClick={scrollTo('top')}>Về đầu trang <ArrowRight size={14} /></a></div>
         </div>
       </footer>
+
       <LumoraChatbot />
     </main>
   );
