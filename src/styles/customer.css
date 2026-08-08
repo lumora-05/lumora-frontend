@@ -2163,8 +2163,8 @@
 }
 .customer-menu-showcase-page .customer-menu-food-image{
   aspect-ratio:1.5 / 1;
-  margin:6px;
-  width:calc(100% - 12px);
+  margin: 0;
+  width: 100%;
   border-radius:12px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
