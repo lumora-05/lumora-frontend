@@ -1693,7 +1693,7 @@
   margin:0 0 9px;
   padding:0 14px;
   border:1px solid #eaded3;
-  border-radius:13px;
+  border-radius:px;
   background:#fff;
   color:#5d402c;
   font-size:14px;
@@ -2184,10 +2184,10 @@
   aspect-ratio:1.5 / 1;
   margin: 0;
   width: 100%;
-  border-radius:12px;
+  border-radius:8px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
-  border-radius:12px;
+  border-radius:8px;
 }
 .customer-menu-food-badge{
   left:8px;
