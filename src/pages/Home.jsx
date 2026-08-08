@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Bike,
   ChefHat,
@@ -15,7 +15,21 @@ import {
   UtensilsCrossed,
   X,
 } from 'lucide-react';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { imageUrl } from '../utils/imageUrl';
 import '../styles/home.css';
+
+const DEFAULT_SETTINGS = {
+  restaurantName: 'LUMORA',
+  address: '128 Nguyễn Huệ, Quận 1, TP.HCM',
+  phone: '(028) 3822 1234',
+  email: 'xinchao@lumora.vn',
+  openingHours: '10:00 - 22:00 hằng ngày',
+  reservationUrl: '/reservations',
+  menuUrl: '#thuc-don',
+  logoUrl: '',
+  bannerUrl: '',
+};
 
 const navLinks = [
   { label: 'Trang chủ', href: '#trang-chu' },
@@ -95,16 +109,28 @@ const steps = [
   },
 ];
 
-function Navbar() {
+function Brand({ settings }) {
+  const logo = imageUrl(settings.logoUrl);
+  return (
+    <>
+      {logo ? (
+        <span className="v0-brand-logo-image"><img src={logo} alt={`Logo ${settings.restaurantName}`} /></span>
+      ) : (
+        <span className="v0-brand-mark">{(settings.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
+      )}
+      <span className="v0-serif v0-brand-name">{settings.restaurantName}</span>
+    </>
+  );
+}
+
+function Navbar({ settings }) {
   const [open, setOpen] = useState(false);
+  const reservationUrl = settings.reservationUrl || '/reservations';
 
   return (
     <header className="v0-navbar">
       <div className="v0-shell v0-navbar-inner">
-        <a href="#trang-chu" className="v0-brand">
-          <span className="v0-brand-mark">L</span>
-          <span className="v0-serif v0-brand-name">Lunora</span>
-        </a>
+        <a href="#trang-chu" className="v0-brand"><Brand settings={settings} /></a>
 
         <nav className="v0-nav-desktop">
           {navLinks.map((link) => (
@@ -113,7 +139,7 @@ function Navbar() {
         </nav>
 
         <div className="v0-book-desktop">
-          <button type="button" className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</button>
+          <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
         </div>
 
         <button
@@ -133,7 +159,7 @@ function Navbar() {
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
-            <button type="button" className="v0-button v0-button-primary v0-pill v0-mobile-book">Đặt bàn ngay</button>
+            <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book">Đặt bàn ngay</a>
           </nav>
         </div>
       )}
@@ -141,11 +167,14 @@ function Navbar() {
   );
 }
 
-function Hero() {
+function Hero({ settings }) {
+  const banner = imageUrl(settings.bannerUrl) || '/lunora-hero.png';
+  const menuUrl = settings.menuUrl || '#thuc-don';
+
   return (
     <section id="trang-chu" className="v0-hero">
       <div className="v0-hero-bg" aria-hidden="true">
-        <img src="/lunora-hero.png" alt="" />
+        <img src={banner} alt="" />
         <div className="v0-hero-overlay" />
       </div>
 
@@ -155,7 +184,7 @@ function Hero() {
           Ẩm thực tinh tế từ 2015
         </span>
 
-        <h1 className="v0-serif">Hương vị đánh thức mọi giác quan tại Lunora</h1>
+        <h1 className="v0-serif">Hương vị đánh thức mọi giác quan tại {settings.restaurantName}</h1>
 
         <p>
           Nơi những nguyên liệu tươi ngon nhất được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc gọi món trực
@@ -163,27 +192,27 @@ function Hero() {
         </p>
 
         <div className="v0-hero-actions">
-          <a href="#dat-mon" className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt món ngay</a>
+          <a href={menuUrl} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt món ngay</a>
           <a href="#thuc-don" className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
         </div>
 
         <div className="v0-hero-meta">
-          <span><Clock size={16} /> Mở cửa 10:00 - 22:00 hằng ngày</span>
-          <span><MapPin size={16} /> 128 Nguyễn Huệ, Quận 1, TP.HCM</span>
+          {settings.openingHours && <span><Clock size={16} /> Mở cửa {settings.openingHours}</span>}
+          {settings.address && <span><MapPin size={16} /> {settings.address}</span>}
         </div>
       </div>
     </section>
   );
 }
 
-function FeaturedMenu() {
+function FeaturedMenu({ restaurantName }) {
   return (
     <section id="thuc-don" className="v0-shell v0-section v0-menu-section">
       <div className="v0-section-head">
         <span className="v0-eyebrow">Thực đơn</span>
         <h2 className="v0-serif">Những món ăn được yêu thích nhất</h2>
         <p>
-          Tuyển chọn từ căn bếp Lunora — mỗi món là sự kết hợp giữa nguyên liệu tươi và bàn tay khéo léo của đầu bếp.
+          Tuyển chọn từ căn bếp {restaurantName} — mỗi món là sự kết hợp giữa nguyên liệu tươi và bàn tay khéo léo của đầu bếp.
         </p>
       </div>
 
@@ -216,20 +245,20 @@ function FeaturedMenu() {
   );
 }
 
-function About() {
+function About({ restaurantName }) {
   return (
     <section id="gioi-thieu" className="v0-about-bg">
       <div className="v0-shell v0-section v0-about-grid">
         <div>
-          <span className="v0-eyebrow">Về Lunora</span>
+          <span className="v0-eyebrow">Về {restaurantName}</span>
           <h2 className="v0-serif v0-about-title">Câu chuyện về hương vị và sự tận tâm</h2>
           <p className="v0-about-copy">
-            Ra đời năm 2015, Lunora bắt đầu từ mong muốn mang đến những bữa ăn không chỉ ngon miệng mà còn chạm đến
+            Ra đời năm 2015, {restaurantName} bắt đầu từ mong muốn mang đến những bữa ăn không chỉ ngon miệng mà còn chạm đến
             cảm xúc. Chúng tôi tin rằng mỗi món ăn là một câu chuyện, được kể qua nguyên liệu tinh tế và sự chăm chút
             trong từng chi tiết.
           </p>
           <p className="v0-about-copy v0-about-copy-second">
-            Đến nay, Lunora tự hào phục vụ hơn 50.000 lượt khách mỗi năm, trở thành điểm hẹn quen thuộc cho những bữa
+            Đến nay, {restaurantName} tự hào phục vụ hơn 50.000 lượt khách mỗi năm, trở thành điểm hẹn quen thuộc cho những bữa
             tối đáng nhớ.
           </p>
 
@@ -259,7 +288,7 @@ function About() {
   );
 }
 
-function OrderCta() {
+function OrderCta({ settings }) {
   return (
     <section id="dat-mon" className="v0-shell v0-section v0-order-section">
       <div className="v0-section-head">
@@ -282,27 +311,24 @@ function OrderCta() {
       </div>
 
       <div className="v0-dark-cta">
-        <h3 className="v0-serif">Sẵn sàng thưởng thức cùng Lunora?</h3>
+        <h3 className="v0-serif">Sẵn sàng thưởng thức cùng {settings.restaurantName}?</h3>
         <p>Đặt bàn trước để giữ chỗ cho những dịp đặc biệt, hoặc gọi món trực tuyến để nhận ngay tại nhà.</p>
         <div className="v0-dark-actions">
-          <button type="button" className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</button>
-          <button type="button" className="v0-button v0-button-dark-outline v0-button-lg v0-pill">Gọi món giao tận nơi</button>
+          <a href={settings.reservationUrl || '/reservations'} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</a>
+          <a href="/delivery" className="v0-button v0-button-dark-outline v0-button-lg v0-pill">Gọi món giao tận nơi</a>
         </div>
       </div>
     </section>
   );
 }
 
-function Footer() {
+function Footer({ settings }) {
   return (
     <footer id="lien-he" className="v0-footer">
       <div className="v0-shell v0-footer-inner">
         <div className="v0-footer-grid">
           <div>
-            <div className="v0-brand">
-              <span className="v0-brand-mark">L</span>
-              <span className="v0-serif v0-brand-name">Lunora</span>
-            </div>
+            <div className="v0-brand"><Brand settings={settings} /></div>
             <p className="v0-footer-brand-copy">Ẩm thực tinh tế, phục vụ tận tâm. Nơi mỗi bữa ăn trở thành kỷ niệm đáng nhớ.</p>
           </div>
 
@@ -318,36 +344,51 @@ function Footer() {
           <div>
             <h4 className="v0-serif">Liên hệ</h4>
             <ul>
-              <li><Phone size={16} /> (028) 3822 1234</li>
-              <li><Mail size={16} /> xinchao@lunora.vn</li>
-              <li className="v0-footer-address"><MapPin size={16} /> <span>128 Nguyễn Huệ, Quận 1, TP.HCM</span></li>
+              {settings.phone && <li><Phone size={16} /> {settings.phone}</li>}
+              {settings.email && <li><Mail size={16} /> {settings.email}</li>}
+              {settings.address && <li className="v0-footer-address"><MapPin size={16} /> <span>{settings.address}</span></li>}
             </ul>
           </div>
 
           <div>
             <h4 className="v0-serif">Giờ mở cửa</h4>
             <ul>
-              <li><Clock size={16} /> Thứ 2 - Thứ 6: 10:00 - 22:00</li>
-              <li className="v0-footer-indent">Thứ 7 - CN: 09:00 - 23:00</li>
+              {settings.openingHours && <li><Clock size={16} /> {settings.openingHours}</li>}
             </ul>
           </div>
         </div>
 
-        <div className="v0-footer-bottom">© 2026 Lunora. Đồ án tốt nghiệp — Ứng dụng quản lý đơn hàng nhà hàng.</div>
+        <div className="v0-footer-bottom">© 2026 {settings.restaurantName}. Đồ án tốt nghiệp — Ứng dụng quản lý đơn hàng nhà hàng.</div>
       </div>
     </footer>
   );
 }
 
 export default function Home() {
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        setSettings((current) => ({ ...current, ...(data || {}) }));
+      })
+      .catch(() => {
+        // Trang chủ vẫn dùng dữ liệu mặc định nếu backend tạm thời không phản hồi.
+      });
+    return () => { active = false; };
+  }, []);
+
   return (
     <main className="v0-home">
-      <Navbar />
-      <Hero />
-      <FeaturedMenu />
-      <About />
-      <OrderCta />
-      <Footer />
+      <Navbar settings={settings} />
+      <Hero settings={settings} />
+      <FeaturedMenu restaurantName={settings.restaurantName} />
+      <About restaurantName={settings.restaurantName} />
+      <OrderCta settings={settings} />
+      <Footer settings={settings} />
     </main>
   );
 }

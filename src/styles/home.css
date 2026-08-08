@@ -182,3 +182,7 @@
 @media (min-width: 1024px) {
   .v0-about-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Logo động từ Cài đặt hệ thống */
+.v0-brand-logo-image{width:38px;height:38px;flex:0 0 38px;border-radius:10px;overflow:hidden;display:grid;place-items:center;background:#fff;border:1px solid var(--v0-border)}
+.v0-brand-logo-image img{width:100%;height:100%;object-fit:contain;padding:3px}

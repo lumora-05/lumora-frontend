@@ -3705,3 +3705,70 @@
   .loyalty-modal-actions{display:grid;grid-template-columns:1fr 1fr}
   .loyalty-modal-actions button{width:100%;min-width:0}
 }
+
+/* Cài đặt hệ thống */
+.system-settings-page{padding:0 24px 30px;display:grid;gap:18px;color:#273244}
+.system-settings-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.system-settings-toolbar h2{margin:0;color:#1f2937;font-size:22px;font-weight:950}
+.system-settings-toolbar p{margin:6px 0 0;color:#7b8798;font-size:12px;line-height:1.5}
+.system-settings-refresh{height:40px;border:1px solid #dce3ec;border-radius:9px;background:#fff;color:#59677a;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 13px;font-size:11px;font-weight:900;cursor:pointer}
+.system-settings-refresh:hover:not(:disabled){border-color:#c9d2df;background:#f8fafc}
+.system-settings-refresh:disabled{opacity:.55;cursor:not-allowed}
+.system-settings-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr);gap:18px;align-items:start}
+.system-settings-card{border:1px solid #e2e8f0;border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.045);overflow:hidden}
+.system-settings-card-head{display:flex;align-items:flex-start;gap:12px;padding:17px 19px;border-bottom:1px solid #edf1f5;background:#fcfdff}
+.system-settings-card-icon{width:40px;height:40px;flex:0 0 auto;border-radius:10px;background:#fff1e8;color:#f35a16;display:grid;place-items:center}
+.system-settings-card-head h3{margin:0;color:#263244;font-size:15px;font-weight:950}
+.system-settings-card-head p{margin:5px 0 0;color:#8591a2;font-size:10px;line-height:1.45;font-weight:650}
+.system-settings-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;padding:18px 19px}
+.system-settings-form-grid label{display:grid;gap:6px;min-width:0;color:#59677a;font-size:11px;font-weight:850}
+.system-settings-form-grid label.full{grid-column:1/-1}
+.system-settings-form-grid label>span b{color:#ef4444}
+.system-settings-input{height:42px;display:flex;align-items:center;gap:9px;border:1px solid #dce3ec;border-radius:9px;background:#fff;padding:0 11px;color:#94a3b8;transition:.16s ease}
+.system-settings-input:focus-within{border-color:#ff8a50;box-shadow:0 0 0 3px rgba(255,90,18,.09);color:#f35a16}
+.system-settings-input svg{flex:0 0 auto}
+.system-settings-input input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#2f3a4c;font-size:12px;font-weight:650}
+.system-settings-input input::placeholder{color:#a6b0bd;font-weight:600}
+.system-settings-actions{display:flex;justify-content:flex-end;padding:14px 19px;border-top:1px solid #edf1f5;background:#fcfdff}
+.system-settings-save{height:42px;border:0;border-radius:9px;background:linear-gradient(135deg,#ff5a12,#ff3d00);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 17px;font-size:11px;font-weight:950;cursor:pointer;box-shadow:0 8px 18px rgba(255,77,0,.16)}
+.system-settings-save:disabled{opacity:.58;cursor:not-allowed}
+.system-settings-branding{display:grid}
+.system-brand-block{display:grid;gap:11px;padding:17px 19px;border-bottom:1px solid #edf1f5}
+.system-brand-block.banner{border-bottom:0}
+.system-brand-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.system-brand-title strong{display:block;color:#344054;font-size:12px;font-weight:950}
+.system-brand-title small{display:block;margin-top:4px;color:#8a96a8;font-size:9px;line-height:1.4;font-weight:650}
+.system-brand-remove{width:32px;height:32px;flex:0 0 auto;border:1px solid #fecaca;border-radius:8px;background:#fff7f7;color:#e33d3d;display:grid;place-items:center;cursor:pointer}
+.system-brand-remove:hover:not(:disabled){background:#fff0f0}
+.system-brand-remove:disabled{opacity:.5;cursor:not-allowed}
+.system-logo-preview,.system-banner-preview{overflow:hidden;border:1px dashed #d7dee8;border-radius:11px;background:#f8fafc;display:grid;place-items:center}
+.system-logo-preview{height:128px}
+.system-banner-preview{height:158px}
+.system-logo-preview img{max-width:86%;max-height:94px;object-fit:contain}
+.system-banner-preview img{width:100%;height:100%;object-fit:cover}
+.system-brand-placeholder{height:100%;display:grid;place-items:center;align-content:center;gap:7px;color:#9aa5b3;font-size:10px;font-weight:800;text-align:center}
+.system-brand-upload{height:40px;border:1px solid #dce3ec;border-radius:9px;background:#fff;color:#4f5e71;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 13px;font-size:11px;font-weight:900;cursor:pointer}
+.system-brand-upload:hover:not(:disabled){border-color:#ffb38e;background:#fff9f5;color:#e75b1d}
+.system-brand-upload:disabled{opacity:.55;cursor:not-allowed}
+.system-settings-note{margin:0;padding:13px 19px;border-top:1px solid #edf1f5;background:#fbfcfd;color:#8390a1;font-size:9px;line-height:1.55;font-weight:650}
+.system-settings-loading{min-height:220px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;gap:9px;color:#738095;font-size:12px;font-weight:850}
+
+@media(max-width:1180px){
+  .system-settings-layout{grid-template-columns:1fr}
+  .system-settings-branding{grid-template-columns:1fr 1fr}
+  .system-settings-branding>.system-settings-card-head,.system-settings-branding>.system-settings-note{grid-column:1/-1}
+  .system-brand-block{border-bottom:0}
+  .system-brand-block:first-of-type{border-right:1px solid #edf1f5}
+}
+@media(max-width:720px){
+  .system-settings-page{padding:0 14px 22px}
+  .system-settings-toolbar{align-items:stretch;flex-direction:column}
+  .system-settings-refresh{width:100%}
+  .system-settings-form-grid{grid-template-columns:1fr;padding:15px}
+  .system-settings-form-grid label.full{grid-column:auto}
+  .system-settings-card-head,.system-settings-actions,.system-brand-block{padding-left:15px;padding-right:15px}
+  .system-settings-branding{grid-template-columns:1fr}
+  .system-settings-branding>.system-settings-card-head,.system-settings-branding>.system-settings-note{grid-column:auto}
+  .system-brand-block:first-of-type{border-right:0;border-bottom:1px solid #edf1f5}
+  .system-settings-save{width:100%}
+}

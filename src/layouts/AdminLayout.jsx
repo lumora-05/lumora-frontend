@@ -17,6 +17,7 @@ const pageMeta = {
   '/admin/promotions': ['Khuyến mãi', 'Quản lý các chương trình ưu đãi và mã giảm giá'],
   '/admin/employees': ['Nhân viên', 'Quản lý tài khoản và phân quyền nhân viên'],
   '/admin/account': ['Tài khoản', 'Quản lý thông tin cá nhân và bảo mật tài khoản quản trị'],
+  '/admin/settings': ['Cài đặt hệ thống', 'Quản lý thông tin nhà hàng, logo và banner trang chủ'],
 };
 
 export default function AdminLayout() {
@@ -35,6 +36,7 @@ export default function AdminLayout() {
     { to: '/admin/inventory', label: 'Kho nguyên liệu', icon: 'inventory' },
     { to: '/admin/reviews', label: 'Đánh giá', icon: 'review' },
     { to: '/admin/reports', label: 'Thống kê', icon: 'report' },
+    { to: '/admin/settings', label: 'Cài đặt hệ thống', icon: 'settings' },
   ];
 
   const [title, defaultSubtitle] = pageMeta[location.pathname] || pageMeta['/admin'];

@@ -16,6 +16,7 @@ const iconMap = {
   inventory: Boxes,
   gift: Gift,
   account: Settings,
+  settings: Settings,
   notify: Bell,
   review: Star,
   service: BellRing,
