@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import { useAuth } from '../hooks/useAuth';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
   '/admin': ['Tổng quan', ''],
@@ -23,6 +26,21 @@ const pageMeta = {
 export default function AdminLayout() {
   const location = useLocation();
   const { user } = useAuth();
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        setBrandSettings((current) => ({ ...current, ...(data || {}) }));
+      })
+      .catch(() => {
+        // Giữ nhận diện mặc định nếu backend tạm thời không phản hồi.
+      });
+    return () => { active = false; };
+  }, []);
   const items = [
     { to: '/admin', label: 'Tổng quan', icon: 'dashboard' },
     { to: '/admin/categories', label: 'Danh mục', icon: 'category' },
@@ -47,7 +65,12 @@ export default function AdminLayout() {
 
   return (
     <div className="app-shell admin-shell">
-      <Sidebar title="Quản lý nhà hàng" items={items} />
+      <Sidebar
+        title="Quản lý nhà hàng"
+        items={items}
+        logoUrl={imageUrl(brandSettings.logoUrl)}
+        restaurantName={brandSettings.restaurantName}
+      />
       <main className="admin-main">
         <Header title={title} subtitle={subtitle} />
         <Outlet />
