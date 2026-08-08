@@ -835,6 +835,8 @@
 }
 .promotion-table{
   width:100%;
+  min-width:1180px;
+  table-layout:fixed;
   border-collapse:separate;
   border-spacing:0;
   color:#111827;
@@ -842,9 +844,9 @@
 .promotion-table thead th{
   background:#fff;
   color:#334155;
-  font-size:15px;
+  font-size:14px;
   font-weight:900;
-  padding:20px 22px;
+  padding:16px 12px;
   border-bottom:1px solid #e5e7eb;
 }
 .promotion-table th,
@@ -852,29 +854,37 @@
   text-align:left;
   border-bottom:1px solid #e5e7eb;
 }
+.promotion-table th:nth-child(1),.promotion-table td:nth-child(1){width:19%;}
+.promotion-table th:nth-child(2),.promotion-table td:nth-child(2){width:10%;}
+.promotion-table th:nth-child(3),.promotion-table td:nth-child(3){width:13%;}
+.promotion-table th:nth-child(4),.promotion-table td:nth-child(4){width:15%;}
+.promotion-table th:nth-child(5),.promotion-table td:nth-child(5){width:9%;}
+.promotion-table th:nth-child(6),.promotion-table td:nth-child(6){width:15%;}
+.promotion-table th:nth-child(7),.promotion-table td:nth-child(7){width:10%;}
+.promotion-table th:nth-child(8),.promotion-table td:nth-child(8){width:9%;}
 .promotion-table tbody td{
-  height:92px;
-  padding:18px 22px;
-  font-size:15px;
+  height:76px;
+  padding:14px 12px;
+  font-size:14px;
   vertical-align:middle;
 }
 .promotion-table tbody tr:last-child td{border-bottom:0;}
 .promotion-table tbody tr:hover{background:#fffaf7;}
 .promotion-name-cell{
-  min-width:250px;
+  min-width:0;
   display:grid;
-  gap:7px;
+  gap:5px;
 }
 .promotion-name-cell strong{
   color:#111827;
-  font-size:16px;
+  font-size:15px;
   font-weight:900;
 }
 .promotion-name-cell span{
-  max-width:280px;
+  max-width:100%;
   color:#64748b;
-  font-size:13px;
-  line-height:1.5;
+  font-size:12px;
+  line-height:1.4;
   font-weight:600;
 }
 .promotion-code{
@@ -893,14 +903,14 @@
   white-space:nowrap;
 }
 .promotion-status{
-  min-width:112px;
-  height:34px;
+  min-width:100px;
+  height:30px;
   border-radius:8px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:0 12px;
-  font-size:14px;
+  padding:0 10px;
+  font-size:13px;
   font-weight:850;
   white-space:nowrap;
 }
@@ -911,13 +921,14 @@
 .promotion-actions{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:6px;
+  flex-wrap:nowrap;
 }
 .promotion-actions button{
-  width:46px;
-  height:46px;
+  width:38px;
+  height:38px;
   border:1px solid #e5e7eb;
-  border-radius:10px;
+  border-radius:9px;
   background:#fff;
   color:#334155;
   display:grid;
@@ -981,29 +992,29 @@
   z-index:1000;
 }
 .promotion-modal{
-  width:min(760px,100%);
-  max-height:92vh;
+  width:min(700px,100%);
+  max-height:88vh;
   overflow:auto;
   background:#fff;
-  border-radius:18px;
+  border-radius:16px;
   box-shadow:0 28px 70px rgba(15,23,42,.26);
-  padding:24px;
+  padding:18px;
   display:grid;
-  gap:18px;
+  gap:12px;
 }
 .promotion-modal-head{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  gap:16px;
+  gap:12px;
 }
-.promotion-modal-head h3{margin:0 0 6px;font-size:22px;color:#111827;}
-.promotion-modal-head p{margin:0;color:#64748b;}
+.promotion-modal-head h3{margin:0 0 4px;font-size:20px;color:#111827;}
+.promotion-modal-head p{margin:0;color:#64748b;font-size:13px;}
 .promotion-modal-head button{
-  width:40px;
-  height:40px;
+  width:36px;
+  height:36px;
   border:1px solid #e5e7eb;
-  border-radius:10px;
+  border-radius:9px;
   background:#fff;
   display:grid;
   place-items:center;
@@ -1012,12 +1023,13 @@
 .promotion-modal-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
+  gap:10px;
 }
 .promotion-modal label{
   display:grid;
-  gap:8px;
+  gap:6px;
   color:#334155;
+  font-size:14px;
   font-weight:850;
 }
 .promotion-modal label.full{grid-column:1/-1;}
@@ -1026,10 +1038,11 @@
 .promotion-modal select{
   width:100%;
   border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:12px 14px;
+  border-radius:10px;
+  padding:9px 12px;
   background:#fff;
   color:#111827;
+  font-size:14px;
   outline:0;
 }
 .promotion-modal textarea{resize:vertical;line-height:1.5;}
@@ -1042,13 +1055,14 @@
 .promotion-modal-actions{
   display:flex;
   justify-content:flex-end;
-  gap:12px;
-  margin-top:2px;
+  gap:10px;
+  margin-top:0;
 }
 .promotion-modal-actions button{
-  height:46px;
-  border-radius:10px;
-  padding:0 18px;
+  height:40px;
+  border-radius:9px;
+  padding:0 16px;
+  font-size:14px;
   font-weight:900;
   cursor:pointer;
 }
@@ -2982,7 +2996,7 @@
 }
 
 /* Hoàn thiện quản lý khuyến mãi */
-.promotion-table{min-width:1380px;}
+.promotion-table{min-width:1180px;}
 .promotion-benefit-cell,
 .promotion-condition-cell{
   display:grid;
@@ -3007,13 +3021,13 @@
   white-space:nowrap;
 }
 .promotion-modal-wide{
-  width:min(880px,calc(100vw - 30px));
-  max-height:calc(100vh - 34px);
+  width:min(720px,calc(100vw - 30px));
+  max-height:88vh;
   overflow:auto;
 }
 .promotion-lock-note{
-  margin:0 0 17px;
-  padding:12px 14px;
+  margin:0 0 10px;
+  padding:9px 12px;
   border:1px solid #f4cf9a;
   border-radius:11px;
   background:#fff8e8;
@@ -3145,8 +3159,8 @@
 }
 
 @media(max-width:760px){
-  .promotion-table{min-width:1380px}
-  .promotion-modal-wide{width:min(680px,calc(100vw - 24px))}
+  .promotion-table{min-width:1080px}
+  .promotion-modal-wide{width:min(640px,calc(100vw - 24px))}
   .cashier-promotion-form{grid-template-columns:1fr}
   .cashier-promotion-form button{min-height:42px}
 }
