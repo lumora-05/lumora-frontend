@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  Bot,
   Building2,
+  CalendarClock,
   Clock3,
+  Coins,
+  CreditCard,
   ImagePlus,
   Link2,
   Loader2,
@@ -25,7 +29,35 @@ const EMPTY_FORM = {
   openingHours: '',
   reservationUrl: '',
   menuUrl: '',
+  reservationDefaultDurationMinutes: '120',
+  reservationPreparationMinutes: '30',
+  reservationNoShowGraceMinutes: '15',
+  vietQrBankId: '',
+  vietQrBankName: '',
+  vietQrAccountNo: '',
+  vietQrAccountName: '',
+  vietQrTemplate: 'compact2',
+  vietQrDescriptionPrefix: 'LUMORA',
+  loyaltyMoneyPerEarnedPoint: '10000',
+  loyaltyValuePerRedeemedPoint: '1000',
+  loyaltyMinimumRedeemPoints: '20',
+  loyaltyMaximumRedeemPercent: '20',
+  chatbotEnabled: true,
+  chatbotModel: 'gpt-5-mini',
+  chatbotTimeoutSeconds: '20',
+  chatbotMaxOutputTokens: '700',
+  chatbotMaxHistoryMessages: '8',
+  chatbotMinimumConfidencePercent: '45',
 };
+
+const TABS = [
+  { id: 'restaurant', label: 'Thông tin nhà hàng', icon: Building2 },
+  { id: 'branding', label: 'Thương hiệu & giao diện', icon: ImagePlus },
+  { id: 'reservation', label: 'Đặt bàn', icon: CalendarClock },
+  { id: 'payment', label: 'Thanh toán', icon: CreditCard },
+  { id: 'loyalty', label: 'Tích điểm', icon: Coins },
+  { id: 'chatbot', label: 'Chatbot', icon: Bot },
+];
 
 const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg',
@@ -33,6 +65,16 @@ const ALLOWED_IMAGE_TYPES = new Set([
   'image/webp',
   'image/gif',
 ]);
+
+function textValue(value, fallback = '') {
+  return value === null || value === undefined ? fallback : String(value);
+}
+
+function ratioToPercent(value, fallback) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return String(fallback);
+  return String(Math.round(parsed * 10000) / 100);
+}
 
 function formOf(settings = {}) {
   return {
@@ -43,6 +85,25 @@ function formOf(settings = {}) {
     openingHours: settings.openingHours || '',
     reservationUrl: settings.reservationUrl || '',
     menuUrl: settings.menuUrl || '',
+    reservationDefaultDurationMinutes: textValue(settings.reservationDefaultDurationMinutes, '120'),
+    reservationPreparationMinutes: textValue(settings.reservationPreparationMinutes, '30'),
+    reservationNoShowGraceMinutes: textValue(settings.reservationNoShowGraceMinutes, '15'),
+    vietQrBankId: settings.vietQrBankId || '',
+    vietQrBankName: settings.vietQrBankName || '',
+    vietQrAccountNo: settings.vietQrAccountNo || '',
+    vietQrAccountName: settings.vietQrAccountName || '',
+    vietQrTemplate: settings.vietQrTemplate || 'compact2',
+    vietQrDescriptionPrefix: settings.vietQrDescriptionPrefix || 'LUMORA',
+    loyaltyMoneyPerEarnedPoint: textValue(settings.loyaltyMoneyPerEarnedPoint, '10000'),
+    loyaltyValuePerRedeemedPoint: textValue(settings.loyaltyValuePerRedeemedPoint, '1000'),
+    loyaltyMinimumRedeemPoints: textValue(settings.loyaltyMinimumRedeemPoints, '20'),
+    loyaltyMaximumRedeemPercent: ratioToPercent(settings.loyaltyMaximumRedeemRatio, 20),
+    chatbotEnabled: settings.chatbotEnabled ?? true,
+    chatbotModel: settings.chatbotModel || 'gpt-5-mini',
+    chatbotTimeoutSeconds: textValue(settings.chatbotTimeoutSeconds, '20'),
+    chatbotMaxOutputTokens: textValue(settings.chatbotMaxOutputTokens, '700'),
+    chatbotMaxHistoryMessages: textValue(settings.chatbotMaxHistoryMessages, '8'),
+    chatbotMinimumConfidencePercent: ratioToPercent(settings.chatbotMinimumConfidence, 45),
   };
 }
 
@@ -59,10 +120,22 @@ function validateImage(file, toast, label) {
   return true;
 }
 
+function numberInRange(value, min, max) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max;
+}
+
+function moneyLabel(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return '0 ₫';
+  return `${new Intl.NumberFormat('vi-VN').format(parsed)} ₫`;
+}
+
 export default function SystemSettings() {
   const toast = useToast();
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('restaurant');
   const [settings, setSettings] = useState({});
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
@@ -93,8 +166,46 @@ export default function SystemSettings() {
     setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const saveInformation = async (event) => {
+  const saveSettings = async (event) => {
     event.preventDefault();
+
+    if (!form.restaurantName.trim()) {
+      setActiveTab('restaurant');
+      toast.error('Vui lòng nhập tên nhà hàng');
+      return;
+    }
+    if (!numberInRange(form.reservationDefaultDurationMinutes, 30, 360)) {
+      setActiveTab('reservation');
+      toast.error('Thời lượng đặt bàn mặc định phải từ 30 đến 360 phút');
+      return;
+    }
+    if (!numberInRange(form.reservationPreparationMinutes, 0, 180)) {
+      setActiveTab('reservation');
+      toast.error('Thời gian chuẩn bị bàn phải từ 0 đến 180 phút');
+      return;
+    }
+    if (!numberInRange(form.reservationNoShowGraceMinutes, 0, 180)) {
+      setActiveTab('reservation');
+      toast.error('Thời gian chờ khách trễ phải từ 0 đến 180 phút');
+      return;
+    }
+    if (!numberInRange(form.loyaltyMoneyPerEarnedPoint, 1, Number.MAX_SAFE_INTEGER)
+      || !numberInRange(form.loyaltyValuePerRedeemedPoint, 1, Number.MAX_SAFE_INTEGER)
+      || !numberInRange(form.loyaltyMinimumRedeemPoints, 1, 1000000)
+      || !numberInRange(form.loyaltyMaximumRedeemPercent, 1, 100)) {
+      setActiveTab('loyalty');
+      toast.error('Vui lòng kiểm tra lại các thông số tích điểm');
+      return;
+    }
+    if (!numberInRange(form.chatbotTimeoutSeconds, 5, 120)
+      || !numberInRange(form.chatbotMaxOutputTokens, 100, 10000)
+      || !numberInRange(form.chatbotMaxHistoryMessages, 0, 50)
+      || !numberInRange(form.chatbotMinimumConfidencePercent, 0, 100)) {
+      setActiveTab('chatbot');
+      toast.error('Vui lòng kiểm tra lại các thông số chatbot');
+      return;
+    }
+
     const payload = {
       restaurantName: form.restaurantName.trim(),
       address: form.address.trim(),
@@ -103,12 +214,26 @@ export default function SystemSettings() {
       openingHours: form.openingHours.trim(),
       reservationUrl: form.reservationUrl.trim(),
       menuUrl: form.menuUrl.trim(),
+      reservationDefaultDurationMinutes: Number(form.reservationDefaultDurationMinutes),
+      reservationPreparationMinutes: Number(form.reservationPreparationMinutes),
+      reservationNoShowGraceMinutes: Number(form.reservationNoShowGraceMinutes),
+      vietQrBankId: form.vietQrBankId.trim(),
+      vietQrBankName: form.vietQrBankName.trim(),
+      vietQrAccountNo: form.vietQrAccountNo.trim(),
+      vietQrAccountName: form.vietQrAccountName.trim(),
+      vietQrTemplate: form.vietQrTemplate.trim(),
+      vietQrDescriptionPrefix: form.vietQrDescriptionPrefix.trim(),
+      loyaltyMoneyPerEarnedPoint: Number(form.loyaltyMoneyPerEarnedPoint),
+      loyaltyValuePerRedeemedPoint: Number(form.loyaltyValuePerRedeemedPoint),
+      loyaltyMinimumRedeemPoints: Number(form.loyaltyMinimumRedeemPoints),
+      loyaltyMaximumRedeemRatio: Number(form.loyaltyMaximumRedeemPercent) / 100,
+      chatbotEnabled: Boolean(form.chatbotEnabled),
+      chatbotModel: form.chatbotModel.trim(),
+      chatbotTimeoutSeconds: Number(form.chatbotTimeoutSeconds),
+      chatbotMaxOutputTokens: Number(form.chatbotMaxOutputTokens),
+      chatbotMaxHistoryMessages: Number(form.chatbotMaxHistoryMessages),
+      chatbotMinimumConfidence: Number(form.chatbotMinimumConfidencePercent) / 100,
     };
-
-    if (!payload.restaurantName) {
-      toast.error('Vui lòng nhập tên nhà hàng');
-      return;
-    }
 
     setSaving(true);
     try {
@@ -178,119 +303,258 @@ export default function SystemSettings() {
   const logo = imageUrl(settings.logoUrl);
   const banner = imageUrl(settings.bannerUrl);
 
+  const cardHead = (Icon, title, description) => (
+    <div className="system-settings-card-head">
+      <span className="system-settings-card-icon"><Icon size={21} /></span>
+      <div>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+    </div>
+  );
+
   return (
     <section className="system-settings-page">
       <div className="system-settings-toolbar">
         <div>
           <h2>Cài đặt hệ thống</h2>
-          <p>Quản lý thông tin và nhận diện thương hiệu được sử dụng trên website nhà hàng.</p>
+          <p>Quản lý cấu hình chung của nhà hàng tại một nơi. Các thay đổi nghiệp vụ được áp dụng sau khi lưu.</p>
         </div>
         <button type="button" className="system-settings-refresh" onClick={() => loadSettings()} disabled={saving || logoBusy || bannerBusy}>
           <RefreshCw size={17} /> Tải lại
         </button>
       </div>
 
-      <div className="system-settings-layout">
-        <form className="system-settings-card system-settings-info" onSubmit={saveInformation}>
-          <div className="system-settings-card-head">
-            <span className="system-settings-card-icon"><Building2 size={21} /></span>
-            <div>
-              <h3>Thông tin nhà hàng</h3>
-              <p>Các thông tin này có thể được dùng trên trang chủ và chatbot.</p>
+      <div className="system-settings-tabs" role="tablist" aria-label="Nhóm cài đặt hệ thống">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === id}
+            className={activeTab === id ? 'active' : ''}
+            onClick={() => setActiveTab(id)}
+          >
+            <Icon size={17} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <form className="system-settings-main" onSubmit={saveSettings}>
+        {activeTab === 'restaurant' && (
+          <div className="system-settings-card">
+            {cardHead(Building2, 'Thông tin nhà hàng', 'Thông tin liên hệ và nội dung công khai được sử dụng trên website nhà hàng.')}
+            <div className="system-settings-form-grid">
+              <label className="full">
+                <span>Tên nhà hàng <b>*</b></span>
+                <div className="system-settings-input"><Building2 size={17} /><input name="restaurantName" value={form.restaurantName} onChange={changeField} maxLength={120} placeholder="LUMORA" /></div>
+              </label>
+              <label>
+                <span>Số điện thoại</span>
+                <div className="system-settings-input"><Phone size={17} /><input name="phone" value={form.phone} onChange={changeField} maxLength={30} placeholder="Số điện thoại nhà hàng" /></div>
+              </label>
+              <label>
+                <span>Email</span>
+                <div className="system-settings-input"><Mail size={17} /><input type="email" name="email" value={form.email} onChange={changeField} maxLength={120} placeholder="Email liên hệ" /></div>
+              </label>
+              <label className="full">
+                <span>Địa chỉ</span>
+                <div className="system-settings-input"><MapPin size={17} /><input name="address" value={form.address} onChange={changeField} maxLength={255} placeholder="Địa chỉ nhà hàng" /></div>
+              </label>
+              <label>
+                <span>Giờ mở cửa</span>
+                <div className="system-settings-input"><Clock3 size={17} /><input name="openingHours" value={form.openingHours} onChange={changeField} maxLength={100} placeholder="10:00 - 22:00 hằng ngày" /></div>
+              </label>
+              <label>
+                <span>Đường dẫn thực đơn</span>
+                <div className="system-settings-input"><Link2 size={17} /><input name="menuUrl" value={form.menuUrl} onChange={changeField} maxLength={255} placeholder="/#thuc-don" /></div>
+              </label>
             </div>
           </div>
+        )}
 
-          <div className="system-settings-form-grid">
-            <label className="full">
-              <span>Tên nhà hàng <b>*</b></span>
-              <div className="system-settings-input"><Building2 size={17} /><input name="restaurantName" value={form.restaurantName} onChange={changeField} maxLength={120} placeholder="LUMORA" /></div>
-            </label>
+        {activeTab === 'branding' && (
+          <div className="system-settings-card system-settings-branding">
+            {cardHead(ImagePlus, 'Thương hiệu & giao diện', 'Thay logo nhà hàng và banner hiển thị trên trang chủ.')}
+            <div className="system-brand-grid">
+              <div className="system-brand-block">
+                <div className="system-brand-title">
+                  <div><strong>Logo nhà hàng</strong><small>Khuyên dùng PNG/WebP nền trong suốt, tối đa 5 MB.</small></div>
+                  {settings.logoUrl && (
+                    <button type="button" className="system-brand-remove" onClick={() => removeBrandImage('logo')} disabled={logoBusy} title="Xóa logo tùy chỉnh"><Trash2 size={16} /></button>
+                  )}
+                </div>
+                <div className="system-logo-preview">
+                  {logo ? <img src={logo} alt="Logo nhà hàng" /> : <div className="system-brand-placeholder"><Building2 size={30} /><span>Chưa có logo tùy chỉnh</span></div>}
+                </div>
+                <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; uploadBrandImage('logo', file); }} />
+                <button type="button" className="system-brand-upload" onClick={() => logoInputRef.current?.click()} disabled={logoBusy}>
+                  {logoBusy ? <Loader2 className="spin" size={17} /> : <Upload size={17} />}
+                  {logoBusy ? 'Đang tải...' : settings.logoUrl ? 'Thay logo' : 'Tải logo lên'}
+                </button>
+              </div>
 
-            <label>
-              <span>Số điện thoại</span>
-              <div className="system-settings-input"><Phone size={17} /><input name="phone" value={form.phone} onChange={changeField} maxLength={30} placeholder="Số điện thoại nhà hàng" /></div>
-            </label>
-
-            <label>
-              <span>Email</span>
-              <div className="system-settings-input"><Mail size={17} /><input type="email" name="email" value={form.email} onChange={changeField} maxLength={120} placeholder="Email liên hệ" /></div>
-            </label>
-
-            <label className="full">
-              <span>Địa chỉ</span>
-              <div className="system-settings-input"><MapPin size={17} /><input name="address" value={form.address} onChange={changeField} maxLength={255} placeholder="Địa chỉ nhà hàng" /></div>
-            </label>
-
-            <label className="full">
-              <span>Giờ mở cửa</span>
-              <div className="system-settings-input"><Clock3 size={17} /><input name="openingHours" value={form.openingHours} onChange={changeField} maxLength={100} placeholder="Ví dụ: 10:00 - 22:00 hằng ngày" /></div>
-            </label>
-
-            <label>
-              <span>Đường dẫn đặt bàn</span>
-              <div className="system-settings-input"><Link2 size={17} /><input name="reservationUrl" value={form.reservationUrl} onChange={changeField} maxLength={255} placeholder="/reservations" /></div>
-            </label>
-
-            <label>
-              <span>Đường dẫn thực đơn</span>
-              <div className="system-settings-input"><Link2 size={17} /><input name="menuUrl" value={form.menuUrl} onChange={changeField} maxLength={255} placeholder="/#thuc-don" /></div>
-            </label>
+              <div className="system-brand-block banner">
+                <div className="system-brand-title">
+                  <div><strong>Banner trang chủ</strong><small>Khuyên dùng ảnh ngang tỷ lệ khoảng 16:7, tối đa 5 MB.</small></div>
+                  {settings.bannerUrl && (
+                    <button type="button" className="system-brand-remove" onClick={() => removeBrandImage('banner')} disabled={bannerBusy} title="Xóa banner tùy chỉnh"><Trash2 size={16} /></button>
+                  )}
+                </div>
+                <div className="system-banner-preview">
+                  {banner ? <img src={banner} alt="Banner trang chủ" /> : <div className="system-brand-placeholder"><ImagePlus size={30} /><span>Chưa có banner tùy chỉnh</span></div>}
+                </div>
+                <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; uploadBrandImage('banner', file); }} />
+                <button type="button" className="system-brand-upload" onClick={() => bannerInputRef.current?.click()} disabled={bannerBusy}>
+                  {bannerBusy ? <Loader2 className="spin" size={17} /> : <Upload size={17} />}
+                  {bannerBusy ? 'Đang tải...' : settings.bannerUrl ? 'Thay banner' : 'Tải banner lên'}
+                </button>
+              </div>
+            </div>
+            <p className="system-settings-note">Logo và banner được upload qua backend. Sau khi cập nhật thành công, trang chủ sẽ tự sử dụng ảnh mới.</p>
           </div>
+        )}
 
-          <div className="system-settings-actions">
+        {activeTab === 'reservation' && (
+          <div className="system-settings-card">
+            {cardHead(CalendarClock, 'Đặt bàn', 'Thiết lập thời lượng giữ bàn, thời gian chuẩn bị và khoảng chờ khách đến trễ.')}
+            <div className="system-settings-form-grid three-columns">
+              <label>
+                <span>Thời lượng đặt bàn mặc định</span>
+                <div className="system-settings-input suffix"><input type="number" min="30" max="360" name="reservationDefaultDurationMinutes" value={form.reservationDefaultDurationMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Khoảng thời gian bàn được giữ cho một lượt đặt.</small>
+              </label>
+              <label>
+                <span>Thời gian chuẩn bị bàn</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="180" name="reservationPreparationMinutes" value={form.reservationPreparationMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Khoảng đệm trước giờ khách đến.</small>
+              </label>
+              <label>
+                <span>Chờ khách đến trễ</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="180" name="reservationNoShowGraceMinutes" value={form.reservationNoShowGraceMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Quá thời gian này có thể xử lý khách không đến.</small>
+              </label>
+              <label className="full">
+                <span>Đường dẫn đặt bàn trực tuyến</span>
+                <div className="system-settings-input"><Link2 size={17} /><input name="reservationUrl" value={form.reservationUrl} onChange={changeField} maxLength={255} placeholder="/reservations" /></div>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payment' && (
+          <div className="system-settings-card">
+            {cardHead(CreditCard, 'Thanh toán', 'Cấu hình thông tin VietQR được sử dụng khi thu ngân tạo mã thanh toán chuyển khoản.')}
+            <div className="system-settings-form-grid">
+              <label>
+                <span>Mã ngân hàng</span>
+                <div className="system-settings-input"><input name="vietQrBankId" value={form.vietQrBankId} onChange={changeField} maxLength={30} placeholder="Ví dụ: 970422" /></div>
+              </label>
+              <label>
+                <span>Tên ngân hàng</span>
+                <div className="system-settings-input"><input name="vietQrBankName" value={form.vietQrBankName} onChange={changeField} maxLength={120} placeholder="Ví dụ: MB Bank" /></div>
+              </label>
+              <label>
+                <span>Số tài khoản</span>
+                <div className="system-settings-input"><input name="vietQrAccountNo" value={form.vietQrAccountNo} onChange={changeField} maxLength={50} placeholder="Số tài khoản nhận tiền" /></div>
+              </label>
+              <label>
+                <span>Tên chủ tài khoản</span>
+                <div className="system-settings-input"><input name="vietQrAccountName" value={form.vietQrAccountName} onChange={changeField} maxLength={160} placeholder="Tên chủ tài khoản" /></div>
+              </label>
+              <label>
+                <span>Mẫu VietQR</span>
+                <div className="system-settings-input"><input name="vietQrTemplate" value={form.vietQrTemplate} onChange={changeField} maxLength={30} placeholder="compact2" /></div>
+              </label>
+              <label>
+                <span>Tiền tố nội dung chuyển khoản</span>
+                <div className="system-settings-input"><input name="vietQrDescriptionPrefix" value={form.vietQrDescriptionPrefix} onChange={changeField} maxLength={50} placeholder="LUMORA" /></div>
+              </label>
+            </div>
+            <p className="system-settings-note warning">Chỉ ADMIN được thay đổi thông tin thanh toán. Hãy kiểm tra kỹ số tài khoản trước khi lưu.</p>
+          </div>
+        )}
+
+        {activeTab === 'loyalty' && (
+          <div className="system-settings-card">
+            {cardHead(Coins, 'Tích điểm', 'Thiết lập cách khách hàng nhận điểm và sử dụng điểm khi thanh toán.')}
+            <div className="system-settings-form-grid">
+              <label>
+                <span>Số tiền để nhận 1 điểm</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" step="1000" name="loyaltyMoneyPerEarnedPoint" value={form.loyaltyMoneyPerEarnedPoint} onChange={changeField} /><em>₫</em></div>
+                <small>Ví dụ {moneyLabel(form.loyaltyMoneyPerEarnedPoint)} chi tiêu = 1 điểm.</small>
+              </label>
+              <label>
+                <span>Giá trị quy đổi của 1 điểm</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" step="100" name="loyaltyValuePerRedeemedPoint" value={form.loyaltyValuePerRedeemedPoint} onChange={changeField} /><em>₫</em></div>
+                <small>1 điểm được giảm {moneyLabel(form.loyaltyValuePerRedeemedPoint)}.</small>
+              </label>
+              <label>
+                <span>Điểm tối thiểu để sử dụng</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" max="1000000" name="loyaltyMinimumRedeemPoints" value={form.loyaltyMinimumRedeemPoints} onChange={changeField} /><em>điểm</em></div>
+              </label>
+              <label>
+                <span>Tỷ lệ tối đa được thanh toán bằng điểm</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" max="100" step="1" name="loyaltyMaximumRedeemPercent" value={form.loyaltyMaximumRedeemPercent} onChange={changeField} /><em>%</em></div>
+                <small>Giới hạn phần giá trị hóa đơn có thể trừ bằng điểm.</small>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'chatbot' && (
+          <div className="system-settings-card">
+            {cardHead(Bot, 'Chatbot', 'Quản lý trạng thái và giới hạn hoạt động của chatbot AI trên website.')}
+            <div className="system-settings-form-grid">
+              <div className="system-settings-toggle-row full">
+                <div>
+                  <strong>Bật chatbot AI</strong>
+                  <small>Cho phép khách hàng sử dụng trợ lý chatbot trên website.</small>
+                </div>
+                <button
+                  type="button"
+                  className={`system-settings-switch ${form.chatbotEnabled ? 'on' : ''}`}
+                  aria-pressed={form.chatbotEnabled}
+                  onClick={() => setForm((current) => ({ ...current, chatbotEnabled: !current.chatbotEnabled }))}
+                >
+                  <span />
+                </button>
+              </div>
+              <label className="full">
+                <span>Model</span>
+                <div className="system-settings-input"><Bot size={17} /><input name="chatbotModel" value={form.chatbotModel} onChange={changeField} maxLength={120} placeholder="gpt-5-mini" /></div>
+              </label>
+              <label>
+                <span>Thời gian chờ phản hồi</span>
+                <div className="system-settings-input suffix"><input type="number" min="5" max="120" name="chatbotTimeoutSeconds" value={form.chatbotTimeoutSeconds} onChange={changeField} /><em>giây</em></div>
+              </label>
+              <label>
+                <span>Giới hạn đầu ra</span>
+                <div className="system-settings-input suffix"><input type="number" min="100" max="10000" step="50" name="chatbotMaxOutputTokens" value={form.chatbotMaxOutputTokens} onChange={changeField} /><em>token</em></div>
+              </label>
+              <label>
+                <span>Số tin nhắn lịch sử</span>
+                <div className="system-settings-input"><input type="number" min="0" max="50" name="chatbotMaxHistoryMessages" value={form.chatbotMaxHistoryMessages} onChange={changeField} /></div>
+              </label>
+              <label>
+                <span>Ngưỡng tin cậy tối thiểu</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="100" step="1" name="chatbotMinimumConfidencePercent" value={form.chatbotMinimumConfidencePercent} onChange={changeField} /><em>%</em></div>
+              </label>
+            </div>
+            <p className="system-settings-note">API key và base URL vẫn được quản lý an toàn bằng biến môi trường của backend, không hiển thị hoặc lưu từ trang này.</p>
+          </div>
+        )}
+
+        {activeTab !== 'branding' && (
+          <div className="system-settings-actions standalone">
             <button type="submit" className="system-settings-save" disabled={saving}>
               {saving ? <Loader2 className="spin" size={17} /> : <Save size={17} />}
               {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
           </div>
-        </form>
-
-        <div className="system-settings-card system-settings-branding">
-          <div className="system-settings-card-head">
-            <span className="system-settings-card-icon"><ImagePlus size={21} /></span>
-            <div>
-              <h3>Thương hiệu & giao diện</h3>
-              <p>Thay logo nhà hàng và banner hiển thị trên trang chủ.</p>
-            </div>
-          </div>
-
-          <div className="system-brand-block">
-            <div className="system-brand-title">
-              <div><strong>Logo nhà hàng</strong><small>Khuyên dùng PNG/WebP nền trong suốt, tối đa 5 MB.</small></div>
-              {settings.logoUrl && (
-                <button type="button" className="system-brand-remove" onClick={() => removeBrandImage('logo')} disabled={logoBusy} title="Xóa logo tùy chỉnh"><Trash2 size={16} /></button>
-              )}
-            </div>
-            <div className="system-logo-preview">
-              {logo ? <img src={logo} alt="Logo nhà hàng" /> : <div className="system-brand-placeholder"><Building2 size={30} /><span>Chưa có logo tùy chỉnh</span></div>}
-            </div>
-            <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; uploadBrandImage('logo', file); }} />
-            <button type="button" className="system-brand-upload" onClick={() => logoInputRef.current?.click()} disabled={logoBusy}>
-              {logoBusy ? <Loader2 className="spin" size={17} /> : <Upload size={17} />}
-              {logoBusy ? 'Đang tải...' : settings.logoUrl ? 'Thay logo' : 'Tải logo lên'}
-            </button>
-          </div>
-
-          <div className="system-brand-block banner">
-            <div className="system-brand-title">
-              <div><strong>Banner trang chủ</strong><small>Khuyên dùng ảnh ngang tỷ lệ khoảng 16:7, tối đa 5 MB.</small></div>
-              {settings.bannerUrl && (
-                <button type="button" className="system-brand-remove" onClick={() => removeBrandImage('banner')} disabled={bannerBusy} title="Xóa banner tùy chỉnh"><Trash2 size={16} /></button>
-              )}
-            </div>
-            <div className="system-banner-preview">
-              {banner ? <img src={banner} alt="Banner trang chủ" /> : <div className="system-brand-placeholder"><ImagePlus size={30} /><span>Chưa có banner tùy chỉnh</span></div>}
-            </div>
-            <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; uploadBrandImage('banner', file); }} />
-            <button type="button" className="system-brand-upload" onClick={() => bannerInputRef.current?.click()} disabled={bannerBusy}>
-              {bannerBusy ? <Loader2 className="spin" size={17} /> : <Upload size={17} />}
-              {bannerBusy ? 'Đang tải...' : settings.bannerUrl ? 'Thay banner' : 'Tải banner lên'}
-            </button>
-          </div>
-
-          <p className="system-settings-note">Ảnh mới được lưu trên hệ thống lưu trữ ảnh của backend. Khi cập nhật thành công, trang chủ sẽ dùng ảnh mới thay cho ảnh mặc định.</p>
-        </div>
-      </div>
+        )}
+      </form>
     </section>
   );
 }
