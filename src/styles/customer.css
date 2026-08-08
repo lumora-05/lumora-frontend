@@ -2071,14 +2071,14 @@
 .customer-header-actions.menu-showcase .customer-service-trigger{
   height:44px;
   padding:0 17px;
-  border-radius:13px;
+  border-radius:8px;
   font-size:13px;
 }
 .customer-table-badge.menu-showcase{
   min-width:132px;
   height:44px;
   padding:0 14px;
-  border-radius:8px;
+  border-radius:9px;
   font-size:13px;
 }
 .customer-table-badge.menu-showcase .customer-table-badge-icon{
@@ -2114,7 +2114,7 @@
   min-height:47px;
   margin:0 0 8px;
   padding:0 13px;
-  border-radius:8px;
+  border-radius:9px;
   gap:10px;
   font-size:14px;
   font-weight:750;
@@ -2122,7 +2122,7 @@
 .customer-menu-showcase-page .customer-menu-categories > button > span{
   width:29px;
   height:29px;
-  border-radius:8px;
+  border-radius:9px;
 }
 
 .customer-menu-showcase-page .customer-menu-content{
@@ -2135,7 +2135,7 @@
 .customer-menu-showcase-page .customer-menu-search,
 .customer-menu-showcase-page .customer-cart-shortcut{
   height:48px;
-  border-radius:13px;
+  border-radius:9px;
 }
 .customer-menu-showcase-page .customer-menu-search{
   gap:10px;
@@ -2184,10 +2184,10 @@
   aspect-ratio:1.5 / 1;
   margin: 0;
   width: 100%;
-  border-radius:8px;
+  border-radius:9px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
-  border-radius:8px;
+  border-radius:9px;
 }
 .customer-menu-food-badge{
   left:8px;
