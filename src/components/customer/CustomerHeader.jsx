@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { tableApi } from '../../api/tableApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
+import { imageUrl } from '../../utils/imageUrl';
 import { useCart } from '../../context/CartContext';
 import CustomerServiceRequest from './CustomerServiceRequest';
 
@@ -61,9 +63,32 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
   const cart = useCart();
   const fallbackTable = 'Bàn';
   const [resolvedTableId, setResolvedTableId] = useState(null);
+  const [showcaseBrand, setShowcaseBrand] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
   const [displayTable, setDisplayTable] = useState(
     () => normalizeTableLabel(tableName) || readCachedTableLabel(qrToken) || fallbackTable,
   );
+
+  useEffect(() => {
+    if (variant !== 'menu-showcase') return undefined;
+
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const settings = systemSettingData(response);
+        setShowcaseBrand({
+          restaurantName: settings?.restaurantName || 'LUMORA',
+          logoUrl: settings?.logoUrl || '',
+        });
+      })
+      .catch(() => {
+        // Giữ wordmark dự phòng nếu không tải được cài đặt công khai.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [variant]);
 
   useEffect(() => {
     const providedLabel = normalizeTableLabel(tableName);
@@ -113,13 +138,22 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
       <header className={headerClassName}>
         <Link className={brandClassName} to={`/table/${qrToken}`}>
           {isMenuShowcase ? (
-            <>
-              <span className="customer-site-brand-wordmark-star" aria-hidden="true">✦</span>
-              <span className="customer-site-brand-wordmark-copy">
-                <strong>LUMORA</strong>
-                <small>RESTAURANT</small>
+            showcaseBrand.logoUrl ? (
+              <span className="customer-site-brand-home-logo">
+                <img
+                  src={imageUrl(showcaseBrand.logoUrl)}
+                  alt={`Logo ${showcaseBrand.restaurantName}`}
+                />
               </span>
-            </>
+            ) : (
+              <>
+                <span className="customer-site-brand-wordmark-star" aria-hidden="true">✦</span>
+                <span className="customer-site-brand-wordmark-copy">
+                  <strong>LUMORA</strong>
+                  <small>RESTAURANT</small>
+                </span>
+              </>
+            )
           ) : (
             <>
               <span className="customer-site-brand-mark"><UtensilsCrossed size={24} /></span>
