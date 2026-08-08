@@ -118,7 +118,6 @@ function Brand({ settings }) {
       ) : (
         <span className="v0-brand-mark">{(settings.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
       )}
-      <span className="v0-serif v0-brand-name">{settings.restaurantName}</span>
     </>
   );
 }
