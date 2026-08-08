@@ -692,26 +692,26 @@
   background:#fff;
   border-radius:18px;
   box-shadow:0 28px 70px rgba(15,23,42,.26);
-  padding:24px;
+  padding:18px;
   display:grid;
-  gap:16px;
+  gap:10px;
 }
 .employee-modal-head{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  gap:16px;
-  margin-bottom:4px;
+  gap:12px;
+  margin-bottom:0;
 }
 .employee-modal-head h3{margin:0 0 6px;font-size:20px;color:#111827;}
 .employee-modal-head p{margin:0;color:#64748b;font-size:14px;}
-.employee-modal-head button{width:40px;height:40px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;display:grid;place-items:center;cursor:pointer;}
+.employee-modal-head button{width:36px;height:36px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;display:grid;place-items:center;cursor:pointer;}
 .employee-modal-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
+  gap:10px;
 }
-.employee-modal label{display:grid;gap:8px;color:#334155;font-size:14px;font-weight:850;}
+.employee-modal label{display:grid;gap:6px;color:#334155;font-size:14px;font-weight:850;}
 .employee-modal label.full{grid-column:1/-1;}
 .employee-area-field small{
   color:#64748b;
@@ -724,7 +724,7 @@
 .employee-modal select{
   border:1px solid #e2e8f0;
   border-radius:12px;
-  padding:12px 14px;
+  padding:9px 12px;
   background:#fff;
   color:#111827;
   font-size:14px;
@@ -738,13 +738,13 @@
 .employee-modal-actions{
   display:flex;
   justify-content:flex-end;
-  gap:12px;
-  margin-top:8px;
+  gap:10px;
+  margin-top:4px;
 }
 .employee-modal-actions button{
-  height:46px;
+  height:40px;
   border-radius:10px;
-  padding:0 18px;
+  padding:0 16px;
   font-size:14px;
   font-weight:900;
   cursor:pointer;
@@ -3702,7 +3702,7 @@
 .employee-area-field{
   grid-column:1/-1;
   display:grid;
-  gap:8px;
+  gap:6px;
 }
 .employee-area-title{
   color:#334155;
@@ -3711,20 +3711,20 @@
 .employee-area-options{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  padding:12px;
+  gap:7px;
+  padding:8px;
   border:1px solid #e2e8f0;
   border-radius:12px;
   background:#fff;
-  max-height:190px;
+  max-height:130px;
   overflow:auto;
 }
 .employee-modal .employee-area-option{
-  min-height:44px;
+  min-height:36px;
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:10px 12px;
+  gap:8px;
+  padding:6px 10px;
   border:1px solid #e2e8f0;
   border-radius:10px;
   background:#f8fafc;
