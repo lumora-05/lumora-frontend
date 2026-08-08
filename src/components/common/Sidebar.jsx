@@ -41,7 +41,6 @@ export default function Sidebar({ title, items, logoUrl = '', restaurantName = '
             <div className="brand-logo-image">
               <img src={logoUrl} alt={`Logo ${restaurantName}`} />
             </div>
-            <span className="brand-role-label">{title}</span>
           </>
         ) : (
           <>
