@@ -277,7 +277,8 @@ export default function EmployeeManage() {
       </div>
 
       <div className="employee-table-card">
-        <table className="employee-table">
+        <div className="employee-table-scroll">
+          <table className="employee-table">
           <thead>
             <tr>
               <th>STT</th>
@@ -350,7 +351,8 @@ export default function EmployeeManage() {
               </tr>
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
 
         <div className="employee-footer">
           <span>Hiển thị {displayRange.from} - {displayRange.to} trong tổng số {totalElements} nhân viên</span>
