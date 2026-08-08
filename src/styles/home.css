@@ -85,7 +85,7 @@
 .v0-hero-content > p { max-width: 576px; margin: 20px 0 0; color: color-mix(in oklch, var(--v0-background) 80%, transparent); font-size: 18px; line-height: 1.625; text-wrap: pretty; }
 .v0-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .v0-hero-actions .v0-button { padding-inline: 32px; }
-.v0-button-hero-outline { border-color: color-mix(in oklch, var(--v0-background) 40%, transparent); background: transparent; color: var(--v0-background); }
+.v0-home a.v0-button-hero-outline { border-color: color-mix(in oklch, var(--v0-background) 40%, transparent); background: transparent; color: var(--v0-background); }
 .v0-button-hero-outline:hover { background: color-mix(in oklch, var(--v0-background) 10%, transparent); color: var(--v0-background); }
 .v0-hero-meta { display: flex; flex-wrap: wrap; gap: 12px 32px; margin-top: 48px; color: color-mix(in oklch, var(--v0-background) 80%, transparent); font-size: 14px; }
 .v0-hero-meta span { display: inline-flex; align-items: center; gap: 8px; }
