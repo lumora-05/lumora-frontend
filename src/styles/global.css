@@ -826,7 +826,8 @@
   box-shadow:0 14px 26px rgba(255,77,0,.22);
 }
 .promotion-table-card{
-  overflow:hidden;
+  overflow-x:auto;
+  overflow-y:hidden;
   background:#fff;
   border:1px solid #e5e7eb;
   border-radius:12px;
