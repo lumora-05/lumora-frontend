@@ -1799,8 +1799,8 @@
 .customer-menu-showcase-page .customer-menu-food-image{
   position:relative;
   aspect-ratio:1.65 / 1;
-  margin:6px;
-  width:calc(100% - 12px);
+  margin: 0;
+  width: 100%;
   border-radius:13px;
   background:linear-gradient(135deg,#f8eee4,#f3dfcf);
 }
