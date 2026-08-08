@@ -2078,7 +2078,7 @@
   min-width:132px;
   height:44px;
   padding:0 14px;
-  border-radius:13px;
+  border-radius:8px;
   font-size:13px;
 }
 .customer-table-badge.menu-showcase .customer-table-badge-icon{
@@ -2114,7 +2114,7 @@
   min-height:47px;
   margin:0 0 8px;
   padding:0 13px;
-  border-radius:13px;
+  border-radius:8px;
   gap:10px;
   font-size:14px;
   font-weight:750;
