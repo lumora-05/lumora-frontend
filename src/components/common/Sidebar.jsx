@@ -30,17 +30,28 @@ const iconMap = {
   delivery: Bike,
 };
 
-export default function Sidebar({ title, items }) {
+export default function Sidebar({ title, items, logoUrl = '', restaurantName = 'LUMORA' }) {
   const { user, logout } = useAuth();
 
   return (
     <aside className="sidebar admin-sidebar">
-      <div className="brand">
-        <div className="brand-logo"><UtensilsCrossed size={28} strokeWidth={2.4} /></div>
-        <div className="brand-text">
-          <b>LUMORA</b>
-          <span>{title}</span>
-        </div>
+      <div className={`brand${logoUrl ? ' has-restaurant-logo' : ''}`}>
+        {logoUrl ? (
+          <>
+            <div className="brand-logo-image">
+              <img src={logoUrl} alt={`Logo ${restaurantName}`} />
+            </div>
+            <span className="brand-role-label">{title}</span>
+          </>
+        ) : (
+          <>
+            <div className="brand-logo"><UtensilsCrossed size={28} strokeWidth={2.4} /></div>
+            <div className="brand-text">
+              <b>LUMORA</b>
+              <span>{title}</span>
+            </div>
+          </>
+        )}
       </div>
 
       <nav>
