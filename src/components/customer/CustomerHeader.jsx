@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ClipboardList, QrCode, ShoppingCart, Star, UtensilsCrossed } from 'lucide-react';
+import {
+  BookOpen,
+  ClipboardList,
+  ConciergeBell,
+  QrCode,
+  ShoppingCart,
+  Star,
+  UtensilsCrossed,
+} from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { tableApi } from '../../api/tableApi';
 import { useCart } from '../../context/CartContext';
@@ -47,7 +55,7 @@ function cacheTableLabel(qrToken, label) {
   }
 }
 
-export default function CustomerHeader({ tableName }) {
+export default function CustomerHeader({ tableName, variant = 'default' }) {
   const { qrToken } = useParams();
   const { pathname } = useLocation();
   const cart = useCart();
@@ -88,47 +96,67 @@ export default function CustomerHeader({ tableName }) {
       active = false;
     };
   }, [fallbackTable, qrToken, tableName]);
+
   const menuActive = pathname === `/table/${qrToken}` || pathname.includes('/foods/');
   const cartActive = pathname.endsWith('/cart');
   const ordersActive = isOrdersPath(pathname);
   const reviewsActive = pathname.includes('/reviews');
+  const isMenuShowcase = variant === 'menu-showcase';
+  const headerClassName = `customer-site-header${isMenuShowcase ? ' menu-showcase' : ''}`;
+  const brandClassName = `customer-site-brand${isMenuShowcase ? ' menu-showcase' : ''}`;
+  const navClassName = `customer-site-nav${isMenuShowcase ? ' menu-showcase' : ''}`;
+  const actionsClassName = `customer-header-actions${isMenuShowcase ? ' menu-showcase' : ''}`;
+  const tableBadgeClassName = `customer-table-badge${isMenuShowcase ? ' menu-showcase' : ''}`;
 
   return (
     <>
-      <header className="customer-site-header">
-        <Link className="customer-site-brand" to={`/table/${qrToken}`}>
-          <span className="customer-site-brand-mark"><UtensilsCrossed size={24} /></span>
-          <span>
-            <strong>LUMORA</strong>
-            <small>Restaurant</small>
-          </span>
+      <header className={headerClassName}>
+        <Link className={brandClassName} to={`/table/${qrToken}`}>
+          {isMenuShowcase ? (
+            <>
+              <span className="customer-site-brand-wordmark-star" aria-hidden="true">✦</span>
+              <span className="customer-site-brand-wordmark-copy">
+                <strong>LUMORA</strong>
+                <small>RESTAURANT</small>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="customer-site-brand-mark"><UtensilsCrossed size={24} /></span>
+              <span>
+                <strong>LUMORA</strong>
+                <small>Restaurant</small>
+              </span>
+            </>
+          )}
         </Link>
 
-        <nav className="customer-site-nav" aria-label="Điều hướng khách hàng">
+        <nav className={navClassName} aria-label="Điều hướng khách hàng">
           <Link className={menuActive ? 'active' : ''} to={`/table/${qrToken}`}>
-            <UtensilsCrossed size={19} />
+            {isMenuShowcase ? <BookOpen size={18} /> : <UtensilsCrossed size={19} />}
             <span>Thực đơn</span>
           </Link>
           <Link className={cartActive ? 'active' : ''} to={`/table/${qrToken}/cart`}>
-            <ShoppingCart size={19} />
+            <ShoppingCart size={18} />
             <span>Giỏ hàng</span>
             {cart.count > 0 ? <b>{cart.count}</b> : null}
           </Link>
           <Link className={ordersActive ? 'active' : ''} to={`/table/${qrToken}/orders`}>
-            <ClipboardList size={19} />
+            <ClipboardList size={18} />
             <span>Đơn hàng</span>
           </Link>
           <Link className={reviewsActive ? 'active' : ''} to={`/table/${qrToken}/reviews`}>
-            <Star size={19} />
+            <Star size={18} />
             <span>Đánh giá</span>
           </Link>
         </nav>
 
-        <div className="customer-header-actions">
+        <div className={actionsClassName}>
           <CustomerServiceRequest qrToken={qrToken} tableId={resolvedTableId} />
-          <div className="customer-table-badge">
-          <span>{displayTable}</span>
-          <span className="customer-table-badge-icon" aria-hidden="true"><QrCode size={15} /></span>
+          <div className={tableBadgeClassName}>
+            {isMenuShowcase ? <span className="customer-table-badge-icon" aria-hidden="true"><QrCode size={16} /></span> : null}
+            <span>{displayTable}</span>
+            {!isMenuShowcase ? <span className="customer-table-badge-icon" aria-hidden="true"><QrCode size={15} /></span> : null}
           </div>
         </div>
       </header>
