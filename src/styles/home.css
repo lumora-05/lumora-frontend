@@ -45,7 +45,13 @@
   gap:16px;
   padding-block:0;
 }
-.v0-brand { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.v0-brand{
+  height:72px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  text-decoration:none;
+}
 .v0-brand-mark {
   width: 36px; height: 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
   background: var(--v0-primary); color: var(--v0-primary-fg); font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-weight: 700;
@@ -193,20 +199,21 @@
 /* Logo động từ Cài đặt hệ thống */
 .v0-brand-logo-image{
   width:120px;
-  height:44px;
+  height:72px;
   flex:0 0 120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   overflow:visible;
-  display:grid;
-  place-items:center;
   background:transparent;
   border:0;
 }
 
 .v0-brand-logo-image img{
   width:100%;
-  height:100%;
+  height:auto;
   object-fit:contain;
   padding:0;
   transform:scale(1.35);
-  transform-origin:center;
+  transform-origin:center center;
 }
