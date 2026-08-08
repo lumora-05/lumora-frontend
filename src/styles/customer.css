@@ -1994,3 +1994,274 @@
   .customer-site-brand.menu-showcase strong{font-size:20px;}
   .customer-site-brand.menu-showcase small{font-size:9px;letter-spacing:.26em;}
 }
+
+
+/* ===== QR menu compact typography/layout refinement =====
+   Chỉ áp dụng cho trang menu QR; các trang khác giữ nguyên. */
+.customer-menu-showcase-page,
+.customer-site-header.menu-showcase{
+  font-family:"SF Pro Display",Inter,"Segoe UI",sans-serif;
+}
+
+.customer-site-header.menu-showcase{
+  height:78px;
+  padding:0 max(28px,calc((100vw - 1380px)/2));
+  column-gap:20px;
+}
+.customer-site-brand.menu-showcase{
+  min-width:210px;
+  gap:9px;
+}
+.customer-site-brand-wordmark-star{
+  width:20px;
+  font-size:16px;
+  transform:translateY(-7px);
+}
+.customer-site-brand.menu-showcase strong{
+  font-family:"SF Pro Display",Inter,"Segoe UI",sans-serif;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+.customer-site-brand.menu-showcase small{
+  margin-top:4px;
+  font-size:9px;
+  letter-spacing:.28em;
+}
+.customer-site-nav.menu-showcase{
+  gap:10px;
+}
+.customer-site-nav.menu-showcase a{
+  padding:0 9px 10px;
+  gap:7px;
+  font-size:14px;
+  font-weight:750;
+}
+.customer-site-nav.menu-showcase a::after{
+  bottom:0;
+  height:2px;
+}
+.customer-site-nav.menu-showcase a b{
+  min-width:20px;
+  height:20px;
+  font-size:10px;
+}
+.customer-header-actions.menu-showcase{
+  gap:12px;
+}
+.customer-header-actions.menu-showcase .customer-service-trigger{
+  height:44px;
+  padding:0 17px;
+  border-radius:13px;
+  font-size:13px;
+}
+.customer-table-badge.menu-showcase{
+  min-width:132px;
+  height:44px;
+  padding:0 14px;
+  border-radius:13px;
+  font-size:13px;
+}
+.customer-table-badge.menu-showcase .customer-table-badge-icon{
+  width:19px;
+  height:19px;
+}
+
+.customer-menu-showcase-page .customer-menu-workspace{
+  width:min(1380px,calc(100% - 32px));
+  margin:20px auto 0;
+  grid-template-columns:238px minmax(0,1fr);
+  gap:18px;
+}
+.customer-menu-showcase-page .customer-menu-categories{
+  min-height:690px;
+  padding:18px 17px;
+  top:96px;
+}
+.customer-menu-showcase-page .customer-section-title{
+  padding:0 0 5px;
+  margin-bottom:12px;
+}
+.customer-menu-showcase-page .customer-section-title span{
+  font-family:"SF Pro Display",Inter,"Segoe UI",sans-serif;
+  font-size:23px;
+  font-weight:850;
+}
+.customer-menu-showcase-page .customer-section-title small{
+  margin-top:4px;
+  font-size:12px;
+}
+.customer-menu-showcase-page .customer-menu-categories > button{
+  min-height:47px;
+  margin:0 0 8px;
+  padding:0 13px;
+  border-radius:13px;
+  gap:10px;
+  font-size:14px;
+  font-weight:750;
+}
+.customer-menu-showcase-page .customer-menu-categories > button > span{
+  width:29px;
+  height:29px;
+  border-radius:8px;
+}
+
+.customer-menu-showcase-page .customer-menu-content{
+  padding:16px 18px 22px;
+}
+.customer-menu-showcase-page .customer-menu-toolbar{
+  grid-template-columns:minmax(0,1fr) 220px;
+  gap:14px;
+}
+.customer-menu-showcase-page .customer-menu-search,
+.customer-menu-showcase-page .customer-cart-shortcut{
+  height:48px;
+  border-radius:13px;
+}
+.customer-menu-showcase-page .customer-menu-search{
+  gap:10px;
+  padding:0 14px;
+}
+.customer-menu-showcase-page .customer-menu-search input{
+  font-size:14px;
+}
+.customer-menu-showcase-page .customer-cart-shortcut{
+  padding:0 14px;
+  gap:9px;
+  font-size:14px;
+}
+.customer-menu-showcase-page .customer-cart-shortcut b{
+  min-width:28px;
+  height:28px;
+  font-size:13px;
+}
+
+.customer-menu-showcase-page .customer-menu-heading{
+  margin:12px 0 12px;
+}
+.customer-menu-showcase-page .customer-menu-heading > div > span{
+  font-size:13px;
+  font-weight:750;
+}
+.customer-menu-showcase-page .customer-menu-heading h1{
+  margin:2px 0 0;
+  font-family:"SF Pro Display",Inter,"Segoe UI",sans-serif;
+  font-size:42px;
+  font-weight:850;
+  line-height:1.02;
+  letter-spacing:-.035em;
+}
+.customer-menu-showcase-page .customer-menu-heading > strong{
+  font-size:14px;
+}
+
+.customer-menu-showcase-page .customer-menu-grid{
+  gap:12px;
+}
+.customer-menu-showcase-page .customer-menu-food-card{
+  border-radius:15px;
+}
+.customer-menu-showcase-page .customer-menu-food-image{
+  aspect-ratio:1.78 / 1;
+  margin:6px;
+  width:calc(100% - 12px);
+  border-radius:12px;
+}
+.customer-menu-showcase-page .customer-menu-food-image img{
+  border-radius:12px;
+}
+.customer-menu-food-badge{
+  left:8px;
+  top:8px;
+  height:23px;
+  padding:0 9px;
+  font-size:11px;
+  box-shadow:0 5px 10px rgba(64,34,18,.14);
+}
+.customer-menu-showcase-page .customer-menu-food-body{
+  padding:1px 10px 10px;
+}
+.customer-menu-showcase-page .customer-menu-food-body > a{
+  min-height:38px;
+  margin-bottom:4px;
+  font-family:"SF Pro Display",Inter,"Segoe UI",sans-serif;
+  font-size:17px;
+  font-weight:800;
+  line-height:1.15;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+.customer-menu-food-description{
+  min-height:34px;
+  margin:0 0 7px;
+  font-size:11px;
+  line-height:1.42;
+}
+.customer-menu-showcase-page .customer-menu-food-body > div > strong{
+  font-size:16px;
+}
+.customer-menu-showcase-page .customer-menu-food-body > div > button{
+  height:32px;
+  padding:0 8px 0 11px;
+  border-radius:10px;
+  gap:6px;
+  font-size:13px;
+}
+.customer-menu-showcase-page .customer-menu-food-body > div > button svg{
+  width:18px;
+  height:18px;
+}
+.customer-menu-showcase-page .customer-menu-load-more{
+  padding-top:12px;
+}
+.customer-menu-showcase-page .customer-menu-load-more > button{
+  min-width:280px;
+  height:42px;
+  border-radius:12px;
+  font-size:13px;
+}
+
+@media (max-width:1260px){
+  .customer-site-header.menu-showcase{
+    height:76px;
+    padding:0 18px;
+  }
+  .customer-site-brand.menu-showcase strong{font-size:22px;}
+  .customer-site-nav.menu-showcase a{font-size:13px;padding:0 7px 9px;}
+  .customer-menu-showcase-page .customer-menu-workspace{
+    width:min(100% - 24px,1280px);
+    grid-template-columns:220px minmax(0,1fr);
+    gap:14px;
+    margin-top:16px;
+  }
+  .customer-menu-showcase-page .customer-menu-heading h1{font-size:38px;}
+  .customer-menu-showcase-page .customer-menu-food-body > a{font-size:16px;}
+}
+
+@media (max-width:1024px){
+  .customer-site-header.menu-showcase{height:68px;}
+  .customer-menu-showcase-page .customer-menu-workspace{
+    grid-template-columns:1fr;
+    margin-top:14px;
+  }
+  .customer-menu-showcase-page .customer-menu-categories{
+    min-height:auto;
+    top:auto;
+    padding:10px;
+  }
+  .customer-menu-showcase-page .customer-menu-categories > button{
+    min-height:42px;
+    margin:0;
+    padding:0 12px;
+    font-size:13px;
+  }
+  .customer-menu-showcase-page .customer-menu-heading h1{font-size:34px;}
+}
+
+@media (max-width:700px){
+  .customer-menu-showcase-page .customer-menu-content{padding:13px;}
+  .customer-menu-showcase-page .customer-menu-heading h1{font-size:30px;}
+  .customer-menu-showcase-page .customer-menu-food-body > a{font-size:15px;}
+}

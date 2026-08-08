@@ -24,7 +24,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 8;
 
 function foodId(food) {
   return food.maMonAn ?? food.id;
