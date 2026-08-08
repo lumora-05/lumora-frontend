@@ -3,6 +3,8 @@ import { BellRing, CalendarCheck2, ClipboardList, History, PlusCircle, Table2, U
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import WaiterHeader from '../components/common/WaiterHeader';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
   '/waiter/order-entry': ['Gọi món tại bàn', 'Ghi nhận món khách gọi tại bàn'],
@@ -27,8 +29,23 @@ const items = [
 export default function WaiterLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        setBrandSettings((current) => ({ ...current, ...(data || {}) }));
+      })
+      .catch(() => {
+        // Giữ nhận diện mặc định nếu backend tạm thời không phản hồi.
+      });
+    return () => { active = false; };
+  }, []);
 
   const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
   const readOnly = detail && new URLSearchParams(location.search).get('readonly') === '1';
@@ -41,7 +58,12 @@ export default function WaiterLayout() {
 
   return (
     <div className="app-shell waiter-shell">
-      <Sidebar title="Nhân viên phục vụ" items={items} />
+      <Sidebar
+        title="Nhân viên phục vụ"
+        items={items}
+        logoUrl={imageUrl(brandSettings.logoUrl)}
+        restaurantName={brandSettings.restaurantName}
+      />
 
       {menuOpen ? <button type="button" className="waiter-mobile-overlay" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} /> : null}
       <aside className={`waiter-mobile-drawer ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>

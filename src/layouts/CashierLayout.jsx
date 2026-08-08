@@ -3,6 +3,8 @@ import { Bell, Bike, History, ReceiptText, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { imageUrl } from '../utils/imageUrl';
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
@@ -23,8 +25,23 @@ const pageMeta = {
 export default function CashierLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        setBrandSettings((current) => ({ ...current, ...(data || {}) }));
+      })
+      .catch(() => {
+        // Giữ nhận diện mặc định nếu backend tạm thời không phản hồi.
+      });
+    return () => { active = false; };
+  }, []);
 
   const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
   let title;
@@ -47,7 +64,12 @@ export default function CashierLayout() {
 
   return (
     <div className="app-shell cashier-shell">
-      <Sidebar title="Thu ngân" items={items} />
+      <Sidebar
+        title="Thu ngân"
+        items={items}
+        logoUrl={imageUrl(brandSettings.logoUrl)}
+        restaurantName={brandSettings.restaurantName}
+      />
 
       {menuOpen ? <button type="button" className="cashier-mobile-overlay" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} /> : null}
       <aside className={`cashier-mobile-drawer ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>

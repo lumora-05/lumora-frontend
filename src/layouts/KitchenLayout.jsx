@@ -3,6 +3,8 @@ import { Bell, Bike, ChefHat, History, UserRound, Utensils, X } from 'lucide-rea
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import KitchenHeader from '../components/common/KitchenHeader';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
   '/kitchen/menu': ['Tình trạng món', 'Tra cứu và cập nhật nhanh món đang phục vụ hoặc đã hết'],
@@ -24,8 +26,23 @@ const items = [
 export default function KitchenLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        setBrandSettings((current) => ({ ...current, ...(data || {}) }));
+      })
+      .catch(() => {
+        // Giữ nhận diện mặc định nếu backend tạm thời không phản hồi.
+      });
+    return () => { active = false; };
+  }, []);
 
   const key = Object.keys(pageMeta)
     .filter((path) => path !== '/kitchen')
@@ -39,7 +56,12 @@ export default function KitchenLayout() {
 
   return (
     <div className="app-shell kitchen-shell">
-      <Sidebar title="Nhân viên bếp" items={items} />
+      <Sidebar
+        title="Nhân viên bếp"
+        items={items}
+        logoUrl={imageUrl(brandSettings.logoUrl)}
+        restaurantName={brandSettings.restaurantName}
+      />
 
       {menuOpen ? <button type="button" className="kitchen-mobile-overlay" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} /> : null}
       <aside className={`kitchen-mobile-drawer ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
