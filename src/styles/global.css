@@ -3668,3 +3668,66 @@
 .table-arrangement-option-list>label.unavailable:hover{border-color:#fde68a;background:#fffbeb}
 .table-arrangement-option-list>label.unavailable label,
 .table-arrangement-option-list>label.unavailable input{cursor:not-allowed}
+
+/* Employee multi-area assignment */
+.employee-area-badges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  max-width:280px;
+}
+.employee-area-field{
+  grid-column:1/-1;
+  display:grid;
+  gap:8px;
+}
+.employee-area-title{
+  color:#334155;
+  font-weight:850;
+}
+.employee-area-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  padding:12px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#fff;
+  max-height:190px;
+  overflow:auto;
+}
+.employee-modal .employee-area-option{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#334155;
+  font-weight:750;
+  cursor:pointer;
+  transition:.16s ease;
+}
+.employee-modal .employee-area-option:hover{
+  border-color:#fdba74;
+  background:#fff7ed;
+}
+.employee-modal .employee-area-option.selected{
+  border-color:#ff7a35;
+  background:#fff7ed;
+  color:#c2410c;
+}
+.employee-modal .employee-area-option input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  flex:0 0 auto;
+  margin:0;
+  padding:0;
+  accent-color:#ff4d00;
+  box-shadow:none;
+}
+@media (max-width:620px){
+  .employee-area-options{grid-template-columns:1fr;}
+}

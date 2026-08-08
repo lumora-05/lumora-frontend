@@ -15,6 +15,7 @@ const emptyForm = {
   matKhau: '123456',
   tenVaiTro: 'WAITER',
   khuVucPhuTrach: '',
+  danhSachKhuVucPhuTrach: [],
   trangThai: 'DANG_LAM_VIEC'
 };
 
@@ -51,8 +52,15 @@ function roleClass(code) {
 }
 
 
-function assignedArea(row) {
-  return typeof row?.khuVucPhuTrach === 'string' ? row.khuVucPhuTrach.trim() : '';
+function assignedAreas(row) {
+  const multi = Array.isArray(row?.danhSachKhuVucPhuTrach)
+    ? row.danhSachKhuVucPhuTrach
+    : [];
+  const legacy = typeof row?.khuVucPhuTrach === 'string' ? row.khuVucPhuTrach.trim() : '';
+  return [...new Set([
+    ...multi.map((value) => String(value || '').trim()),
+    legacy,
+  ].filter(Boolean))];
 }
 
 function tableArea(row) {
@@ -154,6 +162,7 @@ export default function EmployeeManage() {
   const displayRange = pageDisplayRange(page, size, numberOfElements, totalElements);
   const selectableAreas = [...new Set([
     ...areaOptions,
+    ...(form.danhSachKhuVucPhuTrach || []),
     form.khuVucPhuTrach?.trim(),
   ].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
 
@@ -172,7 +181,8 @@ export default function EmployeeManage() {
       tenDangNhap: item.tenDangNhap || '',
       matKhau: '',
       tenVaiTro: roleCode(item),
-      khuVucPhuTrach: assignedArea(item),
+      khuVucPhuTrach: assignedAreas(item)[0] || '',
+      danhSachKhuVucPhuTrach: assignedAreas(item),
       trangThai: item.trangThai || 'DANG_LAM_VIEC'
     });
     setOpenForm(true);
@@ -186,12 +196,21 @@ export default function EmployeeManage() {
 
   async function submit(e) {
     e.preventDefault();
+    const selectedAreas = form.tenVaiTro === 'WAITER'
+      ? [...new Set((form.danhSachKhuVucPhuTrach || []).map((area) => String(area).trim()).filter(Boolean))]
+      : [];
+
+    if (form.tenVaiTro === 'WAITER' && selectedAreas.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một khu vực phụ trách');
+      return;
+    }
+
     const payload = {
       ...form,
       tenVaiTro: form.tenVaiTro,
-      khuVucPhuTrach: form.tenVaiTro === 'WAITER'
-        ? (form.khuVucPhuTrach.trim() || null)
-        : null,
+      // Giữ trường cũ để tương thích ngược; backend mới ưu tiên danh sách nhiều khu vực.
+      khuVucPhuTrach: form.tenVaiTro === 'WAITER' ? (selectedAreas[0] || null) : null,
+      danhSachKhuVucPhuTrach: form.tenVaiTro === 'WAITER' ? selectedAreas : [],
       matKhau: form.matKhau || undefined
     };
 
@@ -287,10 +306,21 @@ export default function EmployeeManage() {
                 </td>
                 <td>
                   {roleCode(item) === 'WAITER' ? (
-                    <span className={`employee-area-badge ${assignedArea(item) ? 'assigned' : 'unassigned'}`}>
-                      <MapPin size={14} />
-                      {assignedArea(item) || 'Chưa phân công'}
-                    </span>
+                    assignedAreas(item).length > 0 ? (
+                      <div className="employee-area-badges">
+                        {assignedAreas(item).map((area) => (
+                          <span className="employee-area-badge assigned" key={area}>
+                            <MapPin size={14} />
+                            {area}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="employee-area-badge unassigned">
+                        <MapPin size={14} />
+                        Chưa phân công
+                      </span>
+                    )
                   ) : (
                     <span className="employee-area-empty">—</span>
                   )}
@@ -412,6 +442,9 @@ export default function EmployeeManage() {
                       ...current,
                       tenVaiTro,
                       khuVucPhuTrach: tenVaiTro === 'WAITER' ? current.khuVucPhuTrach : '',
+                      danhSachKhuVucPhuTrach: tenVaiTro === 'WAITER'
+                        ? current.danhSachKhuVucPhuTrach
+                        : [],
                     }));
                   }}
                 >
@@ -422,27 +455,46 @@ export default function EmployeeManage() {
               </label>
 
               {form.tenVaiTro === 'WAITER' && (
-                <label className="full employee-area-field">
-                  <span>Khu vực phụ trách</span>
-                  <select
-                    required
-                    value={form.khuVucPhuTrach}
-                    onChange={(e) => setForm({ ...form, khuVucPhuTrach: e.target.value })}
-                  >
-                    <option value="">Chọn khu vực phụ trách</option>
-                    {selectableAreas.map((area) => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
+                <div className="full employee-area-field">
+                  <span className="employee-area-title">Khu vực phụ trách</span>
+                  {selectableAreas.length > 0 ? (
+                    <div className="employee-area-options">
+                      {selectableAreas.map((area) => {
+                        const checked = (form.danhSachKhuVucPhuTrach || []).includes(area);
+                        return (
+                          <label className={`employee-area-option ${checked ? 'selected' : ''}`} key={area}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setForm((current) => {
+                                  const areas = current.danhSachKhuVucPhuTrach || [];
+                                  const nextAreas = areas.includes(area)
+                                    ? areas.filter((item) => item !== area)
+                                    : [...areas, area];
+                                  return {
+                                    ...current,
+                                    khuVucPhuTrach: nextAreas[0] || '',
+                                    danhSachKhuVucPhuTrach: nextAreas,
+                                  };
+                                });
+                              }}
+                            />
+                            <span>{area}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                   <small>
-                    Danh sách được lấy từ trường khu vực trong quản lý bàn. Phục vụ chỉ thấy bàn và đơn thuộc khu vực này.
+                    Có thể chọn một hoặc nhiều khu vực. Phục vụ chỉ thấy bàn, đơn và yêu cầu thuộc các khu vực được phân công.
                   </small>
                   {selectableAreas.length === 0 && (
                     <small className="employee-area-warning">
                       Chưa có khu vực nào. Hãy gán khu vực cho bàn trước khi tạo nhân viên phục vụ.
                     </small>
                   )}
-                </label>
+                </div>
               )}
 
               <label className="full">
