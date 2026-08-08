@@ -186,7 +186,7 @@
 /* Logo động từ Cài đặt hệ thống */
 .v0-brand-logo-image{
   width:120px;
-  height:72px;
+  height:40px;
   flex:0 0 120px;
   overflow:visible;
   display:grid;
@@ -200,6 +200,6 @@
   height:100%;
   object-fit:contain;
   padding:0;
-  transform:scale(1.65);
+  transform:scale(1.55);
   transform-origin:center;
 }
