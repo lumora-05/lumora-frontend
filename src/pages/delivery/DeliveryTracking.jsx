@@ -34,14 +34,18 @@ import {
 } from '../../utils/delivery';
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
+import { formatDistanceMeters, formatDurationSeconds } from '../../utils/googleMaps';
 
-const NORMAL_STEPS = [
+const BASE_STEPS = [
   { code: 'CHO_XAC_NHAN', label: 'Chờ xác nhận', icon: Store },
   { code: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị', icon: ChefHat },
   { code: 'CHO_TAI_XE_NHAN', label: 'Chờ tài xế nhận', icon: PackageCheck },
   { code: 'DANG_GIAO', label: 'Đang giao', icon: Truck },
+  { code: 'CHO_DOI_SOAT', label: 'Chờ đối soát', icon: PackageCheck },
   { code: 'HOAN_THANH', label: 'Hoàn thành', icon: Check },
 ];
+
+const VIETQR_PAYMENT_STEP = { code: 'CHO_THANH_TOAN', label: 'Chờ thanh toán', icon: CreditCard };
 
 function savedOrder(token) {
   try {
@@ -101,11 +105,17 @@ export default function DeliveryTracking() {
     return () => window.clearInterval(timer);
   }, [loadOrder, order]);
 
+  const steps = useMemo(() => {
+    const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
+    if (paymentMethod !== 'VIETQR') return BASE_STEPS;
+    return [BASE_STEPS[0], VIETQR_PAYMENT_STEP, ...BASE_STEPS.slice(1)];
+  }, [order?.phuongThucThanhToan]);
+
   const currentStep = useMemo(() => {
     const rawCode = String(order?.trangThaiGiaoHang || '').toUpperCase();
     const code = rawCode === 'CHO_BAN_GIAO' ? 'CHO_TAI_XE_NHAN' : rawCode;
-    return NORMAL_STEPS.findIndex((step) => step.code === code);
-  }, [order?.trangThaiGiaoHang]);
+    return steps.findIndex((step) => step.code === code);
+  }, [order?.trangThaiGiaoHang, steps]);
 
   async function generateQr() {
     setQrLoading(true);
@@ -167,10 +177,11 @@ export default function DeliveryTracking() {
 
   const status = String(order.trangThaiGiaoHang || '').toUpperCase();
   const failed = ['DA_HUY', 'GIAO_THAT_BAI'].includes(status);
-  const canCancel = status === 'CHO_XAC_NHAN';
+  const paymentStatus = String(order.trangThaiThanhToan || '').toUpperCase();
+  const canCancel = status === 'CHO_XAC_NHAN' || (status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN');
   const showQrButton = String(order.phuongThucThanhToan || '').toUpperCase() === 'VIETQR'
-    && String(order.trangThaiThanhToan || '').toUpperCase() !== 'DA_THANH_TOAN'
-    && !['DA_HUY', 'HOAN_THANH'].includes(status);
+    && status === 'CHO_THANH_TOAN'
+    && paymentStatus === 'CHO_THANH_TOAN';
   const failureReason = order.lyDoTuChoi || order.lyDoGiaoThatBai;
 
   return (
@@ -194,8 +205,8 @@ export default function DeliveryTracking() {
         {error ? <div className="delivery-inline-error"><AlertTriangle size={17} />{error}</div> : null}
 
         {!failed ? (
-          <div className="delivery-timeline">
-            {NORMAL_STEPS.map(({ code, label, icon: Icon }, index) => {
+          <div className="delivery-timeline" style={{ '--delivery-step-count': steps.length }}>
+            {steps.map(({ code, label, icon: Icon }, index) => {
               const active = index === currentStep;
               const done = currentStep >= 0 && index < currentStep;
               return (
@@ -227,18 +238,22 @@ export default function DeliveryTracking() {
                 <p><UserRound size={17} /><span><small>Người nhận</small><strong>{order.tenNguoiNhan}</strong></span></p>
                 <p><Phone size={17} /><span><small>Số điện thoại</small><strong>{order.soDienThoaiNhanChe}</strong></span></p>
                 <p className="wide"><MapPin size={17} /><span><small>Địa chỉ</small><strong>{order.diaChiGiaoHang}</strong></span></p>
+                {order.googleMaps && order.quangDuongMet ? <p><Truck size={17} /><span><small>Quãng đường Google Maps</small><strong>{formatDistanceMeters(order.quangDuongMet)}</strong></span></p> : null}
+                {order.googleMaps && order.thoiGianDuKienGiay ? <p><Clock3 size={17} /><span><small>Thời gian di chuyển dự kiến</small><strong>{formatDurationSeconds(order.thoiGianDuKienGiay)}</strong></span></p> : null}
                 {order.ghiChuGiaoHang ? <p className="wide"><Clock3 size={17} /><span><small>Ghi chú giao hàng</small><strong>{order.ghiChuGiaoHang}</strong></span></p> : null}
               </div>
             </section>
 
             {order.maVanChuyen ? (
               <section className="delivery-info-card">
-                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>GrabExpress (Demo) mô phỏng điều phối tài xế sau khi bếp hoàn thành toàn bộ món</p></div></div>
+                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>GrabExpress (Demo) có thể điều phối tài xế khi bếp gần hoàn tất; chỉ bàn giao sau khi toàn bộ món sẵn sàng</p></div></div>
                 <div className="delivery-recipient-grid">
                   <p><PackageCheck size={17} /><span><small>Mã vận đơn</small><strong><button type="button" onClick={() => copyText(order.maVanChuyen, 'Đã sao chép mã vận đơn.')}>{order.maVanChuyen} <Copy size={14} /></button></strong></span></p>
                   <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'GrabExpress (Demo) đang điều phối'}</strong></span></p>
                   {order.tenNguoiGiao ? <p><UserRound size={17} /><span><small>Tài xế</small><strong>{order.tenNguoiGiao}</strong></span></p> : null}
                   {order.soDienThoaiNguoiGiaoChe ? <p><Phone size={17} /><span><small>Liên hệ tài xế</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></p> : null}
+                  {order.trangThaiDoiTac ? <p><Truck size={17} /><span><small>Đối tác cập nhật</small><strong>{deliveryStatusLabel(order.trangThaiDoiTac)}</strong></span></p> : null}
+                  {order.lyDoDoiTac ? <p className="wide"><AlertTriangle size={17} /><span><small>Phản hồi đối tác</small><strong>{order.lyDoDoiTac}</strong></span></p> : null}
                 </div>
               </section>
             ) : null}
@@ -247,7 +262,10 @@ export default function DeliveryTracking() {
           <aside className="delivery-payment-card">
             <div className="delivery-info-title"><CreditCard size={20} /><div><h2>Thanh toán</h2><p>{order.phuongThucThanhToan === 'VIETQR' ? 'Chuyển khoản VietQR' : 'Thanh toán khi nhận hàng'}</p></div></div>
             <div className="delivery-payment-status"><span className={deliveryStatusClass(order.trangThaiThanhToan)}>{deliveryPaymentLabel(order.trangThaiThanhToan)}</span></div>
-            <div className="delivery-track-money"><p><span>Tạm tính</span><strong>{formatMoney(order.tamTinh)}</strong></p><p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p><p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p><div><span>Tổng cộng</span><strong>{formatMoney(order.tongThanhToan)}</strong></div></div>
+            <div className="delivery-track-money"><p><span>Tạm tính</span><strong>{formatMoney(order.tamTinh)}</strong></p><p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p><p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p>{Number(order.soTienDaHoan || 0) > 0 ? <p><span>Đã hoàn tiền</span><strong>{formatMoney(order.soTienDaHoan)}</strong></p> : null}{Number(order.soTienCanHoan || 0) > 0 ? <p><span>Đang chờ hoàn</span><strong>{formatMoney(order.soTienCanHoan)}</strong></p> : null}<div><span>Tổng cộng</span><strong>{formatMoney(order.tongThanhToan)}</strong></div></div>
+
+            {status === 'CHO_THANH_TOAN' && order.thoiGianHetHanThanhToan ? <div className="delivery-eta warning"><Clock3 size={19} /><span><small>Hạn thanh toán VietQR</small><strong>{formatDate(order.thoiGianHetHanThanhToan)}</strong></span></div> : null}
+            {paymentStatus === 'CHO_HOAN_TIEN' ? <div className="delivery-refund-notice"><AlertTriangle size={18} /><span>Nhà hàng đang hoàn {formatMoney(order.soTienCanHoan)}. Trạng thái sẽ cập nhật sau khi thu ngân xác nhận giao dịch hoàn tiền.</span></div> : null}
 
             {order.thoiGianSanSang ? <div className="delivery-eta"><Clock3 size={19} /><span><small>Sẵn sàng bàn giao</small><strong>{formatDate(order.thoiGianSanSang)}</strong></span></div> : null}
             {order.thoiGianBanGiao ? <div className="delivery-eta"><Truck size={19} /><span><small>Đã bàn giao</small><strong>{formatDate(order.thoiGianBanGiao)}</strong></span></div> : null}
@@ -257,7 +275,7 @@ export default function DeliveryTracking() {
             {qr ? <div className="delivery-qr-box"><img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /><strong>{formatMoney(qr.amount)}</strong><small>{qr.bankName} · {qr.accountNo}</small><small>Nội dung: {qr.addInfo}</small></div> : null}
 
             {canCancel ? (
-              <div className="delivery-cancel-box"><strong>Cần hủy đơn?</strong><textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi nhà hàng xác nhận" /><button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Hủy đơn</button></div>
+              <div className="delivery-cancel-box"><strong>Cần hủy đơn?</strong><textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi bếp tiếp nhận" /><button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Hủy đơn</button></div>
             ) : null}
 
             <a className="delivery-support-phone" href={`tel:${import.meta.env.VITE_RESTAURANT_PHONE || '0979792909'}`}><Phone size={18} /> Liên hệ nhà hàng</a>

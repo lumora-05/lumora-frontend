@@ -3,6 +3,9 @@ import axiosClient from './axiosClient';
 const publicConfig = { skipAuth: true };
 
 export const deliveryApi = {
+  quote: (data) => axiosClient.post('/customer/delivery/quote', data, publicConfig),
+  requestOtp: (data) => axiosClient.post('/customer/delivery/phone-otp/request', data, publicConfig),
+  verifyOtp: (data) => axiosClient.post('/customer/delivery/phone-otp/verify', data, publicConfig),
   create: (data) => axiosClient.post('/customer/delivery/orders', data, publicConfig),
   track: (trackingToken) => axiosClient.get(
     `/customer/delivery/orders/${encodeURIComponent(trackingToken)}`,
@@ -23,10 +26,12 @@ export const deliveryApi = {
   }),
   detail: (orderId) => axiosClient.get(`/delivery-orders/${orderId}`),
   confirmVietQr: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/confirm-vietqr`, data),
+  confirmRefund: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/confirm-refund`, data),
   confirmOrder: (orderId) => axiosClient.post(`/delivery-orders/${orderId}/confirm`),
   rejectOrder: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/reject`, data),
   handover: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/handover`, data),
   complete: (orderId) => axiosClient.post(`/delivery-orders/${orderId}/complete`),
   fail: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/fail`, data),
+  simulateProviderResult: (orderId, data) => axiosClient.post(`/delivery-orders/${orderId}/simulate-provider-result`, data),
   retry: (orderId) => axiosClient.post(`/delivery-orders/${orderId}/retry`),
 };
