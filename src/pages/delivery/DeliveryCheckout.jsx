@@ -8,7 +8,6 @@ import {
   Minus,
   Phone,
   Plus,
-  ShieldCheck,
   ShoppingBag,
   Trash2,
   UserRound,
@@ -55,11 +54,6 @@ export default function DeliveryCheckout() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [otpRequestId, setOtpRequestId] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [demoOtp, setDemoOtp] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [phoneVerificationToken, setPhoneVerificationToken] = useState('');
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
@@ -123,12 +117,6 @@ export default function DeliveryCheckout() {
     return (event) => {
       const value = event.target.value;
       setForm((current) => ({ ...current, [field]: value }));
-      if (field === 'soDienThoaiNhan') {
-        setOtpRequestId('');
-        setOtpCode('');
-        setDemoOtp('');
-        setPhoneVerificationToken('');
-      }
     };
   }
 
@@ -145,53 +133,6 @@ export default function DeliveryCheckout() {
     }));
   }
 
-  async function requestPhoneOtp() {
-    const phone = normalizePhone(form.soDienThoaiNhan);
-    if (!/^\+?[0-9]{9,15}$/.test(phone)) {
-      toast.error('Vui lòng nhập số điện thoại hợp lệ trước.');
-      return;
-    }
-    setOtpLoading(true);
-    try {
-      const response = await deliveryApi.requestOtp({ soDienThoai: phone });
-      const data = unwrapDeliveryResponse(response);
-      setOtpRequestId(data?.requestId || '');
-      setDemoOtp(data?.demoOtp || '');
-      setOtpCode('');
-      setPhoneVerificationToken('');
-      toast.success('Đã tạo mã OTP xác thực số điện thoại.');
-    } catch (error) {
-      toast.error(errorMessageOf(error, 'Không thể tạo OTP.'));
-    } finally {
-      setOtpLoading(false);
-    }
-  }
-
-  async function verifyPhoneOtp() {
-    const phone = normalizePhone(form.soDienThoaiNhan);
-    if (!otpRequestId || !/^\d{6}$/.test(otpCode)) {
-      toast.error('Vui lòng nhập đủ mã OTP 6 số.');
-      return;
-    }
-    setOtpLoading(true);
-    try {
-      const response = await deliveryApi.verifyOtp({
-        requestId: otpRequestId,
-        soDienThoai: phone,
-        otp: otpCode,
-      });
-      const data = unwrapDeliveryResponse(response);
-      if (!data?.verificationToken) throw new Error('Không nhận được token xác thực.');
-      setPhoneVerificationToken(data.verificationToken);
-      toast.success('Số điện thoại đã được xác thực.');
-    } catch (error) {
-      setPhoneVerificationToken('');
-      toast.error(errorMessageOf(error, 'OTP không hợp lệ.'));
-    } finally {
-      setOtpLoading(false);
-    }
-  }
-
   async function submit(event) {
     event.preventDefault();
     if (!cart.items.length) {
@@ -202,10 +143,6 @@ export default function DeliveryCheckout() {
     const phone = normalizePhone(form.soDienThoaiNhan);
     if (!/^\+?[0-9]{9,15}$/.test(phone)) {
       toast.error('Số điện thoại nhận hàng không hợp lệ.');
-      return;
-    }
-    if (!phoneVerificationToken) {
-      toast.error('Vui lòng xác thực số điện thoại bằng OTP trước khi đặt đơn.');
       return;
     }
     if (!form.tenNguoiNhan.trim()) {
@@ -245,7 +182,6 @@ export default function DeliveryCheckout() {
         ghiChuGiaoHang: form.ghiChuGiaoHang.trim() || null,
         phuongThucThanhToan: form.phuongThucThanhToan,
         ghiChuDonHang: form.ghiChuDonHang.trim() || null,
-        phoneVerificationToken,
         items: cart.items.map((item) => ({
           maMonAn: Number(itemId(item)),
           soLuong: Number(item.soLuong || 1),
@@ -298,23 +234,10 @@ export default function DeliveryCheckout() {
       <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>
         <div className="delivery-checkout-main">
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><UserRound size={20} /></span><div><h2>Người nhận</h2><p>Xác thực số điện thoại giúp hạn chế đơn COD giả</p></div></div>
+            <div className="delivery-card-title"><span><UserRound size={20} /></span><div><h2>Người nhận</h2></div></div>
             <div className="delivery-form-grid two">
               <label><span>Họ tên người nhận *</span><div><UserRound size={18} /><input required value={form.tenNguoiNhan} onChange={updateField('tenNguoiNhan')} maxLength={120} placeholder="Nguyễn Văn A" /></div></label>
               <label><span>Số điện thoại *</span><div><Phone size={18} /><input required value={form.soDienThoaiNhan} onChange={updateField('soDienThoaiNhan')} maxLength={20} placeholder="0901234567" inputMode="tel" /></div></label>
-            </div>
-            <div className="delivery-otp-box">
-              <div className="delivery-otp-head"><ShieldCheck size={18} /><strong>Xác thực số điện thoại</strong>{phoneVerificationToken && <span>Đã xác thực</span>}</div>
-              {!otpRequestId ? (
-                <button type="button" onClick={requestPhoneOtp} disabled={otpLoading}>{otpLoading ? <LoaderCircle className="spin" size={16} /> : <Phone size={16} />} Gửi mã OTP</button>
-              ) : (
-                <div className="delivery-otp-actions">
-                  <input value={otpCode} onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="Nhập 6 số OTP" disabled={Boolean(phoneVerificationToken)} />
-                  <button type="button" onClick={verifyPhoneOtp} disabled={otpLoading || Boolean(phoneVerificationToken)}>{otpLoading ? <LoaderCircle className="spin" size={16} /> : <ShieldCheck size={16} />} Xác thực</button>
-                  {!phoneVerificationToken && <button type="button" className="secondary" onClick={requestPhoneOtp} disabled={otpLoading}>Gửi lại</button>}
-                </div>
-              )}
-              {demoOtp && !phoneVerificationToken && <small className="delivery-demo-otp">OTP demo cho đồ án: <b>{demoOtp}</b></small>}
             </div>
           </section>
 
@@ -393,7 +316,7 @@ export default function DeliveryCheckout() {
             <p><span>Phí giao hàng</span><strong>{quote ? formatMoney(deliveryFee) : 'Chờ địa chỉ'}</strong></p>
             <div><span>Tổng thanh toán</span><strong>{quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
           </div>
-          <button className="delivery-submit-order" type="submit" disabled={submitting || !quote || !phoneVerificationToken}>
+          <button className="delivery-submit-order" type="submit" disabled={submitting || !quote}>
             {submitting ? <LoaderCircle className="spin" size={19} /> : <ShoppingBag size={19} />}
             {submitting ? 'Đang gửi đơn...' : 'Đặt món giao tận nơi'}
           </button>

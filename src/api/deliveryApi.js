@@ -4,8 +4,6 @@ const publicConfig = { skipAuth: true };
 
 export const deliveryApi = {
   quote: (data) => axiosClient.post('/customer/delivery/quote', data, publicConfig),
-  requestOtp: (data) => axiosClient.post('/customer/delivery/phone-otp/request', data, publicConfig),
-  verifyOtp: (data) => axiosClient.post('/customer/delivery/phone-otp/verify', data, publicConfig),
   create: (data) => axiosClient.post('/customer/delivery/orders', data, publicConfig),
   track: (trackingToken) => axiosClient.get(
     `/customer/delivery/orders/${encodeURIComponent(trackingToken)}`,
