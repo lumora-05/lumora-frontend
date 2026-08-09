@@ -238,13 +238,7 @@ export default function CustomerMenu() {
           </div>
         ) : (
           <section className="v0-shell v0-section v0-menu-section customer-menu-home-section">
-            <div className="v0-section-head">
-              <span className="v0-eyebrow">Thực đơn</span>
-              <h2 className="v0-serif">Những món ăn được yêu thích nhất</h2>
-              <p>
-                Tuyển chọn từ căn bếp LUMORA — mỗi món là sự kết hợp giữa nguyên liệu tươi và bàn tay khéo léo của đầu bếp.
-              </p>
-            </div>
+
 
             {menuError ? (
               <div className="customer-menu-inline-state error">
