@@ -2435,3 +2435,9 @@
     font-size:12px;
   }
 }
+
+
+/* Sync Cart / Orders / Reviews page background with the QR menu background. */
+.customer-menu-bg-page{
+  background:linear-gradient(180deg,#faf7f2 0%,#f8f5ef 100%);
+}

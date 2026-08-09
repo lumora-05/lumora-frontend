@@ -119,7 +119,7 @@ export default function Cart() {
   }
 
   return (
-    <main className="customer-flow-page">
+    <main className="customer-flow-page customer-menu-bg-page">
       <CustomerHeader />
 
       <section className="customer-cart-container">

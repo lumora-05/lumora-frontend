@@ -195,7 +195,7 @@ export default function CustomerReviews() {
   const totalReviews = visibleReviewCount(statistics);
 
   return (
-    <main className="customer-flow-page customer-review-page">
+    <main className="customer-flow-page customer-review-page customer-menu-bg-page">
       <CustomerHeader />
 
       <section className="customer-review-container">
