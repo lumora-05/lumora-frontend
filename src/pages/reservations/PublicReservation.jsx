@@ -196,7 +196,7 @@ export default function PublicReservation() {
       return;
     }
     if (!VIETNAM_MOBILE_PATTERN.test(phone)) {
-      if (!silent) toast.error('Số điện thoại phải là số di động Việt Nam hợp lệ gồm 10 chữ số.');
+      if (!silent) toast.error('Vui lòng nhập số điện thoại hợp lệ.');
       return;
     }
     try {
