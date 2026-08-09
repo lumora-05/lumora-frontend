@@ -2181,13 +2181,16 @@
   border-radius:15px;
 }
 .customer-menu-showcase-page .customer-menu-food-image{
-  aspect-ratio:1.7 / 1;
+  aspect-ratio:1.5 / 1;
   margin: 0;
   width: 100%;
   border-radius:9px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
-  border-radius:9px;
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  border-radius: 9px;
 }
 .customer-menu-food-badge{
   left:8px;
