@@ -19,11 +19,13 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { reservationApi } from '../../api/reservationApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { StaffReservationPreorderModal, preorderStatus, preorderStatusMeta } from './ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pagination';
 import {
+  canCheckIn,
   canMarkNoShow,
   reservationData,
   reservationDate,
@@ -44,6 +46,7 @@ const STATUS_OPTIONS = [
   ['DA_HUY', 'Đã hủy'],
   ['TU_CHOI', 'Từ chối'],
   ['KHONG_DEN', 'Không đến'],
+  ['HET_HAN', 'Hết hạn'],
 ];
 
 const today = () => {
@@ -56,7 +59,7 @@ function ActionButton({ children, tone = '', ...props }) {
   return <button type="button" className={`reservation-action-button ${tone}`} {...props}>{children}</button>;
 }
 
-function DetailModal({ item, onClose }) {
+function DetailModal({ item, onClose, defaultDurationMinutes = 120 }) {
   const meta = reservationStatusMeta(item);
   const lines = [
     ['Mã tra cứu', item?.maTraCuu],
@@ -64,7 +67,7 @@ function DetailModal({ item, onClose }) {
     ['Số điện thoại', item?.soDienThoai],
     ['Ngày giờ đến', reservationDateTime(item?.ngayGioDen)],
     ['Số lượng khách', `${item?.soLuongKhach || 0} người`],
-    ['Thời lượng', `${item?.thoiLuongPhut || 120} phút`],
+    ['Thời lượng', `${item?.thoiLuongPhut || defaultDurationMinutes} phút`],
     ['Khu vực mong muốn', item?.khuVucMongMuon || 'Không yêu cầu'],
     ['Bàn dự kiến', item?.tenBanDuKien || 'Chưa chọn'],
     ['Bàn thực tế', item?.tenBanThucTe || 'Chưa xếp'],
@@ -91,7 +94,7 @@ function TableSelectModal({ action, item, tables, loadingTables, selectedTable, 
   return (
     <section className="reservation-manage-modal reservation-table-modal" role="dialog" aria-modal="true">
       <header><div><span>{isConfirm ? 'XÁC NHẬN ĐẶT BÀN' : 'XẾP BÀN THỰC TẾ'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{item?.soLuongKhach} khách · {reservationDateTime(item?.ngayGioDen)}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
-      <div className="reservation-table-intro"><Table2 size={20} /><p>{isConfirm ? 'Chọn bàn dự kiến phù hợp. Bàn chưa chuyển sang đang sử dụng cho đến khi khách check-in và được xếp bàn.' : 'Chọn bàn trống để bắt đầu phiên phục vụ cho khách.'}</p></div>
+      <div className="reservation-table-intro"><Table2 size={20} /><p>{isConfirm ? 'Chọn bàn hoặc nhóm bàn ghép dự kiến phù hợp. Bàn chưa chuyển sang đang sử dụng cho đến khi khách check-in và được xếp bàn.' : 'Chọn bàn hoặc nhóm bàn ghép đang trống để bắt đầu phiên phục vụ cho khách.'}</p></div>
       <div className="reservation-table-list">
         {loadingTables ? <div className="reservation-modal-loading"><LoaderCircle className="spin" size={22} /> Đang kiểm tra bàn khả dụng...</div>
           : tables.length ? tables.map((table) => {
@@ -103,7 +106,7 @@ function TableSelectModal({ action, item, tables, loadingTables, selectedTable, 
                 <span><Table2 size={19} /></span><div><strong>{table?.tenBan || `Bàn ${table?.maBan}`}</strong><small>{table?.khuVuc || 'Chưa có khu vực'} · {table?.sucChua || 0} chỗ</small></div><em>{availabilityLabel}</em>
               </button>
             );
-          }) : <div className="reservation-modal-empty">Không có bàn phù hợp trong khung giờ này.</div>}
+          }) : <div className="reservation-modal-empty">Không có bàn hoặc nhóm bàn phù hợp trong khung giờ này. Với đoàn đông, hãy ghép các bàn phù hợp trước khi xác nhận.</div>}
       </div>
       {isConfirm ? <label className="reservation-modal-field">Ghi chú xác nhận<textarea rows="3" maxLength="500" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Không bắt buộc" /></label> : null}
       <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || !selectedTable}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />}{isConfirm ? 'Xác nhận đặt bàn' : 'Xếp bàn'}</button></footer>
@@ -144,6 +147,11 @@ export default function ReservationManagement({ role = 'admin' }) {
   const socketEvent = useWebSocket(topics);
   const [rows, setRows] = useState([]);
   const [areas, setAreas] = useState([]);
+  const [reservationPolicy, setReservationPolicy] = useState({
+    defaultDurationMinutes: 120,
+    noShowGraceMinutes: 15,
+    checkInEarlyMinutes: 30,
+  });
   const [status, setStatus] = useState('');
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
@@ -164,12 +172,27 @@ export default function ReservationManagement({ role = 'admin' }) {
   const [note, setNote] = useState('');
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [clockTick, setClockTick] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTick(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     reservationApi.publicAreas().then((response) => {
       const data = reservationData(response);
       setAreas(Array.isArray(data) ? data : []);
     }).catch(() => setAreas([]));
+
+    systemSettingApi.getPublic().then((response) => {
+      const settings = systemSettingData(response);
+      setReservationPolicy({
+        defaultDurationMinutes: Number(settings?.reservationDefaultDurationMinutes) || 120,
+        noShowGraceMinutes: Math.max(Number(settings?.reservationNoShowGraceMinutes) || 0, 0),
+        checkInEarlyMinutes: Math.max(Number(settings?.reservationCheckInEarlyMinutes) || 0, 0),
+      });
+    }).catch(() => {});
   }, []);
 
   const load = useCallback(async () => {
@@ -244,7 +267,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       const response = await reservationApi.availableTables({
         arrival: item?.ngayGioDen,
         partySize: item?.soLuongKhach,
-        durationMinutes: item?.thoiLuongPhut || 120,
+        durationMinutes: item?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes,
         area: item?.khuVucMongMuon || undefined,
         excludeReservationId: reservationId(item),
       });
@@ -323,7 +346,7 @@ export default function ReservationManagement({ role = 'admin' }) {
                   const meta = reservationStatusMeta(statusValue);
                   return (
                     <tr key={reservationId(item)}>
-                      <td><strong>{reservationTime(item?.ngayGioDen)}</strong><small>{reservationDate(item?.ngayGioDen)}</small><em>{item?.thoiLuongPhut || 120} phút</em></td>
+                      <td><strong>{reservationTime(item?.ngayGioDen)}</strong><small>{reservationDate(item?.ngayGioDen)}</small><em>{item?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes} phút</em></td>
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
@@ -332,7 +355,14 @@ export default function ReservationManagement({ role = 'admin' }) {
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
                         {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone="preorder" onClick={() => openAction('preorder', item)}><ChefHat size={15} /> Món đặt trước</ActionButton> : null}
                         {statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
-                        {statusValue === 'DA_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('check-in', item)}><UserCheck size={15} /> Check-in</ActionButton>{canMarkNoShow(item) ? <ActionButton tone="warning" onClick={() => openAction('no-show', item)}><CalendarClock size={15} /> Không đến</ActionButton> : null}</> : null}
+                        {statusValue === 'DA_XAC_NHAN' ? <>
+                          {canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, clockTick)
+                            ? <ActionButton tone="primary" onClick={() => openAction('check-in', item)}><UserCheck size={15} /> Check-in</ActionButton>
+                            : null}
+                          {canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, clockTick)
+                            ? <ActionButton tone="warning" onClick={() => openAction('no-show', item)}><CalendarClock size={15} /> Không đến</ActionButton>
+                            : null}
+                        </> : null}
                         {statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> Xếp bàn</ActionButton> : null}
                         {['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'KHACH_DA_DEN'].includes(statusValue) ? <ActionButton tone="muted-danger" onClick={() => openAction('cancel', item)}>Hủy</ActionButton> : null}
                       </div></td>
@@ -352,7 +382,7 @@ export default function ReservationManagement({ role = 'admin' }) {
 
       {(modal || detail) ? createPortal(
         <div className="reservation-manage-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && (setModal(null), setDetail(null))}>
-          {detail ? <DetailModal item={detail} onClose={() => setDetail(null)} /> : null}
+          {detail ? <DetailModal item={detail} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onClose={() => setDetail(null)} /> : null}
           {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}

@@ -20,6 +20,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import LumoraChatbot from '../../components/customer/LumoraChatbot';
 import { CustomerReservationPreorder } from '../../components/reservation/ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
@@ -27,6 +28,7 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import {
   canCustomerCancel,
   canCustomerEdit,
+  maxReservationDateTime,
   minReservationDateTime,
   reservationData,
   reservationDate,
@@ -49,7 +51,7 @@ const EMPTY_FORM = {
 
 function ReservationStatusTimeline({ item }) {
   const current = reservationStatus(item);
-  const terminal = ['DA_HUY', 'TU_CHOI', 'KHONG_DEN'].includes(current);
+  const terminal = ['DA_HUY', 'TU_CHOI', 'KHONG_DEN', 'HET_HAN'].includes(current);
   const steps = [
     ['CHO_XAC_NHAN', 'Đã gửi yêu cầu'],
     ['DA_XAC_NHAN', 'Nhà hàng xác nhận'],
@@ -86,7 +88,7 @@ function ReservationStatusTimeline({ item }) {
   );
 }
 
-function ReservationDetail({ item, onEdit, onCancel }) {
+function ReservationDetail({ item, onEdit, onCancel, defaultDurationMinutes = 120 }) {
   const meta = reservationStatusMeta(item);
   const status = reservationStatus(item);
   return (
@@ -112,7 +114,7 @@ function ReservationDetail({ item, onEdit, onCancel }) {
       <div className="reservation-public-detail-lines">
         <p><span>Bàn dự kiến</span><strong>{item?.tenBanDuKien || 'Nhà hàng sẽ sắp xếp'}</strong></p>
         <p><span>Bàn thực tế</span><strong>{item?.tenBanThucTe || 'Chưa xếp bàn'}</strong></p>
-        <p><span>Thời lượng dự kiến</span><strong>{item?.thoiLuongPhut || 120} phút</strong></p>
+        <p><span>Thời lượng dự kiến</span><strong>{item?.thoiLuongPhut || defaultDurationMinutes} phút</strong></p>
         <p><span>Ngày tạo</span><strong>{reservationDateTime(item?.thoiGianTao)}</strong></p>
       </div>
 
@@ -133,6 +135,15 @@ export default function PublicReservation() {
   const toast = useToast();
   const [mode, setMode] = useState('create');
   const [areas, setAreas] = useState([]);
+  const [reservationPolicy, setReservationPolicy] = useState({
+    defaultDurationMinutes: 120,
+    preparationMinutes: 30,
+    noShowGraceMinutes: 15,
+    checkInEarlyMinutes: 30,
+    minimumAdvanceMinutes: 30,
+    maximumAdvanceDays: 60,
+    openingHours: '',
+  });
   const [form, setForm] = useState(EMPTY_FORM);
   const [lookup, setLookup] = useState({ code: '', phone: '' });
   const [reservation, setReservation] = useState(null);
@@ -147,6 +158,28 @@ export default function PublicReservation() {
     reservationApi.publicAreas()
       .then((response) => setAreas(Array.isArray(reservationData(response)) ? reservationData(response) : []))
       .catch(() => setAreas([]));
+
+    systemSettingApi.getPublic()
+      .then((response) => {
+        const settings = systemSettingData(response);
+        const next = {
+          defaultDurationMinutes: Number(settings?.reservationDefaultDurationMinutes) || 120,
+          preparationMinutes: Math.max(Number(settings?.reservationPreparationMinutes) || 0, 0),
+          noShowGraceMinutes: Math.max(Number(settings?.reservationNoShowGraceMinutes) || 0, 0),
+          checkInEarlyMinutes: Math.max(Number(settings?.reservationCheckInEarlyMinutes) || 0, 0),
+          minimumAdvanceMinutes: Math.max(Number(settings?.reservationMinimumAdvanceMinutes) || 0, 0),
+          maximumAdvanceDays: Math.max(Number(settings?.reservationMaximumAdvanceDays) || 60, 1),
+          openingHours: settings?.openingHours || '',
+        };
+        setReservationPolicy(next);
+        setForm((current) => ({
+          ...current,
+          thoiLuongPhut: Number(current.thoiLuongPhut) === 120
+            ? next.defaultDurationMinutes
+            : current.thoiLuongPhut,
+        }));
+      })
+      .catch(() => {});
   }, []);
 
   const loadReservation = useCallback(async (silent = false) => {
@@ -172,7 +205,20 @@ export default function PublicReservation() {
     if (socketEvent && reservation?.maTraCuu) loadReservation(true);
   }, [loadReservation, reservation?.maTraCuu, socketEvent]);
 
-  const minDateTime = useMemo(() => minReservationDateTime(15), []);
+  const minDateTime = useMemo(
+    () => minReservationDateTime(reservationPolicy.minimumAdvanceMinutes),
+    [reservationPolicy.minimumAdvanceMinutes],
+  );
+  const maxDateTime = useMemo(
+    () => maxReservationDateTime(reservationPolicy.maximumAdvanceDays),
+    [reservationPolicy.maximumAdvanceDays],
+  );
+  const durationOptions = useMemo(
+    () => Array.from(new Set([60, 90, 120, 150, 180, 240, reservationPolicy.defaultDurationMinutes]))
+      .filter((value) => value >= 30 && value <= 360)
+      .sort((a, b) => a - b),
+    [reservationPolicy.defaultDurationMinutes],
+  );
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -182,7 +228,15 @@ export default function PublicReservation() {
     if (!form.hoTenKhach.trim()) return 'Vui lòng nhập họ tên.';
     if (!form.soDienThoai.trim()) return 'Vui lòng nhập số điện thoại.';
     if (!form.ngayGioDen) return 'Vui lòng chọn ngày giờ đến.';
-    if (new Date(form.ngayGioDen).getTime() <= Date.now()) return 'Ngày giờ đến phải ở tương lai.';
+    const arrival = new Date(form.ngayGioDen).getTime();
+    const earliest = Date.now() + reservationPolicy.minimumAdvanceMinutes * 60000;
+    const latest = Date.now() + reservationPolicy.maximumAdvanceDays * 24 * 60 * 60 * 1000;
+    if (!Number.isFinite(arrival) || arrival < earliest) {
+      return `Vui lòng đặt bàn trước ít nhất ${reservationPolicy.minimumAdvanceMinutes} phút.`;
+    }
+    if (arrival > latest) {
+      return `Chỉ có thể đặt bàn trước tối đa ${reservationPolicy.maximumAdvanceDays} ngày.`;
+    }
     if (Number(form.soLuongKhach) < 1 || Number(form.soLuongKhach) > 50) return 'Số lượng khách phải từ 1 đến 50.';
     return '';
   }
@@ -194,7 +248,7 @@ export default function PublicReservation() {
       ngayGioDen: form.ngayGioDen,
       soLuongKhach: Number(form.soLuongKhach),
       khuVucMongMuon: form.khuVucMongMuon || null,
-      thoiLuongPhut: Number(form.thoiLuongPhut) || 120,
+      thoiLuongPhut: Number(form.thoiLuongPhut) || reservationPolicy.defaultDurationMinutes,
       ghiChu: form.ghiChu.trim() || null,
     };
   }
@@ -231,7 +285,7 @@ export default function PublicReservation() {
       ngayGioDen: toDateTimeLocal(reservation?.ngayGioDen),
       soLuongKhach: reservation?.soLuongKhach || 2,
       khuVucMongMuon: reservation?.khuVucMongMuon || '',
-      thoiLuongPhut: reservation?.thoiLuongPhut || 120,
+      thoiLuongPhut: reservation?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes,
       ghiChu: reservation?.ghiChu || '',
     });
     setEditing(true);
@@ -305,14 +359,14 @@ export default function PublicReservation() {
             <div className="reservation-public-form-grid">
               <label><span><UserRound size={16} /> Họ tên khách</span><input maxLength="100" value={form.hoTenKhach} onChange={(e) => updateField('hoTenKhach', e.target.value)} placeholder="Nguyễn Văn A" /></label>
               <label><span><Phone size={16} /> Số điện thoại</span><input maxLength="20" value={form.soDienThoai} onChange={(e) => updateField('soDienThoai', e.target.value)} placeholder="0901 234 567" disabled={editing} /></label>
-              <label><span><CalendarDays size={16} /> Ngày giờ đến</span><input type="datetime-local" min={minDateTime} value={form.ngayGioDen} onChange={(e) => updateField('ngayGioDen', e.target.value)} /></label>
+              <label><span><CalendarDays size={16} /> Ngày giờ đến</span><input type="datetime-local" min={minDateTime} max={maxDateTime} value={form.ngayGioDen} onChange={(e) => updateField('ngayGioDen', e.target.value)} /></label>
               <label><span><UsersRound size={16} /> Số lượng khách</span><input type="number" min="1" max="50" value={form.soLuongKhach} onChange={(e) => updateField('soLuongKhach', e.target.value)} /></label>
               <label><span><MapPin size={16} /> Khu vực mong muốn</span><select value={form.khuVucMongMuon} onChange={(e) => updateField('khuVucMongMuon', e.target.value)}><option value="">Nhà hàng tự sắp xếp</option>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></label>
-              <label><span><Clock3 size={16} /> Thời lượng dự kiến</span><select value={form.thoiLuongPhut} onChange={(e) => updateField('thoiLuongPhut', e.target.value)}><option value="60">60 phút</option><option value="90">90 phút</option><option value="120">120 phút</option><option value="150">150 phút</option><option value="180">180 phút</option><option value="240">240 phút</option></select></label>
+              <label><span><Clock3 size={16} /> Thời lượng dự kiến</span><select value={form.thoiLuongPhut} onChange={(e) => updateField('thoiLuongPhut', e.target.value)}>{durationOptions.map((minutes) => <option key={minutes} value={minutes}>{minutes} phút</option>)}</select></label>
               <label className="wide"><span>Ghi chú</span><textarea maxLength="500" rows="4" value={form.ghiChu} onChange={(e) => updateField('ghiChu', e.target.value)} placeholder="Ví dụ: cần ghế trẻ em, khách lớn tuổi, dịp sinh nhật..." /><small>{form.ghiChu.length}/500</small></label>
             </div>
 
-            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn. Nhà hàng sẽ xác nhận và lựa chọn bàn phù hợp dựa trên số lượng khách và tình trạng bàn.</p></div>
+            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn. Nhà hàng sẽ xác nhận bàn hoặc nhóm bàn phù hợp theo số lượng khách. {reservationPolicy.openingHours ? `Giờ phục vụ: ${reservationPolicy.openingHours}.` : ''}</p></div>
             <button className="reservation-public-submit" type="submit" disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={19} /> : <CalendarCheck2 size={19} />}{editing ? 'Lưu thay đổi' : 'Gửi yêu cầu đặt bàn'}</button>
           </form>
         ) : (
@@ -327,7 +381,7 @@ export default function PublicReservation() {
             {reservation ? (
               <>
                 <button type="button" className="reservation-public-copy" onClick={copyCode}><Copy size={16} /> Sao chép mã {reservation.maTraCuu}</button>
-                <ReservationDetail item={reservation} onEdit={startEdit} onCancel={() => setCancelOpen(true)} />
+                <ReservationDetail item={reservation} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onEdit={startEdit} onCancel={() => setCancelOpen(true)} />
                 <CustomerReservationPreorder
                   reservation={reservation}
                   code={lookup.code}

@@ -1,11 +1,22 @@
 import { reservationApi } from '../api/reservationApi';
+import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { normalizePage } from './pagination';
 import { reservationStatus } from './reservations';
 
 const HOLD_STATUSES = ['DA_XAC_NHAN', 'KHACH_DA_DEN'];
-const DEFAULT_SERVICE_MINUTES = 120;
-const PREPARATION_MINUTES = 30;
+const DEFAULT_POLICY = {
+  defaultDurationMinutes: 120,
+  preparationMinutes: 30,
+};
+let activePolicy = { ...DEFAULT_POLICY };
 const PAGE_SIZE = 200;
+
+function policyOf(settings = {}) {
+  return {
+    defaultDurationMinutes: Number(settings?.reservationDefaultDurationMinutes) || DEFAULT_POLICY.defaultDurationMinutes,
+    preparationMinutes: Math.max(Number(settings?.reservationPreparationMinutes) || 0, 0),
+  };
+}
 
 function localDateValue(date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -21,11 +32,13 @@ export function reservationEndTime(item) {
   if (Number.isFinite(explicit)) return explicit;
   const start = item?.ngayGioDen ? new Date(item.ngayGioDen).getTime() : Number.NaN;
   if (!Number.isFinite(start)) return Number.NaN;
-  return start + Number(item?.thoiLuongPhut || DEFAULT_SERVICE_MINUTES) * 60000;
+  return start + Number(item?.thoiLuongPhut || activePolicy.defaultDurationMinutes) * 60000;
 }
 
-export function buildReservationHoldMap(items, now = Date.now()) {
-  const serviceEndWithPreparation = now + (DEFAULT_SERVICE_MINUTES + PREPARATION_MINUTES) * 60000;
+export function buildReservationHoldMap(items, now = Date.now(), policy = activePolicy) {
+  const effectivePolicy = { ...activePolicy, ...(policy || {}) };
+  const serviceEndWithPreparation = now
+    + (effectivePolicy.defaultDurationMinutes + effectivePolicy.preparationMinutes) * 60000;
   const result = new Map();
 
   (Array.isArray(items) ? items : [])
@@ -64,7 +77,7 @@ export function reservationHoldDateTime(item) {
 }
 
 export function reservationHoldMessage(item, tableName = 'Bàn này') {
-  return `${tableName} đã được giữ cho lịch đặt lúc ${reservationHoldDateTime(item)}. Lượt phục vụ mới dự kiến kéo dài 120 phút và cần 30 phút chuẩn bị bàn. Vui lòng chọn bàn khác.`;
+  return `${tableName} đã được giữ cho lịch đặt lúc ${reservationHoldDateTime(item)}. Lượt phục vụ mới dự kiến kéo dài ${activePolicy.defaultDurationMinutes} phút và cần ${activePolicy.preparationMinutes} phút chuẩn bị bàn. Vui lòng chọn bàn khác.`;
 }
 
 export async function fetchReservationHoldMap() {
@@ -73,14 +86,18 @@ export async function fetchReservationHoldMap() {
   const from = localDateValue(now);
   const to = localDateValue(tomorrow);
 
-  const responses = await Promise.all(HOLD_STATUSES.map((status) => reservationApi.list({
-    status,
-    from,
-    to,
-    page: 0,
-    size: PAGE_SIZE,
-  })));
+  const [settingsResponse, ...responses] = await Promise.all([
+    systemSettingApi.getPublic().catch(() => null),
+    ...HOLD_STATUSES.map((status) => reservationApi.list({
+      status,
+      from,
+      to,
+      page: 0,
+      size: PAGE_SIZE,
+    })),
+  ]);
 
+  activePolicy = policyOf(systemSettingData(settingsResponse));
   const rows = responses.flatMap((response) => normalizePage(response, PAGE_SIZE).content);
-  return buildReservationHoldMap(rows);
+  return buildReservationHoldMap(rows, Date.now(), activePolicy);
 }

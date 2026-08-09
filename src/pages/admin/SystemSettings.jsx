@@ -32,6 +32,9 @@ const EMPTY_FORM = {
   reservationDefaultDurationMinutes: '120',
   reservationPreparationMinutes: '30',
   reservationNoShowGraceMinutes: '15',
+  reservationCheckInEarlyMinutes: '30',
+  reservationMinimumAdvanceMinutes: '30',
+  reservationMaximumAdvanceDays: '60',
   vietQrBankId: '',
   vietQrBankName: '',
   vietQrAccountNo: '',
@@ -88,6 +91,9 @@ function formOf(settings = {}) {
     reservationDefaultDurationMinutes: textValue(settings.reservationDefaultDurationMinutes, '120'),
     reservationPreparationMinutes: textValue(settings.reservationPreparationMinutes, '30'),
     reservationNoShowGraceMinutes: textValue(settings.reservationNoShowGraceMinutes, '15'),
+    reservationCheckInEarlyMinutes: textValue(settings.reservationCheckInEarlyMinutes, '30'),
+    reservationMinimumAdvanceMinutes: textValue(settings.reservationMinimumAdvanceMinutes, '30'),
+    reservationMaximumAdvanceDays: textValue(settings.reservationMaximumAdvanceDays, '60'),
     vietQrBankId: settings.vietQrBankId || '',
     vietQrBankName: settings.vietQrBankName || '',
     vietQrAccountNo: settings.vietQrAccountNo || '',
@@ -189,6 +195,21 @@ export default function SystemSettings() {
       toast.error('Thời gian chờ khách trễ phải từ 0 đến 180 phút');
       return;
     }
+    if (!numberInRange(form.reservationCheckInEarlyMinutes, 0, 180)) {
+      setActiveTab('reservation');
+      toast.error('Thời gian cho phép check-in sớm phải từ 0 đến 180 phút');
+      return;
+    }
+    if (!numberInRange(form.reservationMinimumAdvanceMinutes, 0, 1440)) {
+      setActiveTab('reservation');
+      toast.error('Thời gian đặt trước tối thiểu phải từ 0 đến 1440 phút');
+      return;
+    }
+    if (!numberInRange(form.reservationMaximumAdvanceDays, 1, 365)) {
+      setActiveTab('reservation');
+      toast.error('Số ngày đặt trước tối đa phải từ 1 đến 365 ngày');
+      return;
+    }
     if (!numberInRange(form.loyaltyMoneyPerEarnedPoint, 1, Number.MAX_SAFE_INTEGER)
       || !numberInRange(form.loyaltyValuePerRedeemedPoint, 1, Number.MAX_SAFE_INTEGER)
       || !numberInRange(form.loyaltyMinimumRedeemPoints, 1, 1000000)
@@ -217,6 +238,9 @@ export default function SystemSettings() {
       reservationDefaultDurationMinutes: Number(form.reservationDefaultDurationMinutes),
       reservationPreparationMinutes: Number(form.reservationPreparationMinutes),
       reservationNoShowGraceMinutes: Number(form.reservationNoShowGraceMinutes),
+      reservationCheckInEarlyMinutes: Number(form.reservationCheckInEarlyMinutes),
+      reservationMinimumAdvanceMinutes: Number(form.reservationMinimumAdvanceMinutes),
+      reservationMaximumAdvanceDays: Number(form.reservationMaximumAdvanceDays),
       vietQrBankId: form.vietQrBankId.trim(),
       vietQrBankName: form.vietQrBankName.trim(),
       vietQrAccountNo: form.vietQrAccountNo.trim(),
@@ -418,7 +442,7 @@ export default function SystemSettings() {
 
         {activeTab === 'reservation' && (
           <div className="system-settings-card">
-            {cardHead(CalendarClock, 'Đặt bàn', 'Thiết lập thời lượng giữ bàn, thời gian chuẩn bị và khoảng chờ khách đến trễ.')}
+            {cardHead(CalendarClock, 'Đặt bàn', 'Thiết lập thời lượng, khoảng đệm, check-in và giới hạn thời gian đặt bàn.')}
             <div className="system-settings-form-grid three-columns">
               <label>
                 <span>Thời lượng đặt bàn mặc định</span>
@@ -434,6 +458,21 @@ export default function SystemSettings() {
                 <span>Chờ khách đến trễ</span>
                 <div className="system-settings-input suffix"><input type="number" min="0" max="180" name="reservationNoShowGraceMinutes" value={form.reservationNoShowGraceMinutes} onChange={changeField} /><em>phút</em></div>
                 <small>Quá thời gian này có thể xử lý khách không đến.</small>
+              </label>
+              <label>
+                <span>Cho phép check-in sớm</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="180" name="reservationCheckInEarlyMinutes" value={form.reservationCheckInEarlyMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Khoảng thời gian trước giờ hẹn nhân viên được check-in.</small>
+              </label>
+              <label>
+                <span>Đặt trước tối thiểu</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="1440" name="reservationMinimumAdvanceMinutes" value={form.reservationMinimumAdvanceMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Không nhận lịch quá sát thời điểm khách đến.</small>
+              </label>
+              <label>
+                <span>Đặt trước tối đa</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" max="365" name="reservationMaximumAdvanceDays" value={form.reservationMaximumAdvanceDays} onChange={changeField} /><em>ngày</em></div>
+                <small>Giới hạn khách đặt lịch quá xa trong tương lai.</small>
               </label>
               <label className="full">
                 <span>Đường dẫn đặt bàn trực tuyến</span>
