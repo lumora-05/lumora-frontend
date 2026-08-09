@@ -23,6 +23,7 @@ import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+import '../../styles/home.css';
 
 const PAGE_SIZE = 8;
 
@@ -221,63 +222,28 @@ export default function CustomerMenu() {
     <main className="customer-flow-page customer-menu-showcase-page">
       <CustomerHeader tableName={tableName} variant="menu-showcase" />
 
-      {loading ? (
-        <div className="customer-menu-access-state">
-          <LoaderCircle className="spin" size={34} />
-          <h2>Đang tải thực đơn...</h2>
-          <p>Hệ thống đang kiểm tra thông tin bàn và danh sách món.</p>
-        </div>
-      ) : loadError ? (
-        <div className="customer-menu-access-state error">
-          <AlertTriangle size={38} />
-          <h2>Chưa thể mở thực đơn</h2>
-          <p>{loadError}</p>
-          <button type="button" onClick={loadTableAccess}><RefreshCw size={18} /> Thử lại</button>
-        </div>
-      ) : (
-        <section className="customer-menu-workspace">
-          <aside className="customer-menu-categories">
-            <div className="customer-section-title">
-              <span>Danh mục</span>
-              <small>Chọn nhóm món</small>
-            </div>
-            <button className={cat === 'all' ? 'active' : ''} type="button" onClick={() => setCat('all')}>
-              <span><Grid2X2 size={20} /></span>
-              Tất cả món
-            </button>
-            {categoryList.map((item, index) => (
-              <button
-                className={String(cat) === item.id ? 'active' : ''}
-                type="button"
-                key={item.id || index}
-                onClick={() => setCat(item.id)}
-              >
-                <span><CategoryIcon type={item.iconType} /></span>
-                {item.name}
-              </button>
-            ))}
-          </aside>
-
-          <section className="customer-menu-content">
-            <div className="customer-menu-toolbar">
-              <label className="customer-menu-search">
-                <Search size={22} />
-                <input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Tìm kiếm món ăn..." />
-              </label>
-              <Link className="customer-cart-shortcut" to={`/table/${qrToken}/cart`}>
-                <ShoppingCartProxy />
-                <span>Giỏ hàng</span>
-                <b>{cart.count}</b>
-                <ChevronRight size={18} />
-              </Link>
-            </div>
-
-            <div className="customer-menu-heading">
-              <div>
-                <span>Thực đơn</span>
-                <h1>{currentTitle}</h1>
-              </div>
-              <strong>{pageInfo.totalElements} món</strong>
+      <div className="customer-menu-home-clone v0-home">
+        {loading ? (
+          <div className="customer-menu-access-state">
+            <LoaderCircle className="spin" size={34} />
+            <h2>Đang tải thực đơn...</h2>
+            <p>Hệ thống đang kiểm tra thông tin bàn và danh sách món.</p>
+          </div>
+        ) : loadError ? (
+          <div className="customer-menu-access-state error">
+            <AlertTriangle size={38} />
+            <h2>Chưa thể mở thực đơn</h2>
+            <p>{loadError}</p>
+            <button type="button" onClick={loadTableAccess}><RefreshCw size={18} /> Thử lại</button>
+          </div>
+        ) : (
+          <section className="v0-shell v0-section v0-menu-section customer-menu-home-section">
+            <div className="v0-section-head">
+              <span className="v0-eyebrow">Thực đơn</span>
+              <h2 className="v0-serif">Những món ăn được yêu thích nhất</h2>
+              <p>
+                Tuyển chọn từ căn bếp LUMORA — mỗi món là sự kết hợp giữa nguyên liệu tươi và bàn tay khéo léo của đầu bếp.
+              </p>
             </div>
 
             {menuError ? (
@@ -290,7 +256,7 @@ export default function CustomerMenu() {
                 <button type="button" onClick={() => loadMenuPage(0, false)}><RefreshCw size={17} /> Thử lại</button>
               </div>
             ) : menuLoading ? (
-              <div className="customer-menu-inline-state">
+              <div className="customer-menu-inline-state customer-menu-home-state">
                 <LoaderCircle className="spin" size={29} />
                 <div>
                   <strong>Đang tải món ăn...</strong>
@@ -299,24 +265,29 @@ export default function CustomerMenu() {
               </div>
             ) : (
               <>
-                <div className="customer-menu-grid">
-                  {!foods.length ? <div className="customer-menu-empty">Không tìm thấy món phù hợp.</div> : null}
+                <div className="v0-dish-grid">
+                  {!foods.length ? <div className="customer-menu-empty customer-menu-home-empty">Không tìm thấy món phù hợp.</div> : null}
                   {foods.map((food, index) => {
                     const badge = foodBadge(food, index);
+                    const detailUrl = `/table/${qrToken}/foods/${foodId(food)}`;
                     return (
-                      <article className="customer-menu-food-card" key={foodId(food) || index}>
-                        <Link className="customer-menu-food-image" to={`/table/${qrToken}/foods/${foodId(food)}`}>
-                          {badge ? <span className={`customer-menu-food-badge ${badge.tone}`}>{badge.label}</span> : null}
-                          {food.hinhAnh
-                            ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
-                            : <span><UtensilsCrossed size={38} /></span>}
-                        </Link>
-                        <div className="customer-menu-food-body">
-                          <Link to={`/table/${qrToken}/foods/${foodId(food)}`}>{food.tenMonAn}</Link>
-                          <p className="customer-menu-food-description">{foodDescription(food)}</p>
-                          <div>
-                            <strong>{formatMoney(food.gia)}</strong>
-                            <button type="button" onClick={() => handleAdd(food)}>
+                      <article className="v0-dish-card" key={foodId(food) || index}>
+                        <div className="v0-dish-image-wrap">
+                          <Link className="customer-menu-home-image-link" to={detailUrl}>
+                            {food.hinhAnh
+                              ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
+                              : <span className="customer-menu-home-image-placeholder"><UtensilsCrossed size={42} /></span>}
+                          </Link>
+                          {badge ? <span className="v0-dish-tag">{badge.label}</span> : null}
+                        </div>
+                        <div className="v0-dish-body">
+                          <h3 className="v0-serif">
+                            <Link className="customer-menu-home-title-link" to={detailUrl}>{food.tenMonAn}</Link>
+                          </h3>
+                          <p>{foodDescription(food)}</p>
+                          <div className="v0-dish-bottom">
+                            <span className="v0-serif v0-price">{formatMoney(food.gia)}</span>
+                            <button type="button" className="v0-button v0-button-primary v0-dish-add v0-pill" onClick={() => handleAdd(food)}>
                               <Plus size={16} />
                               Thêm
                             </button>
@@ -328,8 +299,8 @@ export default function CustomerMenu() {
                 </div>
 
                 {!pageInfo.last && foods.length ? (
-                  <div className="customer-menu-load-more">
-                    <button type="button" onClick={handleLoadMore} disabled={loadingMore}>
+                  <div className="v0-menu-more">
+                    <button type="button" className="v0-button v0-button-outline v0-pill customer-menu-home-load-more" onClick={handleLoadMore} disabled={loadingMore}>
                       {loadingMore ? <LoaderCircle className="spin" size={18} /> : null}
                       {loadingMore ? 'Đang tải thêm...' : 'Xem thêm món'}
                       {!loadingMore ? <ChevronDown size={18} /> : null}
@@ -339,8 +310,8 @@ export default function CustomerMenu() {
               </>
             )}
           </section>
-        </section>
-      )}
+        )}
+      </div>
     </main>
   );
 }

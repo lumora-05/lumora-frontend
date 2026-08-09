@@ -2287,3 +2287,51 @@
   .customer-menu-showcase-page .customer-menu-heading h1{font-size:30px;}
   .customer-menu-showcase-page .customer-menu-food-body > a{font-size:15px;}
 }
+
+/* ===== QR menu: dùng nguyên phong cách thẻ món của trang chủ =====
+   Giữ nguyên CustomerHeader; phần nội dung bên dưới dùng hệ v0 của Home. */
+.customer-menu-showcase-page .customer-menu-home-clone{
+  min-height:calc(100vh - 78px);
+}
+.customer-menu-showcase-page .customer-menu-home-section{
+  position:relative;
+}
+.customer-menu-showcase-page .customer-menu-home-image-link{
+  position:absolute;
+  inset:0;
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.customer-menu-showcase-page .customer-menu-home-image-link img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.customer-menu-showcase-page .customer-menu-home-image-placeholder{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#fff3e9,#ffe5d5);
+  color:#ee5919;
+}
+.customer-menu-showcase-page .customer-menu-home-title-link{
+  color:inherit;
+  text-decoration:none;
+}
+.customer-menu-showcase-page .customer-menu-home-title-link:hover{
+  color:var(--v0-primary);
+}
+.customer-menu-showcase-page .customer-menu-home-state,
+.customer-menu-showcase-page .customer-menu-home-empty{
+  margin-top:56px;
+}
+.customer-menu-showcase-page .customer-menu-home-empty{
+  grid-column:1 / -1;
+  min-height:180px;
+}
+.customer-menu-showcase-page .customer-menu-home-load-more{
+  height:40px;
+  padding-inline:32px;
+}
