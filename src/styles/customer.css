@@ -2187,10 +2187,30 @@
   border-radius:9px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 9px;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:9px;
+}
+.customer-menu-showcase-page .customer-menu-food-image .customer-menu-food-image-backdrop{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  filter:blur(12px) brightness(1.06);
+  opacity:.52;
+  transform:scale(1.1);
+}
+.customer-menu-showcase-page .customer-menu-food-image .customer-menu-food-image-main{
+  position:relative;
+  z-index:1;
+  transform:scale(.9);
+  transform-origin:center;
+}
+.customer-menu-showcase-page .customer-menu-food-card:hover .customer-menu-food-image .customer-menu-food-image-backdrop{
+  transform:scale(1.1);
+}
+.customer-menu-showcase-page .customer-menu-food-card:hover .customer-menu-food-image .customer-menu-food-image-main{
+  transform:scale(.9);
 }
 .customer-menu-food-badge{
   left:8px;
