@@ -39,6 +39,12 @@ import {
   toDateTimeLocal,
 } from '../../utils/reservations';
 
+const VIETNAM_MOBILE_PATTERN = /^0(?:3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])\d{7}$/;
+
+function normalizeVietnamPhone(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 10);
+}
+
 const EMPTY_FORM = {
   hoTenKhach: '',
   soDienThoai: '',
@@ -184,9 +190,13 @@ export default function PublicReservation() {
 
   const loadReservation = useCallback(async (silent = false) => {
     const code = lookup.code.trim();
-    const phone = lookup.phone.trim();
+    const phone = normalizeVietnamPhone(lookup.phone);
     if (!code || !phone) {
       if (!silent) toast.error('Vui lòng nhập mã đặt bàn và số điện thoại.');
+      return;
+    }
+    if (!VIETNAM_MOBILE_PATTERN.test(phone)) {
+      if (!silent) toast.error('Số điện thoại phải là số di động Việt Nam hợp lệ gồm 10 chữ số.');
       return;
     }
     try {
@@ -227,6 +237,9 @@ export default function PublicReservation() {
   function validateForm() {
     if (!form.hoTenKhach.trim()) return 'Vui lòng nhập họ tên.';
     if (!form.soDienThoai.trim()) return 'Vui lòng nhập số điện thoại.';
+    if (!VIETNAM_MOBILE_PATTERN.test(form.soDienThoai)) {
+      return 'Số điện thoại phải là số di động Việt Nam hợp lệ gồm 10 chữ số.';
+    }
     if (!form.ngayGioDen) return 'Vui lòng chọn ngày giờ đến.';
     const arrival = new Date(form.ngayGioDen).getTime();
     const earliest = Date.now() + reservationPolicy.minimumAdvanceMinutes * 60000;
@@ -244,7 +257,7 @@ export default function PublicReservation() {
   function payload() {
     return {
       hoTenKhach: form.hoTenKhach.trim(),
-      soDienThoai: form.soDienThoai.trim(),
+      soDienThoai: normalizeVietnamPhone(form.soDienThoai),
       ngayGioDen: form.ngayGioDen,
       soLuongKhach: Number(form.soLuongKhach),
       khuVucMongMuon: form.khuVucMongMuon || null,
@@ -358,7 +371,7 @@ export default function PublicReservation() {
 
             <div className="reservation-public-form-grid">
               <label><span><UserRound size={16} /> Họ tên khách</span><input maxLength="100" value={form.hoTenKhach} onChange={(e) => updateField('hoTenKhach', e.target.value)} placeholder="Nguyễn Văn A" /></label>
-              <label><span><Phone size={16} /> Số điện thoại</span><input maxLength="20" value={form.soDienThoai} onChange={(e) => updateField('soDienThoai', e.target.value)} placeholder="0901 234 567" disabled={editing} /></label>
+              <label><span><Phone size={16} /> Số điện thoại</span><input inputMode="numeric" autoComplete="tel" maxLength="10" value={form.soDienThoai} onChange={(e) => updateField('soDienThoai', normalizeVietnamPhone(e.target.value))} placeholder="0901234567" disabled={editing} /></label>
               <label><span><CalendarDays size={16} /> Ngày giờ đến</span><input type="datetime-local" min={minDateTime} max={maxDateTime} value={form.ngayGioDen} onChange={(e) => updateField('ngayGioDen', e.target.value)} /></label>
               <label><span><UsersRound size={16} /> Số lượng khách</span><input type="number" min="1" max="50" value={form.soLuongKhach} onChange={(e) => updateField('soLuongKhach', e.target.value)} /></label>
               <label><span><MapPin size={16} /> Khu vực mong muốn</span><select value={form.khuVucMongMuon} onChange={(e) => updateField('khuVucMongMuon', e.target.value)}><option value="">Nhà hàng tự sắp xếp</option>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></label>
@@ -374,7 +387,7 @@ export default function PublicReservation() {
             <form onSubmit={(event) => { event.preventDefault(); loadReservation(); }}>
               <div><h2>Tra cứu đặt bàn</h2><p>Nhập mã đặt bàn và số điện thoại đã sử dụng khi đăng ký.</p></div>
               <label><span>Mã đặt bàn</span><input value={lookup.code} onChange={(e) => setLookup((current) => ({ ...current, code: e.target.value.toUpperCase() }))} placeholder="DB-7A1B2C3D4E" /></label>
-              <label><span>Số điện thoại</span><input value={lookup.phone} onChange={(e) => setLookup((current) => ({ ...current, phone: e.target.value }))} placeholder="0901 234 567" /></label>
+              <label><span>Số điện thoại</span><input inputMode="numeric" autoComplete="tel" maxLength="10" value={lookup.phone} onChange={(e) => setLookup((current) => ({ ...current, phone: normalizeVietnamPhone(e.target.value) }))} placeholder="0901234567" /></label>
               <button type="submit" disabled={searching}>{searching ? <LoaderCircle className="spin" size={18} /> : <Search size={18} />} Tra cứu</button>
             </form>
 
