@@ -69,8 +69,6 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
   );
 
   useEffect(() => {
-    if (variant !== 'menu-showcase') return undefined;
-
     let active = true;
     systemSettingApi.getPublic()
       .then((response) => {
@@ -88,7 +86,7 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
     return () => {
       active = false;
     };
-  }, [variant]);
+  }, []);
 
   useEffect(() => {
     const providedLabel = normalizeTableLabel(tableName);
@@ -137,23 +135,21 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
     <>
       <header className={headerClassName}>
         <Link className={brandClassName} to={`/table/${qrToken}`}>
-          {isMenuShowcase ? (
-            showcaseBrand.logoUrl ? (
-              <span className="customer-site-brand-home-logo">
-                <img
-                  src={imageUrl(showcaseBrand.logoUrl)}
-                  alt={`Logo ${showcaseBrand.restaurantName}`}
-                />
+          {showcaseBrand.logoUrl ? (
+            <span className="customer-site-brand-home-logo">
+              <img
+                src={imageUrl(showcaseBrand.logoUrl)}
+                alt={`Logo ${showcaseBrand.restaurantName}`}
+              />
+            </span>
+          ) : isMenuShowcase ? (
+            <>
+              <span className="customer-site-brand-wordmark-star" aria-hidden="true">✦</span>
+              <span className="customer-site-brand-wordmark-copy">
+                <strong>LUMORA</strong>
+                <small>RESTAURANT</small>
               </span>
-            ) : (
-              <>
-                <span className="customer-site-brand-wordmark-star" aria-hidden="true">✦</span>
-                <span className="customer-site-brand-wordmark-copy">
-                  <strong>LUMORA</strong>
-                  <small>RESTAURANT</small>
-                </span>
-              </>
-            )
+            </>
           ) : (
             <>
               <span className="customer-site-brand-mark"><UtensilsCrossed size={24} /></span>
