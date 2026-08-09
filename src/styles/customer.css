@@ -1931,7 +1931,7 @@
     font-size:14px;
   }
   .customer-menu-showcase-page .customer-menu-workspace{
-    width:min(100% - 28px,1180px);
+    width:min(100% - 28px,1200px);
     grid-template-columns:210px minmax(0,1fr);
     gap:16px;
   }
@@ -1950,7 +1950,7 @@
   .customer-header-actions.menu-showcase .customer-service-trigger,
   .customer-table-badge.menu-showcase{display:none;}
   .customer-menu-showcase-page .customer-menu-workspace{
-    width:min(100% - 24px,1180px);
+    width:min(100% - 24px,1200px);
     margin-top:18px;
     grid-template-columns:1fr;
   }
@@ -2024,7 +2024,7 @@
 
 .customer-site-header.menu-showcase{
   height:78px;
-  padding:0 max(28px,calc((100vw - 1380px)/2));
+  padding:0 max(28px,calc((100vw - 1200px)/2));
   column-gap:20px;
 }
 .customer-site-brand.menu-showcase{
@@ -2087,7 +2087,7 @@
 }
 
 .customer-menu-showcase-page .customer-menu-workspace{
-  width:min(1280px,calc(100% - 32px));
+  width:min(1200px,calc(100% - 32px));
   margin:20px auto 0;
   grid-template-columns:238px minmax(0,1fr);
   gap:18px;
