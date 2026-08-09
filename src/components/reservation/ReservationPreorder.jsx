@@ -297,9 +297,11 @@ export function CustomerReservationPreorder({ reservation, code, phone, onChange
   const bookingStatus = reservationStatus(reservation);
   const itemCount = Number(preorder?.items?.length || reservation?.soMonDatTruoc || 0);
   const total = preorder?.tongTienDuKien ?? reservation?.tongTienDatTruocDuKien ?? 0;
-  const editable = bookingStatus === 'DA_XAC_NHAN' && !['DA_CHUYEN_BEP', 'DA_HUY'].includes(status);
+  const editable = ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(bookingStatus)
+    && !['DA_CHUYEN_BEP', 'DA_HUY'].includes(status);
   const cancellable = itemCount > 0 && !['DA_CHUYEN_BEP', 'DA_HUY', 'CHUA_DAT'].includes(status);
-  const shouldShow = bookingStatus === 'DA_XAC_NHAN' || itemCount > 0 || status !== 'CHUA_DAT';
+  const shouldShow = ['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(bookingStatus)
+    || itemCount > 0 || status !== 'CHUA_DAT';
 
   if (!shouldShow) return null;
 
@@ -312,11 +314,12 @@ export function CustomerReservationPreorder({ reservation, code, phone, onChange
     <>
       <section className="reservation-public-preorder-card">
         <header>
-          <div><span><ChefHat size={19} /></span><div><h3>Đặt món trước</h3><p>Chọn món sau khi lịch được xác nhận để giảm thời gian chờ tại nhà hàng.</p></div></div>
+          <div><span><ChefHat size={19} /></span><div><h3>Đặt món trước</h3><p>Chọn món ngay khi gửi yêu cầu đặt bàn. Món chưa chuyển xuống bếp cho đến khi bạn đến và được xếp bàn.</p></div></div>
           <span className={`reservation-preorder-status ${meta.tone}`}>{meta.label}</span>
         </header>
         {loading ? <div className="reservation-preorder-inline-loading"><LoaderCircle className="spin" size={20} /> Đang tải thực đơn đặt trước...</div> : (
           <>
+            {bookingStatus === 'CHO_XAC_NHAN' && itemCount > 0 ? <div className="reservation-preorder-approved"><Clock3 size={19} /><p>Món đã được lưu cùng yêu cầu đặt bàn và đang chờ nhà hàng xử lý. Món chưa được gửi xuống bếp.</p></div> : null}
             {status === 'TU_CHOI' && preorder?.lyDoTuChoiDatMonTruoc ? <div className="reservation-preorder-alert"><AlertTriangle size={19} /><p><b>Nhà hàng yêu cầu điều chỉnh:</b> {preorder.lyDoTuChoiDatMonTruoc}</p></div> : null}
             {status === 'DA_XAC_NHAN' ? <div className="reservation-preorder-approved"><CheckCircle2 size={19} /><p>Nhà hàng đã duyệt thực đơn. Món chỉ được chuyển xuống bếp sau khi bạn đến và được xếp bàn.</p></div> : null}
             {status === 'DA_CHUYEN_BEP' ? <div className="reservation-preorder-approved"><ChefHat size={19} /><p>Món đặt trước đã chuyển xuống bếp{preorder?.maDonHang ? ` thành đơn #${preorder.maDonHang}` : ''}.</p></div> : null}
@@ -393,7 +396,10 @@ export function StaffReservationPreorderModal({ item, onClose, onUpdated }) {
 
   const status = preorderStatus(preorder?.trangThaiDatMonTruoc || item?.trangThaiDatMonTruoc);
   const meta = preorderStatusMeta(status);
-  const canSend = status === 'DA_XAC_NHAN' && reservationStatus(item) === 'DA_XEP_BAN';
+  const bookingStatus = reservationStatus(item);
+  const canApprove = status === 'CHO_XAC_NHAN'
+    && ['DA_XAC_NHAN', 'KHACH_DA_DEN', 'DA_XEP_BAN'].includes(bookingStatus);
+  const canSend = status === 'DA_XAC_NHAN' && bookingStatus === 'DA_XEP_BAN';
 
   return (
     <section className="reservation-preorder-modal staff" role="dialog" aria-modal="true">
@@ -410,6 +416,7 @@ export function StaffReservationPreorderModal({ item, onClose, onUpdated }) {
           {preorder?.lyDoTuChoiDatMonTruoc ? <div className="reservation-preorder-alert"><AlertTriangle size={19} /><p><b>Lý do:</b> {preorder.lyDoTuChoiDatMonTruoc}</p></div> : null}
           <PreorderItems preorder={preorder} />
           {preorder?.ghiChuDatMonTruoc ? <div className="reservation-preorder-note"><b>Ghi chú chung:</b> {preorder.ghiChuDatMonTruoc}</div> : null}
+          {status === 'CHO_XAC_NHAN' && bookingStatus === 'CHO_XAC_NHAN' ? <div className="reservation-preorder-send-info"><Clock3 size={21} /><p>Khách đã chọn món cùng yêu cầu đặt bàn. Hãy xác nhận lịch đặt bàn trước khi duyệt thực đơn; món hiện chưa chuyển xuống bếp.</p></div> : null}
           {status === 'CHO_XAC_NHAN' ? (
             <div className="reservation-preorder-review-grid">
               <label>Chuẩn bị trước giờ đến<select value={preparationMinutes} onChange={(event) => setPreparationMinutes(event.target.value)}><option value="15">15 phút</option><option value="30">30 phút</option><option value="45">45 phút</option><option value="60">60 phút</option><option value="90">90 phút</option><option value="120">120 phút</option><option value="180">180 phút</option></select></label>
@@ -426,7 +433,7 @@ export function StaffReservationPreorderModal({ item, onClose, onUpdated }) {
         <button type="button" onClick={onClose} disabled={busy}>Đóng</button>
         {status === 'CHO_XAC_NHAN' ? <>
           <button type="button" className="danger" onClick={() => runAction('reject')} disabled={busy || !rejectReason.trim()}>{busy ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Yêu cầu điều chỉnh</button>
-          <button type="button" className="primary" onClick={() => runAction('confirm')} disabled={busy}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />} Duyệt thực đơn</button>
+          <button type="button" className="primary" onClick={() => runAction('confirm')} disabled={busy || !canApprove}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />} Duyệt thực đơn</button>
         </> : null}
         {status === 'DA_XAC_NHAN' ? <button type="button" className="primary" onClick={() => runAction('send')} disabled={busy || !canSend}>{busy ? <LoaderCircle className="spin" size={17} /> : <ChefHat size={17} />} Chuyển xuống bếp</button> : null}
       </footer>

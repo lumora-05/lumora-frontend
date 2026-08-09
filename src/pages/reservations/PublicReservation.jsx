@@ -333,13 +333,13 @@ export default function PublicReservation() {
         <div className="reservation-public-hero-copy">
           <span><Sparkles size={15} /> Đặt bàn trực tuyến</span>
           <h1>Giữ chỗ cho một bữa ăn <em>trọn vẹn.</em></h1>
-          <p>Gửi yêu cầu đặt bàn trong vài phút. Nhà hàng sẽ xác nhận và chuẩn bị vị trí phù hợp trước khi bạn đến.</p>
+          <p>Gửi yêu cầu đặt bàn và chọn món trước ngay trong cùng một quy trình. Nhà hàng sẽ xác nhận và chuẩn bị vị trí phù hợp trước khi bạn đến.</p>
           <div><b><ShieldCheck size={18} /> Thông tin được bảo mật</b><b><CalendarCheck2 size={18} /> Tra cứu dễ dàng</b></div>
         </div>
         <div className="reservation-public-hero-card">
           <CalendarCheck2 size={30} />
           <strong>Quy trình nhanh gọn</strong>
-          <p>Gửi yêu cầu → Nhà hàng xác nhận → Chọn món trước → Check-in</p>
+          <p>Gửi yêu cầu → Chọn món trước → Nhà hàng xác nhận → Check-in</p>
         </div>
       </section>
 
@@ -366,7 +366,7 @@ export default function PublicReservation() {
               <label className="wide"><span>Ghi chú</span><textarea maxLength="500" rows="4" value={form.ghiChu} onChange={(e) => updateField('ghiChu', e.target.value)} placeholder="Ví dụ: cần ghế trẻ em, khách lớn tuổi, dịp sinh nhật..." /><small>{form.ghiChu.length}/500</small></label>
             </div>
 
-            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn. Nhà hàng sẽ xác nhận bàn hoặc nhóm bàn phù hợp theo số lượng khách. {reservationPolicy.openingHours ? `Giờ phục vụ: ${reservationPolicy.openingHours}.` : ''}</p></div>
+            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn. Sau khi gửi yêu cầu, bạn có thể chọn món trước ngay mà không cần chờ nhà hàng xác nhận bàn. Món chỉ được lưu cùng lịch và chưa chuyển xuống bếp. {reservationPolicy.openingHours ? `Giờ phục vụ: ${reservationPolicy.openingHours}.` : ''}</p></div>
             <button className="reservation-public-submit" type="submit" disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={19} /> : <CalendarCheck2 size={19} />}{editing ? 'Lưu thay đổi' : 'Gửi yêu cầu đặt bàn'}</button>
           </form>
         ) : (
