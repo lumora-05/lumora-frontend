@@ -238,7 +238,7 @@ export default function PublicReservation() {
     if (!form.hoTenKhach.trim()) return 'Vui lòng nhập họ tên.';
     if (!form.soDienThoai.trim()) return 'Vui lòng nhập số điện thoại.';
     if (!VIETNAM_MOBILE_PATTERN.test(form.soDienThoai)) {
-      return 'Số điện thoại phải là số di động Việt Nam hợp lệ gồm 10 chữ số.';
+      return 'Vui lòng nhập số điện thoại hợp lệ.';
     }
     if (!form.ngayGioDen) return 'Vui lòng chọn ngày giờ đến.';
     const arrival = new Date(form.ngayGioDen).getTime();
