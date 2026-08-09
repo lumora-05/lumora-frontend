@@ -1,6 +1,7 @@
 import axiosClient from './axiosClient';
 export const menuApi = {
   getActive: (config = {}) => axiosClient.get('/menu', config),
+  getTopSelling: (limit = 4, config = {}) => axiosClient.get('/menu/top-selling', { ...config, params: { ...(config.params || {}), limit } }),
   getAll: () => axiosClient.get('/menu/all'),
   getPage: (params = {}) => axiosClient.get('/menu/page', { params }),
   getById: (id) => axiosClient.get(`/menu/${id}`),

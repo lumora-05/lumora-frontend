@@ -15,6 +15,7 @@ import {
   UtensilsCrossed,
   X,
 } from 'lucide-react';
+import { menuApi } from '../api/menuApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { imageUrl } from '../utils/imageUrl';
 import '../styles/home.css';
@@ -39,7 +40,7 @@ const navLinks = [
   { label: 'Liên hệ', href: '#lien-he' },
 ];
 
-const dishes = [
+const DEFAULT_DISHES = [
   {
     name: 'Bò lúc lắc',
     desc: 'Thăn bò áp chảo cùng ớt chuông, hành tây và sốt tiêu đen đậm đà.',
@@ -205,13 +206,39 @@ function Hero({ settings }) {
 }
 
 function FeaturedMenu({ restaurantName }) {
+  const [dishes, setDishes] = useState(DEFAULT_DISHES);
+
+  useEffect(() => {
+    let active = true;
+
+    menuApi.getTopSelling(4, { skipAuth: true })
+      .then((response) => {
+        if (!active) return;
+        const foods = Array.isArray(response?.data) ? response.data : [];
+        if (foods.length === 0) return;
+
+        setDishes(foods.map((food) => ({
+          name: food.tenMonAn,
+          desc: food.moTa || 'Món ăn trong thực đơn nhà hàng',
+          price: `${new Intl.NumberFormat('vi-VN').format(Number(food.gia || 0))}đ`,
+          img: imageUrl(food.hinhAnh) || '/dish-bo-luc-lac.png',
+          tag: 'Bán chạy',
+        })));
+      })
+      .catch(() => {
+        // Giữ bộ món mặc định nếu backend tạm thời không phản hồi.
+      });
+
+    return () => { active = false; };
+  }, []);
+
   return (
     <section id="thuc-don" className="v0-shell v0-section v0-menu-section">
       <div className="v0-section-head">
         <span className="v0-eyebrow">Thực đơn</span>
-        <h2 className="v0-serif">Những món ăn được yêu thích nhất</h2>
+        <h2 className="v0-serif">Những món ăn bán chạy nhất</h2>
         <p>
-          Tuyển chọn từ căn bếp {restaurantName} — mỗi món là sự kết hợp giữa nguyên liệu tươi và bàn tay khéo léo của đầu bếp.
+          Những món được thực khách lựa chọn nhiều nhất tại {restaurantName}.
         </p>
       </div>
 
