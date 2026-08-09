@@ -2355,3 +2355,81 @@
   height:40px;
   padding-inline:32px;
 }
+
+
+/* ===== QR menu: thanh danh mục ngang gọn như mẫu ===== */
+.customer-menu-showcase-page .customer-menu-home-category-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  margin:0 0 26px;
+  padding:2px 0 10px;
+  overflow-x:auto;
+  overscroll-behavior-inline:contain;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar::-webkit-scrollbar{
+  display:none;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar > button{
+  flex:0 0 auto;
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid transparent;
+  border-radius:7px;
+  background:transparent;
+  color:#75563f;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font:inherit;
+  font-size:13px;
+  font-weight:650;
+  line-height:1;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:background .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar > button svg{
+  width:15px;
+  height:15px;
+  color:#b66f36;
+  stroke-width:1.9;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar > button:hover{
+  background:#fff7f0;
+  border-color:#f3dfd0;
+  color:#5b3925;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar > button.active{
+  background:#ef6d12;
+  border-color:#ef6d12;
+  color:#fff;
+  box-shadow:0 5px 12px rgba(239,109,18,.16);
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar > button.active svg{
+  color:#fff;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar + .customer-menu-inline-state,
+.customer-menu-showcase-page .customer-menu-home-category-bar + .customer-menu-home-state{
+  margin-top:22px;
+}
+.customer-menu-showcase-page .customer-menu-home-category-bar ~ .v0-dish-grid{
+  margin-top:0;
+}
+
+@media (max-width:700px){
+  .customer-menu-showcase-page .customer-menu-home-category-bar{
+    margin-bottom:18px;
+    padding-bottom:7px;
+    gap:6px;
+  }
+  .customer-menu-showcase-page .customer-menu-home-category-bar > button{
+    min-height:36px;
+    padding:0 11px;
+    font-size:12px;
+  }
+}

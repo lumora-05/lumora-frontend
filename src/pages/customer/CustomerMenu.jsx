@@ -238,7 +238,30 @@ export default function CustomerMenu() {
           </div>
         ) : (
           <section className="v0-shell v0-section v0-menu-section customer-menu-home-section">
+            <div className="customer-menu-home-category-bar" aria-label="Danh mục món ăn">
+              <button
+                type="button"
+                className={cat === 'all' ? 'active' : ''}
+                aria-pressed={cat === 'all'}
+                onClick={() => setCat('all')}
+              >
+                <Grid2X2 size={15} />
+                <span>Tất cả</span>
+              </button>
 
+              {categoryList.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={String(cat) === item.id ? 'active' : ''}
+                  aria-pressed={String(cat) === item.id}
+                  onClick={() => setCat(item.id)}
+                >
+                  <CategoryIcon type={item.iconType} />
+                  <span>{item.name}</span>
+                </button>
+              ))}
+            </div>
 
             {menuError ? (
               <div className="customer-menu-inline-state error">
