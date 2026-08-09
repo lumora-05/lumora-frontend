@@ -40,9 +40,18 @@ import {
 } from '../../utils/reservations';
 
 const VIETNAM_MOBILE_PATTERN = /^0(?:3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])\d{7}$/;
+const HOUR_24_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
 
 function normalizeVietnamPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 10);
+}
+
+function dateTimeParts(value) {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(String(value || ''));
+  return match
+    ? { date: match[1], hour: match[2], minute: match[3] }
+    : { date: '', hour: '', minute: '' };
 }
 
 const EMPTY_FORM = {
@@ -151,6 +160,9 @@ export default function PublicReservation() {
     openingHours: '',
   });
   const [form, setForm] = useState(EMPTY_FORM);
+  const [arrivalDate, setArrivalDate] = useState('');
+  const [arrivalHour, setArrivalHour] = useState('');
+  const [arrivalMinute, setArrivalMinute] = useState('');
   const [lookup, setLookup] = useState({ code: '', phone: '' });
   const [reservation, setReservation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -229,9 +241,23 @@ export default function PublicReservation() {
       .sort((a, b) => a - b),
     [reservationPolicy.defaultDurationMinutes],
   );
+  const minReservationDate = minDateTime.slice(0, 10);
+  const maxReservationDate = maxDateTime.slice(0, 10);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateArrival(nextDate = arrivalDate, nextHour = arrivalHour, nextMinute = arrivalMinute) {
+    setArrivalDate(nextDate);
+    setArrivalHour(nextHour);
+    setArrivalMinute(nextMinute);
+    setForm((current) => ({
+      ...current,
+      ngayGioDen: nextDate && nextHour !== '' && nextMinute !== ''
+        ? `${nextDate}T${nextHour}:${nextMinute}`
+        : '',
+    }));
   }
 
   function validateForm() {
@@ -292,10 +318,15 @@ export default function PublicReservation() {
   }
 
   function startEdit() {
+    const localDateTime = toDateTimeLocal(reservation?.ngayGioDen);
+    const parts = dateTimeParts(localDateTime);
+    setArrivalDate(parts.date);
+    setArrivalHour(parts.hour);
+    setArrivalMinute(parts.minute);
     setForm({
       hoTenKhach: reservation?.hoTenKhach || '',
       soDienThoai: reservation?.soDienThoai || '',
-      ngayGioDen: toDateTimeLocal(reservation?.ngayGioDen),
+      ngayGioDen: localDateTime,
       soLuongKhach: reservation?.soLuongKhach || 2,
       khuVucMongMuon: reservation?.khuVucMongMuon || '',
       thoiLuongPhut: reservation?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes,
@@ -372,7 +403,30 @@ export default function PublicReservation() {
             <div className="reservation-public-form-grid">
               <label><span><UserRound size={16} /> Họ tên khách</span><input maxLength="100" value={form.hoTenKhach} onChange={(e) => updateField('hoTenKhach', e.target.value)} placeholder="Nguyễn Văn A" /></label>
               <label><span><Phone size={16} /> Số điện thoại</span><input inputMode="numeric" autoComplete="tel" maxLength="10" value={form.soDienThoai} onChange={(e) => updateField('soDienThoai', normalizeVietnamPhone(e.target.value))} placeholder="0901234567" disabled={editing} /></label>
-              <label><span><CalendarDays size={16} /> Ngày giờ đến</span><input type="datetime-local" min={minDateTime} max={maxDateTime} value={form.ngayGioDen} onChange={(e) => updateField('ngayGioDen', e.target.value)} /></label>
+              <label className="reservation-public-arrival">
+                <span><CalendarDays size={16} /> Ngày giờ đến</span>
+                <div className="reservation-public-datetime24">
+                  <input
+                    type="date"
+                    aria-label="Ngày đến"
+                    min={minReservationDate}
+                    max={maxReservationDate}
+                    value={arrivalDate}
+                    onChange={(e) => updateArrival(e.target.value, arrivalHour, arrivalMinute)}
+                  />
+                  <div className="reservation-public-time24">
+                    <select aria-label="Giờ đến" value={arrivalHour} onChange={(e) => updateArrival(arrivalDate, e.target.value, arrivalMinute)}>
+                      <option value="">Giờ</option>
+                      {HOUR_24_OPTIONS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+                    </select>
+                    <b>:</b>
+                    <select aria-label="Phút đến" value={arrivalMinute} onChange={(e) => updateArrival(arrivalDate, arrivalHour, e.target.value)}>
+                      <option value="">Phút</option>
+                      {MINUTE_OPTIONS.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </label>
               <label><span><UsersRound size={16} /> Số lượng khách</span><input type="number" min="1" max="50" value={form.soLuongKhach} onChange={(e) => updateField('soLuongKhach', e.target.value)} /></label>
               <label><span><MapPin size={16} /> Khu vực mong muốn</span><select value={form.khuVucMongMuon} onChange={(e) => updateField('khuVucMongMuon', e.target.value)}><option value="">Nhà hàng tự sắp xếp</option>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></label>
               <label><span><Clock3 size={16} /> Thời lượng dự kiến</span><select value={form.thoiLuongPhut} onChange={(e) => updateField('thoiLuongPhut', e.target.value)}>{durationOptions.map((minutes) => <option key={minutes} value={minutes}>{minutes} phút</option>)}</select></label>
