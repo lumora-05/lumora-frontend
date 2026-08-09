@@ -308,7 +308,19 @@ export default function CustomerMenu() {
                         <Link className="customer-menu-food-image" to={`/table/${qrToken}/foods/${foodId(food)}`}>
                           {badge ? <span className={`customer-menu-food-badge ${badge.tone}`}>{badge.label}</span> : null}
                           {food.hinhAnh
-                            ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
+                            ? <>
+                                <img
+                                  className="customer-menu-food-image-backdrop"
+                                  src={imageUrl(food.hinhAnh)}
+                                  alt=""
+                                  aria-hidden="true"
+                                />
+                                <img
+                                  className="customer-menu-food-image-main"
+                                  src={imageUrl(food.hinhAnh)}
+                                  alt={food.tenMonAn}
+                                />
+                              </>
                             : <span><UtensilsCrossed size={38} /></span>}
                         </Link>
                         <div className="customer-menu-food-body">
