@@ -2087,7 +2087,7 @@
 }
 
 .customer-menu-showcase-page .customer-menu-workspace{
-  width:min(1380px,calc(100% - 32px));
+  width:min(1280px,calc(100% - 32px));
   margin:20px auto 0;
   grid-template-columns:238px minmax(0,1fr);
   gap:18px;
