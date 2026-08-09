@@ -2187,9 +2187,9 @@
   border-radius:9px;
 }
 .customer-menu-showcase-page .customer-menu-food-image img{
-  width: 88%;
-  height: 88%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 9px;
 }
 .customer-menu-food-badge{
