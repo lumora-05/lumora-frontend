@@ -34,6 +34,7 @@ import {
   googleMapsEnabled,
 } from '../../utils/googleMaps';
 import { imageUrl } from '../../utils/imageUrl';
+import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAddress';
 
 const DISTRICTS = ['Thanh Khê', 'Hải Châu', 'Sơn Trà', 'Ngũ Hành Sơn', 'Cẩm Lệ', 'Liên Chiểu', 'Hòa Vang'];
 
@@ -46,24 +47,29 @@ function itemId(item) {
   return item?.maMonAn ?? item?.id;
 }
 
+function initialDeliveryAddress() {
+  return readDeliveryAddress() || {};
+}
+
 export default function DeliveryCheckout() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
   const requestIdRef = useRef(createRequestId());
   const [submitting, setSubmitting] = useState(false);
-  const [quote, setQuote] = useState(null);
+  const [quote, setQuote] = useState(() => readDeliveryAddress()?.quote || null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
-  const [selectedPlace, setSelectedPlace] = useState(null);
+  const savedAddress = useMemo(initialDeliveryAddress, []);
+  const [selectedPlace, setSelectedPlace] = useState(savedAddress?.selectedPlace || null);
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
-    diaChiChiTiet: '',
-    phuongXa: '',
-    quanHuyen: '',
-    tinhThanh: 'Đà Nẵng',
+    diaChiChiTiet: savedAddress?.form?.diaChiChiTiet || '',
+    phuongXa: savedAddress?.form?.phuongXa || '',
+    quanHuyen: savedAddress?.form?.quanHuyen || '',
+    tinhThanh: savedAddress?.form?.tinhThanh || 'Đà Nẵng',
     ghiChuGiaoHang: '',
     maCodeKhuyenMai: '',
     phuongThucThanhToan: 'COD',
@@ -110,7 +116,18 @@ export default function DeliveryCheckout() {
       googleFormattedAddress: useGoogleQuote ? selectedPlace.formattedAddress : null,
     }).then((response) => {
       if (active) {
-        setQuote(unwrapDeliveryResponse(response));
+        const value = unwrapDeliveryResponse(response);
+        setQuote(value);
+        saveDeliveryAddress({
+          selectedPlace,
+          form: {
+            diaChiChiTiet: form.diaChiChiTiet,
+            phuongXa: form.phuongXa,
+            quanHuyen: form.quanHuyen,
+            tinhThanh: form.tinhThanh,
+          },
+          quote: value,
+        });
       }
     }).catch((error) => {
       if (active) {
