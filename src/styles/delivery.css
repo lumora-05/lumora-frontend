@@ -320,3 +320,21 @@
 .google-place-input-shell input{width:100%;min-width:0;height:46px;padding:0;border:0;outline:0;background:transparent;color:#35404b;font:inherit;font-size:13px}
 .google-place-input-shell input::placeholder{color:#9aa3ad}
 .google-place-input-shell input:disabled{cursor:not-allowed;color:#929aa3}
+
+/* Checkout giao hàng: khuyến mãi dùng chung phong cách form hiện có. */
+.delivery-promotion-field>span{display:flex;align-items:center;gap:7px}
+.delivery-promotion-hint{display:block;margin-top:7px;color:#7d8796;font-size:12px;line-height:1.45}
+.delivery-promotion-hint.success{color:#16814a;font-weight:800}
+
+/* Đánh giá sau khi đơn giao thành công. */
+.delivery-review-box{margin-top:12px;padding:14px;border:1px solid #eadfd5;border-radius:13px;background:#fff;display:grid;gap:10px}
+.delivery-review-box>strong{color:#30251e;font-size:13px}
+.delivery-review-box>small{color:#60705f;line-height:1.5}
+.delivery-review-stars{display:flex;gap:5px}
+.delivery-review-stars button{width:34px;height:34px;padding:0;display:grid;place-items:center;border:1px solid #e8ddd2;border-radius:9px;background:#fff;color:#a6a6a6;cursor:pointer}
+.delivery-review-stars button.active{color:#e39b20;background:#fff8e9;border-color:#efd79f}
+.delivery-review-stars button.active svg{fill:currentColor}
+.delivery-review-box textarea{min-height:74px;padding:10px 11px;border:1px solid #dedfe3;border-radius:10px;resize:vertical;font:inherit;outline:0}
+.delivery-review-box textarea:focus{border-color:#ef8b5d;box-shadow:0 0 0 3px rgba(239,100,31,.08)}
+.delivery-review-box>button{min-height:40px;border:0;border-radius:10px;background:#ef641f;color:#fff;font:inherit;font-weight:850;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+.delivery-review-box>button:disabled{opacity:.65;cursor:wait}
