@@ -312,3 +312,11 @@
   .delivery-home-menu .delivery-food-grid{grid-template-columns:1fr}
   .delivery-home-menu .delivery-food-image{height:auto;aspect-ratio:1.15}
 }
+
+/* Checkout địa chỉ: cho phép nhập trực tiếp, Google Maps chỉ hỗ trợ gợi ý. */
+.google-place-input-shell{min-height:48px;padding:0 13px;border:1px solid #dce2e8;border-radius:12px;display:flex;align-items:center;gap:9px;background:#fff;box-sizing:border-box;transition:border-color .18s ease,box-shadow .18s ease}
+.google-place-input-shell:focus-within{border-color:#ef9a63;box-shadow:0 0 0 3px rgba(233,103,32,.08)}
+.google-place-input-shell>svg{flex:none;color:#e96720}
+.google-place-input-shell input{width:100%;min-width:0;height:46px;padding:0;border:0;outline:0;background:transparent;color:#35404b;font:inherit;font-size:13px}
+.google-place-input-shell input::placeholder{color:#9aa3ad}
+.google-place-input-shell input:disabled{cursor:not-allowed;color:#929aa3}

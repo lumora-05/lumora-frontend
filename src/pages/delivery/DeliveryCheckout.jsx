@@ -68,39 +68,48 @@ export default function DeliveryCheckout() {
 
   useEffect(() => {
     const useGoogleQuote = googleMapsEnabled && Boolean(selectedPlace?.placeId);
-    if (googleMapsEnabled && !useGoogleQuote) {
+    const typedAddress = form.diaChiChiTiet.trim();
+
+    if (googleMapsEnabled && !useGoogleQuote && typedAddress.length < 6) {
       setQuote(null);
       setQuoteError('');
       setQuoteLoading(false);
       return undefined;
     }
-    if (!useGoogleQuote && (!form.tinhThanh || !form.quanHuyen)) {
+    if (!googleMapsEnabled && (!form.tinhThanh || !form.quanHuyen)) {
       setQuote(null);
       setQuoteError('');
+      setQuoteLoading(false);
       return undefined;
     }
 
     let active = true;
-    setQuoteLoading(true);
-    setQuoteError('');
-    deliveryApi.quote({
-      tinhThanh: form.tinhThanh || null,
-      quanHuyen: form.quanHuyen || null,
-      phuongXa: form.phuongXa || null,
-      diaChiChiTiet: form.diaChiChiTiet || null,
-      googlePlaceId: useGoogleQuote ? selectedPlace.placeId : null,
-      googleFormattedAddress: useGoogleQuote ? selectedPlace.formattedAddress : null,
-    }).then((response) => {
-      if (active) setQuote(unwrapDeliveryResponse(response));
-    }).catch((error) => {
-      if (active) {
-        setQuote(null);
-        setQuoteError(errorMessageOf(error, 'Địa chỉ này chưa thuộc phạm vi giao hàng.'));
-      }
-    }).finally(() => {
-      if (active) setQuoteLoading(false);
-    });
-    return () => { active = false; };
+    const timer = window.setTimeout(() => {
+      setQuoteLoading(true);
+      setQuoteError('');
+      deliveryApi.quote({
+        tinhThanh: form.tinhThanh || null,
+        quanHuyen: form.quanHuyen || null,
+        phuongXa: form.phuongXa || null,
+        diaChiChiTiet: typedAddress || null,
+        googlePlaceId: useGoogleQuote ? selectedPlace.placeId : null,
+        googleFormattedAddress: useGoogleQuote ? selectedPlace.formattedAddress : null,
+      }).then((response) => {
+        if (active) setQuote(unwrapDeliveryResponse(response));
+      }).catch((error) => {
+        if (active) {
+          setQuote(null);
+          setQuoteError(errorMessageOf(error, 'Không thể xác định địa chỉ này. Vui lòng nhập cụ thể hơn.'));
+        }
+      }).finally(() => {
+        if (active) setQuoteLoading(false);
+      });
+    }, useGoogleQuote ? 0 : 700);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [
     form.tinhThanh,
     form.quanHuyen,
@@ -120,13 +129,26 @@ export default function DeliveryCheckout() {
     };
   }
 
+  function handleAddressChange(value) {
+    setSelectedPlace(null);
+    setQuote(null);
+    setQuoteError('');
+    setForm((current) => ({
+      ...current,
+      diaChiChiTiet: value,
+      phuongXa: '',
+      quanHuyen: '',
+      tinhThanh: current.tinhThanh || 'Đà Nẵng',
+    }));
+  }
+
   function handleGooglePlaceSelected(place) {
     setSelectedPlace(place);
     setQuote(null);
     setQuoteError('');
     setForm((current) => ({
       ...current,
-      diaChiChiTiet: place.diaChiChiTiet || place.formattedAddress || '',
+      diaChiChiTiet: place.formattedAddress || place.diaChiChiTiet || '',
       phuongXa: place.phuongXa || '',
       quanHuyen: place.quanHuyen || '',
       tinhThanh: place.tinhThanh || 'Đà Nẵng',
@@ -150,16 +172,24 @@ export default function DeliveryCheckout() {
       return;
     }
     if (googleMapsEnabled) {
-      if (!selectedPlace?.placeId) {
-        toast.error('Vui lòng chọn địa chỉ từ danh sách gợi ý Google Maps.');
+      if (form.diaChiChiTiet.trim().length < 6) {
+        toast.error('Vui lòng nhập địa chỉ giao hàng cụ thể hơn, ví dụ số nhà và tên đường.');
         return;
       }
     } else if (!form.diaChiChiTiet.trim() || !form.phuongXa.trim() || !form.quanHuyen) {
       toast.error('Vui lòng nhập đầy đủ địa chỉ giao hàng.');
       return;
     }
-    if (!quote || quoteError) {
-      toast.error('Địa chỉ chưa được backend xác nhận phí giao hàng.');
+    if (quoteLoading) {
+      toast.info('Hệ thống đang xác định địa chỉ và tính phí giao hàng.');
+      return;
+    }
+    if (quoteError) {
+      toast.error(quoteError);
+      return;
+    }
+    if (!quote) {
+      toast.error('Vui lòng nhập địa chỉ cụ thể để hệ thống tính phí giao hàng.');
       return;
     }
     if (cart.count > 100 || cart.items.some((item) => Number(item.soLuong || 0) > 50)) {
@@ -242,10 +272,14 @@ export default function DeliveryCheckout() {
           </section>
 
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>{googleMapsEnabled ? 'Chọn địa chỉ Google Maps để tính quãng đường và phí giao thực tế' : 'Backend tự xác định khu vực và phí giao hàng'}</p></div></div>
+            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>{googleMapsEnabled ? 'Nhập địa chỉ nhận hàng, hệ thống sẽ tự xác định quãng đường và phí giao' : 'Backend tự xác định khu vực và phí giao hàng'}</p></div></div>
             {googleMapsEnabled ? (
               <>
-                <GooglePlaceAutocomplete onPlaceSelected={handleGooglePlaceSelected} />
+                <GooglePlaceAutocomplete
+                  value={form.diaChiChiTiet}
+                  onChange={handleAddressChange}
+                  onPlaceSelected={handleGooglePlaceSelected}
+                />
                 {selectedPlace && (
                   <div className="delivery-google-address">
                     <MapPin size={18} />
@@ -272,7 +306,7 @@ export default function DeliveryCheckout() {
               ) : quote ? (
                 <><CheckCircle2 size={17} /><span>{quote.googleMaps ? `${formatDistanceMeters(quote.quangDuongMet)} · khoảng ${formatDurationSeconds(quote.thoiGianDuKienGiay)} · ` : `${deliveryAreaLabel(quote.khuVucGiaoHang)} · `}Phí giao <b>{formatMoney(deliveryFee)}</b></span></>
               ) : (
-                <><MapPin size={17} /><span>{quoteError || (googleMapsEnabled ? 'Chọn địa chỉ trong gợi ý Google Maps để tính phí.' : 'Chọn quận/huyện để hệ thống tính phí.')}</span></>
+                <><MapPin size={17} /><span>{quoteError || (googleMapsEnabled ? 'Nhập số nhà, tên đường, phường/xã... Hệ thống sẽ tự tính phí; chọn gợi ý Google Maps là tùy chọn.' : 'Chọn quận/huyện để hệ thống tính phí.')}</span></>
               )}
             </div>
             {googleMapsEnabled && quote && !quote.googleMaps && (
@@ -316,7 +350,7 @@ export default function DeliveryCheckout() {
             <p><span>Phí giao hàng</span><strong>{quote ? formatMoney(deliveryFee) : 'Chờ địa chỉ'}</strong></p>
             <div><span>Tổng thanh toán</span><strong>{quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
           </div>
-          <button className="delivery-submit-order" type="submit" disabled={submitting || !quote}>
+          <button className="delivery-submit-order" type="submit" disabled={submitting}>
             {submitting ? <LoaderCircle className="spin" size={19} /> : <ShoppingBag size={19} />}
             {submitting ? 'Đang gửi đơn...' : 'Đặt món giao tận nơi'}
           </button>
