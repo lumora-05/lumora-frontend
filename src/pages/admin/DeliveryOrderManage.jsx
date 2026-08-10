@@ -38,7 +38,7 @@ import {
 } from '../../utils/delivery';
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
-import { formatDistanceMeters, formatDurationSeconds } from '../../utils/googleMaps';
+import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 
 function currentRole(user) {
   return String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '')
@@ -297,8 +297,8 @@ export default function DeliveryOrderManage() {
                         <p className="wide"><small>Địa chỉ</small><strong>{selectedDelivery.diaChiGiaoHang}</strong></p>
                         <p><small>Khu vực</small><strong>{deliveryAreaLabel(selectedDelivery.khuVucGiaoHang)}</strong></p>
                         <p><small>Phí giao</small><strong>{formatMoney(selectedDelivery.phiGiaoHang)}</strong></p>
-                        {selectedDelivery.googleMaps && selectedDelivery.quangDuongMet ? <p><small>Quãng đường Google Maps</small><strong>{formatDistanceMeters(selectedDelivery.quangDuongMet)}</strong></p> : null}
-                        {selectedDelivery.googleMaps && selectedDelivery.thoiGianDuKienGiay ? <p><small>Thời gian dự kiến</small><strong>{formatDurationSeconds(selectedDelivery.thoiGianDuKienGiay)}</strong></p> : null}
+                        {selectedDelivery.quangDuongMet ? <p><small>Quãng đường giao hàng</small><strong>{formatDistanceMeters(selectedDelivery.quangDuongMet)}</strong></p> : null}
+                        {selectedDelivery.thoiGianDuKienGiay ? <p><small>Thời gian dự kiến</small><strong>{formatDurationSeconds(selectedDelivery.thoiGianDuKienGiay)}</strong></p> : null}
                         {selectedDelivery.ghiChuGiaoHang ? <p className="wide"><small>Ghi chú giao hàng</small><strong>{selectedDelivery.ghiChuGiaoHang}</strong></p> : null}
                         {selected?.ghiChu ? <p className="wide"><small>Ghi chú đơn</small><strong>{selected.ghiChu}</strong></p> : null}
                       </div>

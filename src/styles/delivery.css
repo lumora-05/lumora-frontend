@@ -50,10 +50,6 @@
 .delivery-detail-items>div{grid-template-columns:34px minmax(0,1fr) auto}
 @media(max-width:900px){.delivery-timeline{grid-template-columns:repeat(var(--delivery-step-count,5),100px)}}
 
-/* Google Maps cho luồng giao hàng */
-.google-place-autocomplete-wrap{margin-top:14px}.google-place-autocomplete-host{min-height:48px}.google-place-autocomplete-host gmp-place-autocomplete{width:100%;min-height:48px;box-sizing:border-box}.google-place-help{margin-top:7px;display:flex;align-items:center;gap:6px;color:#7b8794;font-size:10px}.google-place-help.ready{color:#47715a}.google-place-help.error{color:#a24438}.delivery-google-address{margin-top:12px;padding:12px 13px;border:1px solid #e1e7ec;border-radius:12px;display:flex;gap:9px;align-items:flex-start;background:#fafbfc}.delivery-google-address>svg{flex:none;color:#e96720}.delivery-google-address strong,.delivery-google-address small{display:block}.delivery-google-address strong{color:#39444f;font-size:11px;line-height:1.45}.delivery-google-address small{margin-top:4px;color:#88939d;font-size:9px}.google-route-map-shell{position:relative;height:230px;margin-top:12px;overflow:hidden;border:1px solid #e1e6eb;border-radius:14px;background:#eef1f4}.google-route-map{width:100%;height:100%}.google-route-map-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:7px;color:#65717c;background:rgba(247,249,251,.9);font-size:10px;font-weight:800}.google-route-map-state.error{color:#9a4438}.delivery-google-fallback{display:block;margin-top:8px;color:#8b642b;font-size:9px;line-height:1.45}.delivery-google-route-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.delivery-google-route-meta span{display:inline-flex;align-items:center;gap:5px}
-@media(max-width:680px){.google-route-map-shell{height:205px}.delivery-google-address strong{font-size:10px}}
-
 /* ===== Đồng bộ trang Thực đơn trực tuyến với giao diện Trang chủ LUMORA ===== */
 .delivery-home-menu{
   --lumora-home-bg:#fbfaf7;
@@ -313,14 +309,6 @@
   .delivery-home-menu .delivery-food-image{height:auto;aspect-ratio:1.15}
 }
 
-/* Checkout địa chỉ: cho phép nhập trực tiếp, Google Maps chỉ hỗ trợ gợi ý. */
-.google-place-input-shell{min-height:48px;padding:0 13px;border:1px solid #dce2e8;border-radius:12px;display:flex;align-items:center;gap:9px;background:#fff;box-sizing:border-box;transition:border-color .18s ease,box-shadow .18s ease}
-.google-place-input-shell:focus-within{border-color:#ef9a63;box-shadow:0 0 0 3px rgba(233,103,32,.08)}
-.google-place-input-shell>svg{flex:none;color:#e96720}
-.google-place-input-shell input{width:100%;min-width:0;height:46px;padding:0;border:0;outline:0;background:transparent;color:#35404b;font:inherit;font-size:13px}
-.google-place-input-shell input::placeholder{color:#9aa3ad}
-.google-place-input-shell input:disabled{cursor:not-allowed;color:#929aa3}
-
 /* Checkout giao hàng: khuyến mãi dùng chung phong cách form hiện có. */
 .delivery-promotion-field>span{display:flex;align-items:center;gap:7px}
 .delivery-promotion-hint{display:block;margin-top:7px;color:#7d8796;font-size:12px;line-height:1.45}
@@ -338,3 +326,19 @@
 .delivery-review-box textarea:focus{border-color:#ef8b5d;box-shadow:0 0 0 3px rgba(239,100,31,.08)}
 .delivery-review-box>button{min-height:40px;border:0;border-radius:10px;background:#ef641f;color:#fff;font:inherit;font-weight:850;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
 .delivery-review-box>button:disabled{opacity:.65;cursor:wait}
+
+/* ===== Bản đồ giao hàng miễn phí: OpenStreetMap + openrouteservice ===== */
+.map-address-input-wrap{margin-top:14px}
+.map-address-input-shell{min-height:48px;padding:0 13px;border:1px solid #dce2e8;border-radius:12px;display:flex;align-items:center;gap:9px;background:#fff;box-sizing:border-box;transition:border-color .18s ease,box-shadow .18s ease}
+.map-address-input-shell:focus-within{border-color:#ef9a63;box-shadow:0 0 0 3px rgba(233,103,32,.08)}
+.map-address-input-shell>svg{flex:none;color:#e96720}
+.map-address-input-shell input{width:100%;min-width:0;height:46px;padding:0;border:0;outline:0;background:transparent;color:#35404b;font:inherit;font-size:13px}
+.map-address-input-shell input::placeholder{color:#9aa3ad}
+.map-address-help{margin-top:7px;display:flex;align-items:center;gap:6px;color:#47715a;font-size:10px}
+.delivery-map-address{margin-top:12px;padding:12px 13px;border:1px solid #e1e7ec;border-radius:12px;display:flex;gap:9px;align-items:flex-start;background:#fafbfc}
+.delivery-map-address>svg{flex:none;color:#e96720}.delivery-map-address strong,.delivery-map-address small{display:block}.delivery-map-address strong{color:#39444f;font-size:11px;line-height:1.45}.delivery-map-address small{margin-top:4px;color:#88939d;font-size:9px}
+.open-map-shell{position:relative;height:230px;margin-top:12px;overflow:hidden;border:1px solid #e1e6eb;border-radius:14px;background:#eef1f4}
+.open-map-canvas{width:100%;height:100%}
+.open-map-state{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;gap:7px;color:#65717c;background:rgba(247,249,251,.9);font-size:10px;font-weight:800}.open-map-state.error{color:#9a4438}
+.delivery-map-fallback{display:block;margin-top:8px;color:#8b642b;font-size:9px;line-height:1.45}
+@media(max-width:680px){.open-map-shell{height:205px}.delivery-map-address strong{font-size:10px}}

@@ -16,8 +16,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
-import GooglePlaceAutocomplete from '../../components/maps/GooglePlaceAutocomplete';
-import GoogleRouteMap from '../../components/maps/GoogleRouteMap';
+import OpenStreetMapRouteMap from '../../components/maps/OpenStreetMapRouteMap';
 import { deliveryApi } from '../../api/deliveryApi';
 import { promotionApi } from '../../api/promotionApi';
 import { useCart } from '../../context/CartContext';
@@ -28,15 +27,10 @@ import {
   unwrapDeliveryResponse,
 } from '../../utils/delivery';
 import { formatMoney } from '../../utils/formatMoney';
-import {
-  formatDistanceMeters,
-  formatDurationSeconds,
-  googleMapsEnabled,
-} from '../../utils/googleMaps';
+import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 import { imageUrl } from '../../utils/imageUrl';
 import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAddress';
 
-const DISTRICTS = ['Thanh Khê', 'Hải Châu', 'Sơn Trà', 'Ngũ Hành Sơn', 'Cẩm Lệ', 'Liên Chiểu', 'Hòa Vang'];
 
 function createRequestId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -62,7 +56,6 @@ export default function DeliveryCheckout() {
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
   const savedAddress = useMemo(initialDeliveryAddress, []);
-  const [selectedPlace, setSelectedPlace] = useState(savedAddress?.selectedPlace || null);
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
@@ -91,16 +84,8 @@ export default function DeliveryCheckout() {
   }, []);
 
   useEffect(() => {
-    const useGoogleQuote = googleMapsEnabled && Boolean(selectedPlace?.placeId);
     const typedAddress = form.diaChiChiTiet.trim();
-
-    if (googleMapsEnabled && !useGoogleQuote && typedAddress.length < 6) {
-      setQuote(null);
-      setQuoteError('');
-      setQuoteLoading(false);
-      return undefined;
-    }
-    if (!googleMapsEnabled && (!form.tinhThanh || !form.quanHuyen)) {
+    if (typedAddress.length < 6) {
       setQuote(null);
       setQuoteError('');
       setQuoteLoading(false);
@@ -113,21 +98,19 @@ export default function DeliveryCheckout() {
       setQuoteError('');
 
       deliveryApi.quote({
-        tinhThanh: form.tinhThanh || null,
+        tinhThanh: form.tinhThanh || 'Đà Nẵng',
         quanHuyen: form.quanHuyen || null,
         phuongXa: form.phuongXa || null,
-        diaChiChiTiet: typedAddress || null,
-        googlePlaceId: useGoogleQuote ? selectedPlace.placeId : null,
-        googleFormattedAddress: useGoogleQuote ? selectedPlace.formattedAddress : null,
+        diaChiChiTiet: typedAddress,
+        googlePlaceId: null,
+        googleFormattedAddress: null,
       })
         .then((response) => {
           if (!active) return;
-
           const value = unwrapDeliveryResponse(response);
           setQuote(value);
-
           saveDeliveryAddress({
-            selectedPlace,
+            selectedPlace: null,
             form: {
               diaChiChiTiet: form.diaChiChiTiet,
               phuongXa: form.phuongXa,
@@ -138,32 +121,23 @@ export default function DeliveryCheckout() {
           });
         })
         .catch((error) => {
-          if (active) {
-            setQuote(null);
-            setQuoteError(
-              errorMessageOf(
-                error,
-                'Không thể xác định địa chỉ này. Vui lòng nhập cụ thể hơn.',
-              ),
-            );
-          }
+          if (!active) return;
+          setQuote(null);
+          setQuoteError(errorMessageOf(
+            error,
+            'Không thể xác định địa chỉ này. Vui lòng nhập cụ thể hơn.',
+          ));
         })
         .finally(() => {
           if (active) setQuoteLoading(false);
         });
-    }, useGoogleQuote ? 0 : 700);
+    }, 900);
 
     return () => {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [
-    form.tinhThanh,
-    form.quanHuyen,
-    form.phuongXa,
-    form.diaChiChiTiet,
-    selectedPlace,
-  ]);
+  }, [form.tinhThanh, form.quanHuyen, form.phuongXa, form.diaChiChiTiet]);
 
   const deliveryFee = Number(quote?.phiGiaoHang || 0);
   const promotionCode = form.maCodeKhuyenMai.trim().toUpperCase();
@@ -194,7 +168,6 @@ export default function DeliveryCheckout() {
   }
 
   function handleAddressChange(value) {
-    setSelectedPlace(null);
     setQuote(null);
     setQuoteError('');
     setForm((current) => ({
@@ -203,19 +176,6 @@ export default function DeliveryCheckout() {
       phuongXa: '',
       quanHuyen: '',
       tinhThanh: current.tinhThanh || 'Đà Nẵng',
-    }));
-  }
-
-  function handleGooglePlaceSelected(place) {
-    setSelectedPlace(place);
-    setQuote(null);
-    setQuoteError('');
-    setForm((current) => ({
-      ...current,
-      diaChiChiTiet: place.formattedAddress || place.diaChiChiTiet || '',
-      phuongXa: place.phuongXa || '',
-      quanHuyen: place.quanHuyen || '',
-      tinhThanh: place.tinhThanh || 'Đà Nẵng',
     }));
   }
 
@@ -235,13 +195,8 @@ export default function DeliveryCheckout() {
       toast.error('Vui lòng nhập họ tên người nhận.');
       return;
     }
-    if (googleMapsEnabled) {
-      if (form.diaChiChiTiet.trim().length < 6) {
-        toast.error('Vui lòng nhập địa chỉ giao hàng cụ thể hơn, ví dụ số nhà và tên đường.');
-        return;
-      }
-    } else if (!form.diaChiChiTiet.trim() || !form.phuongXa.trim() || !form.quanHuyen) {
-      toast.error('Vui lòng nhập đầy đủ địa chỉ giao hàng.');
+    if (form.diaChiChiTiet.trim().length < 6) {
+      toast.error('Vui lòng nhập địa chỉ giao hàng cụ thể hơn, ví dụ số nhà và tên đường.');
       return;
     }
     if (quoteLoading) {
@@ -271,8 +226,8 @@ export default function DeliveryCheckout() {
         phuongXa: form.phuongXa.trim(),
         quanHuyen: form.quanHuyen,
         tinhThanh: form.tinhThanh || null,
-        googlePlaceId: selectedPlace?.placeId || null,
-        googleFormattedAddress: selectedPlace?.formattedAddress || null,
+        googlePlaceId: null,
+        googleFormattedAddress: null,
         ghiChuGiaoHang: form.ghiChuGiaoHang.trim() || null,
         maCodeKhuyenMai: promotionCode || null,
         phuongThucThanhToan: form.phuongThucThanhToan,
@@ -337,46 +292,49 @@ export default function DeliveryCheckout() {
           </section>
 
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>{googleMapsEnabled ? 'Nhập địa chỉ nhận hàng, hệ thống sẽ tự xác định quãng đường và phí giao' : 'Backend tự xác định khu vực và phí giao hàng'}</p></div></div>
-            {googleMapsEnabled ? (
-              <>
-                <GooglePlaceAutocomplete
+            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>Nhập địa chỉ bình thường; backend tự định vị và tính quãng đường bằng OpenStreetMap + openrouteservice</p></div></div>
+            <div className="map-address-input-wrap">
+              <div className="map-address-input-shell">
+                <MapPin size={18} />
+                <input
                   value={form.diaChiChiTiet}
-                  onChange={handleAddressChange}
-                  onPlaceSelected={handleGooglePlaceSelected}
+                  onChange={(event) => handleAddressChange(event.target.value)}
+                  maxLength={500}
+                  autoComplete="street-address"
+                  placeholder="Số nhà, tên đường, phường/xã..."
+                  aria-label="Địa chỉ giao hàng"
                 />
-                {selectedPlace && (
-                  <div className="delivery-google-address">
-                    <MapPin size={18} />
-                    <div>
-                      <strong>{selectedPlace.formattedAddress}</strong>
-                      <small>{[selectedPlace.phuongXa, selectedPlace.quanHuyen, selectedPlace.tinhThanh].filter(Boolean).join(' · ') || 'Địa chỉ đã được Google Maps chuẩn hóa'}</small>
-                    </div>
-                  </div>
-                )}
-                {selectedPlace && <GoogleRouteMap destination={selectedPlace} encodedPolyline={quote?.encodedPolyline} />}
-              </>
-            ) : (
-              <div className="delivery-form-grid two">
-                <label><span>Tỉnh/Thành phố *</span><div><MapPin size={18} /><select value={form.tinhThanh} onChange={updateField('tinhThanh')}><option value="Đà Nẵng">Đà Nẵng</option></select></div></label>
-                <label><span>Quận/Huyện *</span><div><MapPin size={18} /><select required value={form.quanHuyen} onChange={updateField('quanHuyen')}><option value="">Chọn quận/huyện</option>{DISTRICTS.map((district) => <option key={district} value={district}>{district}</option>)}</select></div></label>
-                <label><span>Phường/Xã *</span><div><MapPin size={18} /><input required value={form.phuongXa} onChange={updateField('phuongXa')} maxLength={120} placeholder="Ví dụ: Chính Gián" /></div></label>
-                <label><span>Địa chỉ chi tiết *</span><div><MapPin size={18} /><input required value={form.diaChiChiTiet} onChange={updateField('diaChiChiTiet')} maxLength={500} placeholder="Số nhà, tên đường" /></div></label>
               </div>
-            )}
+              <small className="map-address-help"><MapPin size={14} /> Không cần chọn gợi ý. Hệ thống tự xác định địa chỉ sau khi bạn nhập.</small>
+            </div>
+            {quote?.quangDuongMet && quote?.diaChiDayDu ? (
+              <div className="delivery-map-address">
+                <MapPin size={18} />
+                <div>
+                  <strong>{quote.diaChiDayDu}</strong>
+                  <small>Đã định vị bằng dữ liệu OpenStreetMap.</small>
+                </div>
+              </div>
+            ) : null}
+            {quote?.encodedPolyline ? (
+              <OpenStreetMapRouteMap
+                routeGeometry={quote.encodedPolyline}
+                destinationLabel={quote.diaChiDayDu}
+              />
+            ) : null}
             <label className="delivery-order-note"><span>Ghi chú giao hàng</span><input value={form.ghiChuGiaoHang} onChange={updateField('ghiChuGiaoHang')} maxLength={500} placeholder="Gọi trước khi đến, số tầng..." /></label>
             <div className={`delivery-quote-box ${quoteError ? 'error' : ''}`}>
               {quoteLoading ? (
-                <><LoaderCircle className="spin" size={17} /> Google Maps đang tính quãng đường và phí...</>
+                <><LoaderCircle className="spin" size={17} /> Đang xác định địa chỉ và tính quãng đường...</>
               ) : quote ? (
-                <><CheckCircle2 size={17} /><span>{quote.googleMaps ? `${formatDistanceMeters(quote.quangDuongMet)} · nhận dự kiến ${formatDurationSeconds(quote.thoiGianNhanDuKienGiay || quote.thoiGianDuKienGiay)} · ` : `${deliveryAreaLabel(quote.khuVucGiaoHang)} · `}Phí giao <b>{formatMoney(deliveryFee)}</b></span></>
+                <><CheckCircle2 size={17} /><span>{quote.quangDuongMet ? `${formatDistanceMeters(quote.quangDuongMet)} · nhận dự kiến ${formatDurationSeconds(quote.thoiGianNhanDuKienGiay || quote.thoiGianDuKienGiay)} · ` : `${deliveryAreaLabel(quote.khuVucGiaoHang)} · `}Phí giao <b>{formatMoney(deliveryFee)}</b></span></>
               ) : (
-                <><MapPin size={17} /><span>{quoteError || (googleMapsEnabled ? 'Nhập số nhà, tên đường, phường/xã... Hệ thống sẽ tự tính phí; chọn gợi ý Google Maps là tùy chọn.' : 'Chọn quận/huyện để hệ thống tính phí.')}</span></>
+                <><MapPin size={17} /><span>{quoteError || 'Nhập số nhà, tên đường, phường/xã... Hệ thống sẽ tự xác định vị trí và tính phí giao hàng.'}</span></>
               )}
             </div>
-            {googleMapsEnabled && quote && !quote.googleMaps && (
-              <small className="delivery-google-fallback">Backend chưa có GOOGLE_MAPS_SERVER_API_KEY nên đang dùng bảng phí khu vực dự phòng.</small>
-            )}
+            {quote && !quote.quangDuongMet ? (
+              <small className="delivery-map-fallback">Backend chưa có OPENROUTESERVICE_API_KEY nên đang dùng bảng phí khu vực dự phòng.</small>
+            ) : null}
           </section>
 
           <section className="delivery-checkout-card">

@@ -36,7 +36,7 @@ import {
 } from '../../utils/delivery';
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
-import { formatDistanceMeters, formatDurationSeconds } from '../../utils/googleMaps';
+import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 
 const ORDER_PLACED_STEP = { code: 'DA_DAT', label: 'Đã đặt hàng', icon: ShoppingBag };
 
@@ -272,7 +272,7 @@ export default function DeliveryTracking() {
                 <p><UserRound size={17} /><span><small>Người nhận</small><strong>{order.tenNguoiNhan}</strong></span></p>
                 <p><Phone size={17} /><span><small>Số điện thoại</small><strong>{order.soDienThoaiNhanChe}</strong></span></p>
                 <p className="wide"><MapPin size={17} /><span><small>Địa chỉ</small><strong>{order.diaChiGiaoHang}</strong></span></p>
-                {order.googleMaps && order.quangDuongMet ? <p><Truck size={17} /><span><small>Quãng đường Google Maps</small><strong>{formatDistanceMeters(order.quangDuongMet)}</strong></span></p> : null}
+                {order.quangDuongMet ? <p><Truck size={17} /><span><small>Quãng đường giao hàng</small><strong>{formatDistanceMeters(order.quangDuongMet)}</strong></span></p> : null}
                 {order.thoiGianNhanDuKienGiay ? <p><Clock3 size={17} /><span><small>Thời gian nhận dự kiến</small><strong>{formatDurationSeconds(order.thoiGianNhanDuKienGiay)}</strong></span></p> : null}
                 {order.ghiChuGiaoHang ? <p className="wide"><Clock3 size={17} /><span><small>Ghi chú giao hàng</small><strong>{order.ghiChuGiaoHang}</strong></span></p> : null}
               </div>
