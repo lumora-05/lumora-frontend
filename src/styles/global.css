@@ -3775,3 +3775,29 @@
 @media (max-width:620px){
   .employee-area-options{grid-template-columns:1fr;}
 }
+
+
+/* ===== Staff operational alerts ===== */
+.staff-alert-toggle{
+  height:40px;
+  padding:0 11px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+  color:#64748b;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font-size:12px;
+  font-weight:850;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:.18s ease;
+}
+.staff-alert-toggle:hover{border-color:#fdba74;color:#ea580c;background:#fffaf7}
+.staff-alert-toggle.enabled{border-color:#86efac;background:#f0fdf4;color:#15803d}
+.staff-alert-toggle.browser-blocked{border-color:#fecaca;background:#fff7f7;color:#b91c1c}
+.staff-alert-toggle:disabled{opacity:.6;cursor:wait}
+@media(max-width:900px){.staff-alert-toggle span{display:none}.staff-alert-toggle{width:40px;padding:0}}
+@media(max-width:680px){.staff-alert-toggle{width:38px;height:38px;border-radius:10px}}

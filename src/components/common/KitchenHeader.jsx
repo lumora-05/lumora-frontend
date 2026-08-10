@@ -4,13 +4,16 @@ import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 import { canonicalKitchenStatus, flattenKitchenOrders, unwrapList } from '../../utils/kitchenData';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
+import StaffAlertToggle from './StaffAlertToggle';
 
 export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
   const event = useWebSocket(['/topic/kitchen', '/topic/orders']);
+  useStaffOperationalAlerts('KITCHEN', event);
   const [newCount, setNewCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const name = user?.hoTen || user?.fullName || user?.tenDangNhap || user?.username || 'Nhân viên bếp';
@@ -44,6 +47,7 @@ export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="kitchen-top-actions">
+        <StaffAlertToggle />
         <Link to="/kitchen/notifications" className="kitchen-notification-button" aria-label={`${newCount} món mới`}>
           <Bell size={21} />
           {newCount > 0 ? <span>{badge}</span> : null}

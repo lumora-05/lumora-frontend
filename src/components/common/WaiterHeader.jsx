@@ -17,8 +17,10 @@ import { serviceRequestApi } from '../../api/serviceRequestApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
+import StaffAlertToggle from './StaffAlertToggle';
 import {
   serviceRequestId,
   serviceRequestStatus,
@@ -92,6 +94,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
   const toast = useToast();
   const location = useLocation();
   const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests']);
+  useStaffOperationalAlerts('WAITER', event);
   const [orders, setOrders] = useState([]);
   const [serviceRequests, setServiceRequests] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -253,6 +256,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="waiter-top-actions">
+        <StaffAlertToggle />
         <div className="waiter-notification-wrap" ref={notificationRef}>
           <button
             type="button"
