@@ -27,14 +27,14 @@ const DEFAULT_SETTINGS = {
   email: 'xinchao@lumora.vn',
   openingHours: '10:00 - 22:00 hằng ngày',
   reservationUrl: '/reservations',
-  menuUrl: '#thuc-don',
+  menuUrl: '/delivery',
   logoUrl: '',
   bannerUrl: '',
 };
 
 const navLinks = [
   { label: 'Trang chủ', href: '#trang-chu' },
-  { label: 'Thực đơn', href: '#thuc-don' },
+  { label: 'Thực đơn', href: '/delivery' },
   { label: 'Về chúng tôi', href: '#gioi-thieu' },
   { label: 'Đặt món', href: '#dat-mon' },
   { label: 'Liên hệ', href: '#lien-he' },
@@ -169,7 +169,7 @@ function Navbar({ settings }) {
 
 function Hero({ settings }) {
   const banner = imageUrl(settings.bannerUrl) || '/lunora-hero.png';
-  const menuUrl = settings.menuUrl || '#thuc-don';
+  const menuUrl = settings.menuUrl && !String(settings.menuUrl).startsWith('#') ? settings.menuUrl : '/delivery';
 
   return (
     <section id="trang-chu" className="v0-hero">
@@ -193,7 +193,7 @@ function Hero({ settings }) {
 
         <div className="v0-hero-actions">
           <a href={menuUrl} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt món ngay</a>
-          <a href="#thuc-don" className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
+          <a href="/delivery" className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
         </div>
 
         <div className="v0-hero-meta">
@@ -265,7 +265,7 @@ function FeaturedMenu({ restaurantName }) {
       </div>
 
       <div className="v0-menu-more">
-        <a href="#dat-mon" className="v0-button v0-button-outline v0-button-lg v0-pill">Xem toàn bộ thực đơn</a>
+        <a href="/delivery" className="v0-button v0-button-outline v0-button-lg v0-pill">Xem toàn bộ thực đơn</a>
       </div>
     </section>
   );
@@ -361,7 +361,7 @@ function Footer({ settings }) {
           <div>
             <h4 className="v0-serif">Khám phá</h4>
             <ul>
-              <li><a href="#thuc-don">Thực đơn</a></li>
+              <li><a href="/delivery">Thực đơn</a></li>
               <li><a href="#gioi-thieu">Về chúng tôi</a></li>
               <li><a href="#dat-mon">Đặt món</a></li>
             </ul>

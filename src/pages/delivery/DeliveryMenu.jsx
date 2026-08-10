@@ -112,17 +112,21 @@ export default function DeliveryMenu() {
   }
 
   return (
-    <main className="delivery-public-page">
-      <DeliveryPublicHeader />
+    <main className="delivery-public-page delivery-home-menu">
+      <DeliveryPublicHeader homeStyle />
 
-      <section className="delivery-hero">
+      <section className="delivery-hero delivery-home-hero">
+        <div className="delivery-home-hero-bg" aria-hidden="true">
+          <img src="/lunora-hero.png" alt="" />
+          <div className="delivery-home-hero-overlay" />
+        </div>
         <div className="delivery-public-container delivery-hero-grid">
           <div>
-            <span className="delivery-eyebrow"><Bike size={16} /> Đặt món trực tuyến · Giao tận nơi</span>
-            <h1>Món ngon từ LUMORA<br /><em>giao đến tận cửa.</em></h1>
+            <span className="delivery-eyebrow"><Bike size={16} /> Thực đơn trực tuyến · Giao tận nơi</span>
+            <h1 className="delivery-home-serif">Hương vị LUMORA<br /><em>giao đến tận cửa.</em></h1>
             <p>
-              Chọn món, nhập địa chỉ nhận hàng và theo dõi tiến trình giao món chỉ trong vài bước.
-              Nhà hàng sẽ xác nhận đơn trước khi chuyển xuống bếp.
+              Khám phá thực đơn LUMORA, chọn món bạn yêu thích và đặt giao tận nơi chỉ trong vài bước.
+              Món ăn được chuẩn bị chỉn chu và cập nhật trạng thái xuyên suốt đơn hàng.
             </p>
             <div className="delivery-hero-benefits">
               <span><Clock3 size={17} /> Xác nhận rõ thời gian giao</span>
@@ -144,7 +148,7 @@ export default function DeliveryMenu() {
         <div className="delivery-menu-toolbar">
           <div>
             <span>Thực đơn trực tuyến</span>
-            <h2>Chọn món bạn yêu thích</h2>
+            <h2 className="delivery-home-serif">Chọn món bạn yêu thích</h2>
           </div>
           <label>
             <Search size={20} />
@@ -194,7 +198,7 @@ export default function DeliveryMenu() {
                 </div>
                 <div className="delivery-food-body">
                   <small>{food?.danhMuc?.tenDanhMuc || food?.tenDanhMuc || 'Món ăn LUMORA'}</small>
-                  <h3>{food?.tenMonAn || 'Món ăn'}</h3>
+                  <h3 className="delivery-home-serif">{food?.tenMonAn || 'Món ăn'}</h3>
                   <p>{food?.moTa || 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.'}</p>
                   <div>
                     <strong>{formatMoney(food?.gia)}</strong>
