@@ -10,7 +10,7 @@ const pageMeta = {
   '/admin': ['Tổng quan', ''],
   '/admin/menu': ['Món ăn', 'Quản lý và cập nhật danh sách món ăn trong nhà hàng'],
   '/admin/orders': ['Đơn hàng', 'Theo dõi và xử lý đơn hàng của nhà hàng'],
-  '/admin/delivery-orders': ['Đơn giao hàng', 'Xác nhận đơn từ xa, thanh toán và bàn giao vận chuyển'],
+  '/admin/delivery-orders': ['Đơn giao hàng', 'Theo dõi đơn giao hàng, thanh toán và bàn giao vận chuyển'],
   '/admin/customers': ['Khách hàng thân thiết', 'Quản lý thông tin, điểm tích lũy và lịch sử giao dịch của khách hàng'],
   '/admin/tables': ['Bàn & Đặt chỗ', 'Quản lý bàn, mã QR và lịch đặt chỗ của nhà hàng'],
   '/admin/categories': ['Danh mục', 'Quản lý danh mục món ăn'],
