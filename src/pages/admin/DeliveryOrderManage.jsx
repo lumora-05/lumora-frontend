@@ -95,7 +95,8 @@ function itemProgressLabel(statuses) {
 }
 
 function selectedStatus(order) {
-  return String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase();
+  const status = String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase();
+  return status === 'CHO_XAC_NHAN' ? 'DANG_CHUAN_BI' : status;
 }
 
 export default function DeliveryOrderManage() {
@@ -176,8 +177,8 @@ export default function DeliveryOrderManage() {
 
   const counters = useMemo(() => ({
     total: orders.length,
-    pending: orders.filter((item) => selectedStatus(item) === 'CHO_XAC_NHAN').length,
-    preparing: orders.filter((item) => ['CHO_THANH_TOAN', 'DANG_CHUAN_BI'].includes(selectedStatus(item))).length,
+    pending: orders.filter((item) => selectedStatus(item) === 'CHO_THANH_TOAN').length,
+    preparing: orders.filter((item) => selectedStatus(item) === 'DANG_CHUAN_BI').length,
     delivery: orders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'CHO_DOI_SOAT'].includes(selectedStatus(item))).length,
   }), [orders]);
 
@@ -230,7 +231,7 @@ export default function DeliveryOrderManage() {
     <section className="delivery-manage-page">
       <div className="delivery-manage-summary">
         <article><span><ShoppingBag size={22} /></span><div><small>Tổng đơn hiển thị</small><strong>{counters.total}</strong></div></article>
-        <article><span><Clock3 size={22} /></span><div><small>Chờ xác nhận</small><strong>{counters.pending}</strong></div></article>
+        <article><span><Clock3 size={22} /></span><div><small>Chờ thanh toán</small><strong>{counters.pending}</strong></div></article>
         <article><span><PackageCheck size={22} /></span><div><small>Đang chuẩn bị</small><strong>{counters.preparing}</strong></div></article>
         <article><span><Truck size={22} /></span><div><small>Chờ/giao hàng</small><strong>{counters.delivery}</strong></div></article>
       </div>
@@ -348,15 +349,8 @@ export default function DeliveryOrderManage() {
                       <section className="delivery-detail-section delivery-actions-panel">
                         <h3>Thao tác nghiệp vụ</h3>
 
-                        {currentStatus === 'CHO_XAC_NHAN' ? (
-                          <>
-                            <div className="delivery-action-block"><button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('confirm', () => deliveryApi.confirmOrder(deliveryOrderId(selected)), isVietQr ? 'Đã nhận đơn, đang chờ khách thanh toán VietQR' : 'Đã nhận đơn và chuyển xuống bếp')}><CheckCircle2 size={17} />{actionLoading === 'confirm' ? 'Đang xử lý...' : 'Xác nhận nhận đơn'}</button><small>Backend kiểm tra tồn nguyên liệu trước khi tiếp nhận. COD xuống bếp ngay; VietQR chuyển sang chờ thanh toán.</small></div>
-                            <div className="delivery-action-block danger"><label>Lý do từ chối *<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Ngoài khu vực giao hàng, món tạm hết..." /></label><button type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('reject', () => deliveryApi.rejectOrder(deliveryOrderId(selected), { lyDo: form.reason.trim() }), 'Đã từ chối đơn giao hàng')}><XCircle size={17} />{actionLoading === 'reject' ? 'Đang xử lý...' : 'Từ chối đơn'}</button></div>
-                          </>
-                        ) : null}
-
                         {isVietQr && currentStatus === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN' ? (
-                          <div className="delivery-action-block"><label>Mã giao dịch VietQR *<input value={form.transactionCode} onChange={(event) => setForm((current) => ({ ...current, transactionCode: event.target.value }))} maxLength={100} placeholder="Ví dụ: MB202608060001" /></label><label>Ghi chú xác nhận<input value={form.paymentNote} onChange={(event) => setForm((current) => ({ ...current, paymentNote: event.target.value }))} maxLength={500} placeholder="Đã kiểm tra tài khoản" /></label><small>Chỉ xác nhận sau khi nhà hàng đã nhận đơn. Khi thu tiền thành công, hệ thống kiểm tra lại nguyên liệu rồi mới chuyển bếp.</small><button type="button" disabled={Boolean(actionLoading) || !form.transactionCode.trim()} onClick={() => runAction('payment', () => deliveryApi.confirmVietQr(deliveryOrderId(selected), { maGiaoDich: form.transactionCode.trim(), ghiChu: form.paymentNote.trim() || null }), 'Đã xác nhận VietQR và chuyển đơn xuống bếp')}><Banknote size={17} />{actionLoading === 'payment' ? 'Đang xử lý...' : 'Xác nhận đã nhận tiền'}</button></div>
+                          <div className="delivery-action-block"><label>Mã giao dịch VietQR *<input value={form.transactionCode} onChange={(event) => setForm((current) => ({ ...current, transactionCode: event.target.value }))} maxLength={100} placeholder="Ví dụ: MB202608060001" /></label><label>Ghi chú xác nhận<input value={form.paymentNote} onChange={(event) => setForm((current) => ({ ...current, paymentNote: event.target.value }))} maxLength={500} placeholder="Đã kiểm tra tài khoản" /></label><small>Đơn đã được hệ thống kiểm tra trước khi tạo. Khi VietQR được ghi nhận, hệ thống kiểm tra lại nguyên liệu và chuyển thẳng xuống bếp.</small><button type="button" disabled={Boolean(actionLoading) || !form.transactionCode.trim()} onClick={() => runAction('payment', () => deliveryApi.confirmVietQr(deliveryOrderId(selected), { maGiaoDich: form.transactionCode.trim(), ghiChu: form.paymentNote.trim() || null }), 'Đã ghi nhận VietQR và chuyển đơn xuống bếp')}><Banknote size={17} />{actionLoading === 'payment' ? 'Đang xử lý...' : 'Ghi nhận đã nhận tiền'}</button></div>
                         ) : null}
 
                         {paymentStatus === 'CHO_HOAN_TIEN' && Number(selectedDelivery.soTienCanHoan || 0) > 0 ? (
@@ -365,28 +359,28 @@ export default function DeliveryOrderManage() {
 
                         {['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO'].includes(currentStatus) ? (
                           <div className="delivery-action-block">
-                            <div className="delivery-assignment-card"><span><Truck size={21} /></span><div><strong>{selectedDelivery.donViVanChuyen || 'GrabExpress (Demo) đang điều phối'}</strong><small>{selectedDelivery.maVanChuyen ? `Mã vận đơn: ${selectedDelivery.maVanChuyen}` : 'Đang chờ cấp mã vận đơn'}</small><small>{selectedDelivery.tenNguoiGiao ? `Tài xế: ${selectedDelivery.tenNguoiGiao}${selectedDelivery.soDienThoaiNguoiGiao ? ` · ${selectedDelivery.soDienThoaiNguoiGiao}` : ''}` : 'Đang chờ thông tin tài xế'}</small></div></div>
+                            <div className="delivery-assignment-card"><span><Truck size={21} /></span><div><strong>{selectedDelivery.donViVanChuyen || 'Đối tác vận chuyển đang điều phối'}</strong><small>{selectedDelivery.maVanChuyen ? `Mã vận đơn: ${selectedDelivery.maVanChuyen}` : 'Đang chờ cấp mã vận đơn'}</small><small>{selectedDelivery.tenNguoiGiao ? `Tài xế: ${selectedDelivery.tenNguoiGiao}${selectedDelivery.soDienThoaiNguoiGiao ? ` · ${selectedDelivery.soDienThoaiNguoiGiao}` : ''}` : 'Đang chờ thông tin tài xế'}</small></div></div>
                             <label>Ghi chú bàn giao<textarea value={form.handoverNote} onChange={(event) => setForm((current) => ({ ...current, handoverNote: event.target.value }))} maxLength={500} placeholder="Ví dụ: Đã bàn giao đủ món và đồ uống" /></label>
-                            <small>Tài xế có thể được điều phối sớm khi bếp gần hoàn tất; nút bàn giao chỉ mở khi toàn bộ món đã sẵn sàng.</small>
+                            <small>Hệ thống điều phối tài xế theo thời điểm món dự kiến sẵn sàng; chỉ bàn giao khi toàn bộ món đã hoàn tất.</small>
                             <button type="button" disabled={Boolean(actionLoading) || !selectedDelivery.maVanChuyen || !selectedDelivery.tenNguoiGiao || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('handover', () => deliveryApi.handover(deliveryOrderId(selected), { ghiChuBanGiao: form.handoverNote.trim() || null }), 'Đã bàn giao đơn cho tài xế')}><Truck size={17} />{actionLoading === 'handover' ? 'Đang xử lý...' : 'Bàn giao cho tài xế'}</button>
                           </div>
                         ) : null}
 
                         {currentStatus === 'DANG_GIAO' ? (
-                          <div className="delivery-action-block"><strong>GrabExpress Demo đang giao</strong><small>Trạng thái thật sẽ đi vào webhook. Hai nút dưới đây chỉ mô phỏng callback của đối tác để trình diễn đồ án.</small><button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('provider-success', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THANH_CONG', lyDo: null }), 'Đối tác đã báo giao thành công; chờ đối soát')}><CheckCircle2 size={17} />{actionLoading === 'provider-success' ? 'Đang mô phỏng...' : 'Demo webhook: giao thành công'}</button><label>Lý do giao thất bại<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Không liên lạc được với người nhận..." /></label><button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('provider-fail', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THAT_BAI', lyDo: form.reason.trim() }), 'Đối tác đã báo giao thất bại')}><XCircle size={17} />{actionLoading === 'provider-fail' ? 'Đang mô phỏng...' : 'Demo webhook: giao thất bại'}</button></div>
+                          <div className="delivery-action-block"><strong>Đối tác vận chuyển đang giao</strong><small>Trạng thái thật sẽ đi vào webhook. Hai nút dưới đây chỉ mô phỏng callback của đối tác để trình diễn đồ án.</small><button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('provider-success', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THANH_CONG', lyDo: null }), 'Đối tác đã báo giao thành công')}><CheckCircle2 size={17} />{actionLoading === 'provider-success' ? 'Đang mô phỏng...' : 'Demo webhook: giao thành công'}</button><label>Lý do giao thất bại<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Không liên lạc được với người nhận..." /></label><button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('provider-fail', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THAT_BAI', lyDo: form.reason.trim() }), 'Đối tác đã báo giao thất bại')}><XCircle size={17} />{actionLoading === 'provider-fail' ? 'Đang mô phỏng...' : 'Demo webhook: giao thất bại'}</button></div>
                         ) : null}
 
                         {currentStatus === 'CHO_DOI_SOAT' ? (
-                          <div className="delivery-action-block"><strong>Đối tác đã báo giao thành công</strong><small>Thu ngân chỉ thực hiện bước đối soát cuối cùng và tạo hóa đơn; không tự phán đoán kết quả giao hàng.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã đối soát và hoàn tất đơn')}><CheckCircle2 size={17} />{actionLoading === 'complete' ? 'Đang xử lý...' : 'Đối soát & hoàn tất'}</button></div>
+                          <div className="delivery-action-block"><strong>Đơn đã giao thành công</strong><small>Khách đã thấy trạng thái Đã giao. Đây chỉ là bước nội bộ để ghi nhận hóa đơn/kế toán.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã ghi nhận hóa đơn')}><CheckCircle2 size={17} />{actionLoading === 'complete' ? 'Đang xử lý...' : 'Ghi nhận hóa đơn'}</button></div>
                         ) : null}
 
                         {currentStatus === 'GIAO_THAT_BAI' ? (
-                          <div className="delivery-action-block"><button type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('retry', () => deliveryApi.retry(deliveryOrderId(selected)), 'Đã yêu cầu GrabExpress (Demo) điều phối lại tài xế')}><RefreshCw size={17} />{actionLoading === 'retry' ? 'Đang xử lý...' : 'Điều phối lại tài xế'}</button></div>
+                          <div className="delivery-action-block"><button type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('retry', () => deliveryApi.retry(deliveryOrderId(selected)), 'Đã yêu cầu đối tác vận chuyển điều phối lại tài xế')}><RefreshCw size={17} />{actionLoading === 'retry' ? 'Đang xử lý...' : 'Điều phối lại tài xế'}</button></div>
                         ) : null}
 
-                        {!['CHO_XAC_NHAN', 'CHO_THANH_TOAN', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'CHO_DOI_SOAT', 'GIAO_THAT_BAI'].includes(currentStatus) && paymentStatus !== 'CHO_HOAN_TIEN' ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
+                        {!['CHO_THANH_TOAN', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'CHO_DOI_SOAT', 'GIAO_THAT_BAI'].includes(currentStatus) && paymentStatus !== 'CHO_HOAN_TIEN' ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
                       </section>
-                    ) : <section className="delivery-detail-section"><h3>Chế độ theo dõi</h3><p className="delivery-no-action">Bếp theo dõi thông tin giao hàng tại đây và cập nhật từng suất món trên Bảng chế biến. Thu ngân hoặc quản trị viên xử lý xác nhận, bàn giao và kết quả giao.</p></section>}
+                    ) : <section className="delivery-detail-section"><h3>Chế độ theo dõi</h3><p className="delivery-no-action">Bếp theo dõi thông tin giao hàng tại đây và cập nhật từng suất món trên Bảng chế biến. Đơn hợp lệ được chuyển thẳng xuống bếp. Thu ngân hoặc quản trị viên chỉ xử lý thanh toán, bàn giao và ngoại lệ giao hàng.</p></section>}
                   </aside>
                 </div>
               </>

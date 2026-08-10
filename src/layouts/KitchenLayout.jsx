@@ -9,7 +9,7 @@ import { imageUrl } from '../utils/imageUrl';
 const pageMeta = {
   '/kitchen/menu': ['Tình trạng món', 'Tra cứu và cập nhật nhanh món đang phục vụ hoặc đã hết'],
   '/kitchen/history': ['Lịch sử chế biến', 'Tra cứu các phiếu bếp đã hoàn tất'],
-  '/kitchen/delivery-orders': ['Đơn giao hàng', 'Theo dõi các đơn từ xa đang được chuẩn bị và bàn giao'],
+  '/kitchen/delivery-orders': ['Đơn giao hàng', 'Theo dõi các đơn giao hàng được chuyển trực tiếp xuống bếp'],
   '/kitchen/notifications': ['Thông báo bếp', 'Theo dõi món mới và các phiếu đang chờ lâu'],
   '/kitchen/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/kitchen': ['Bảng chế biến', 'Ưu tiên và xử lý món ăn theo thời gian thực'],

@@ -1,6 +1,5 @@
 export const DELIVERY_ORDER_STATUSES = [
   'ALL',
-  'CHO_XAC_NHAN',
   'CHO_THANH_TOAN',
   'DANG_CHUAN_BI',
   'CHO_TAI_XE_NHAN',
@@ -14,14 +13,14 @@ export const DELIVERY_ORDER_STATUSES = [
 
 const STATUS_LABELS = {
   ALL: 'Tất cả',
-  CHO_XAC_NHAN: 'Chờ xác nhận',
+  CHO_XAC_NHAN: 'Đang chuẩn bị',
   CHO_THANH_TOAN: 'Chờ thanh toán',
   DANG_CHUAN_BI: 'Đang chuẩn bị',
-  CHO_TAI_XE_NHAN: 'Chờ tài xế nhận',
+  CHO_TAI_XE_NHAN: 'Chờ tài xế đến nhận',
   CHO_BAN_GIAO: 'Chờ bàn giao',
   DANG_GIAO: 'Đang giao',
-  CHO_DOI_SOAT: 'Chờ đối soát',
-  HOAN_THANH: 'Hoàn thành',
+  CHO_DOI_SOAT: 'Đã giao · chờ ghi nhận nội bộ',
+  HOAN_THANH: 'Đã giao',
   GIAO_THAT_BAI: 'Giao thất bại',
   DA_HUY: 'Đã hủy',
   CHO_BEP: 'Chờ bếp',

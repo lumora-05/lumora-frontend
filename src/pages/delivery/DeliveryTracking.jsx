@@ -14,7 +14,7 @@ import {
   RefreshCw,
   Search,
   ShoppingBag,
-  Store,
+  Star,
   Truck,
   UserRound,
   XCircle,
@@ -23,7 +23,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
 import { deliveryApi } from '../../api/deliveryApi';
+import { reviewApi } from '../../api/reviewApi';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import {
   deliveryAreaLabel,
   deliveryPaymentLabel,
@@ -36,13 +38,13 @@ import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatDistanceMeters, formatDurationSeconds } from '../../utils/googleMaps';
 
+const ORDER_PLACED_STEP = { code: 'DA_DAT', label: 'Đã đặt hàng', icon: ShoppingBag };
+
 const BASE_STEPS = [
-  { code: 'CHO_XAC_NHAN', label: 'Chờ xác nhận', icon: Store },
   { code: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị', icon: ChefHat },
-  { code: 'CHO_TAI_XE_NHAN', label: 'Chờ tài xế nhận', icon: PackageCheck },
+  { code: 'CHO_TAI_XE_NHAN', label: 'Chờ tài xế đến nhận', icon: PackageCheck },
   { code: 'DANG_GIAO', label: 'Đang giao', icon: Truck },
-  { code: 'CHO_DOI_SOAT', label: 'Chờ đối soát', icon: PackageCheck },
-  { code: 'HOAN_THANH', label: 'Hoàn thành', icon: Check },
+  { code: 'HOAN_THANH', label: 'Đã giao', icon: Check },
 ];
 
 const VIETQR_PAYMENT_STEP = { code: 'CHO_THANH_TOAN', label: 'Chờ thanh toán', icon: CreditCard };
@@ -76,6 +78,11 @@ export default function DeliveryTracking() {
   const [qrLoading, setQrLoading] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [canceling, setCanceling] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(() => localStorage.getItem(`lumora_delivery_review_${trackingCode}`) === '1');
+  const deliverySocketEvent = useWebSocket(trackingCode ? [`/topic/customer/delivery/${trackingCode}`] : []);
 
   const loadOrder = useCallback(async ({ silent = false } = {}) => {
     if (!trackingCode) return;
@@ -99,16 +106,21 @@ export default function DeliveryTracking() {
   }, [loadOrder]);
 
   useEffect(() => {
+    if (!deliverySocketEvent) return;
+    loadOrder({ silent: true });
+  }, [deliverySocketEvent, loadOrder]);
+
+  useEffect(() => {
     const status = order?.trangThaiGiaoHang;
     if (!order || isDeliveryFinished(status)) return undefined;
-    const timer = window.setInterval(() => loadOrder({ silent: true }), 15000);
+    const timer = window.setInterval(() => loadOrder({ silent: true }), 30000);
     return () => window.clearInterval(timer);
   }, [loadOrder, order]);
 
   const steps = useMemo(() => {
     const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
-    if (paymentMethod !== 'VIETQR') return BASE_STEPS;
-    return [BASE_STEPS[0], VIETQR_PAYMENT_STEP, ...BASE_STEPS.slice(1)];
+    if (paymentMethod !== 'VIETQR') return [ORDER_PLACED_STEP, ...BASE_STEPS];
+    return [ORDER_PLACED_STEP, VIETQR_PAYMENT_STEP, ...BASE_STEPS];
   }, [order?.phuongThucThanhToan]);
 
   const currentStep = useMemo(() => {
@@ -148,6 +160,28 @@ export default function DeliveryTracking() {
     }
   }
 
+  async function submitReview() {
+    if (reviewRating < 1 || reviewRating > 5) {
+      toast.error('Vui lòng chọn số sao đánh giá.');
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      await reviewApi.create({
+        displayName: String(order?.tenNguoiNhan || 'Khách hàng').slice(0, 50),
+        rating: reviewRating,
+        comment: reviewComment.trim() || null,
+      });
+      localStorage.setItem(`lumora_delivery_review_${trackingCode}`, '1');
+      setReviewSubmitted(true);
+      toast.success('Cảm ơn bạn đã gửi đánh giá.');
+    } catch (requestError) {
+      toast.error(errorMessageOf(requestError, 'Chưa thể gửi đánh giá.'));
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
   async function copyText(value, successMessage) {
     try {
       await navigator.clipboard.writeText(value);
@@ -178,7 +212,7 @@ export default function DeliveryTracking() {
   const status = String(order.trangThaiGiaoHang || '').toUpperCase();
   const failed = ['DA_HUY', 'GIAO_THAT_BAI'].includes(status);
   const paymentStatus = String(order.trangThaiThanhToan || '').toUpperCase();
-  const canCancel = status === 'CHO_XAC_NHAN' || (status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN');
+  const canCancel = status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN';
   const showQrButton = String(order.phuongThucThanhToan || '').toUpperCase() === 'VIETQR'
     && status === 'CHO_THANH_TOAN'
     && paymentStatus === 'CHO_THANH_TOAN';
@@ -193,7 +227,7 @@ export default function DeliveryTracking() {
             <Link to="/delivery"><ArrowLeft size={18} /> Tiếp tục đặt món</Link>
             <span>Theo dõi giao hàng</span>
             <h1>Đơn <button type="button" onClick={() => copyText(order.maDonHangHienThi, 'Đã sao chép mã đơn.')}>{order.maDonHangHienThi}<Copy size={16} /></button></h1>
-            <p>Đặt lúc {formatDate(order.thoiGianDat)} · Tự động cập nhật mỗi 15 giây</p>
+            <p>Đặt lúc {formatDate(order.thoiGianDat)} · Trạng thái được tự động cập nhật</p>
           </div>
           <div className={`delivery-current-status ${deliveryStatusClass(status)}`}>
             {failed ? <XCircle size={24} /> : <Truck size={24} />}
@@ -239,21 +273,19 @@ export default function DeliveryTracking() {
                 <p><Phone size={17} /><span><small>Số điện thoại</small><strong>{order.soDienThoaiNhanChe}</strong></span></p>
                 <p className="wide"><MapPin size={17} /><span><small>Địa chỉ</small><strong>{order.diaChiGiaoHang}</strong></span></p>
                 {order.googleMaps && order.quangDuongMet ? <p><Truck size={17} /><span><small>Quãng đường Google Maps</small><strong>{formatDistanceMeters(order.quangDuongMet)}</strong></span></p> : null}
-                {order.googleMaps && order.thoiGianDuKienGiay ? <p><Clock3 size={17} /><span><small>Thời gian di chuyển dự kiến</small><strong>{formatDurationSeconds(order.thoiGianDuKienGiay)}</strong></span></p> : null}
+                {order.thoiGianNhanDuKienGiay ? <p><Clock3 size={17} /><span><small>Thời gian nhận dự kiến</small><strong>{formatDurationSeconds(order.thoiGianNhanDuKienGiay)}</strong></span></p> : null}
                 {order.ghiChuGiaoHang ? <p className="wide"><Clock3 size={17} /><span><small>Ghi chú giao hàng</small><strong>{order.ghiChuGiaoHang}</strong></span></p> : null}
               </div>
             </section>
 
             {order.maVanChuyen ? (
               <section className="delivery-info-card">
-                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>GrabExpress (Demo) có thể điều phối tài xế khi bếp gần hoàn tất; chỉ bàn giao sau khi toàn bộ món sẵn sàng</p></div></div>
+                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>Đối tác vận chuyển được điều phối theo thời điểm món dự kiến sẵn sàng; chỉ nhận hàng khi toàn bộ món hoàn tất</p></div></div>
                 <div className="delivery-recipient-grid">
                   <p><PackageCheck size={17} /><span><small>Mã vận đơn</small><strong><button type="button" onClick={() => copyText(order.maVanChuyen, 'Đã sao chép mã vận đơn.')}>{order.maVanChuyen} <Copy size={14} /></button></strong></span></p>
-                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'GrabExpress (Demo) đang điều phối'}</strong></span></p>
+                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'Đối tác vận chuyển đang điều phối'}</strong></span></p>
                   {order.tenNguoiGiao ? <p><UserRound size={17} /><span><small>Tài xế</small><strong>{order.tenNguoiGiao}</strong></span></p> : null}
                   {order.soDienThoaiNguoiGiaoChe ? <p><Phone size={17} /><span><small>Liên hệ tài xế</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></p> : null}
-                  {order.trangThaiDoiTac ? <p><Truck size={17} /><span><small>Đối tác cập nhật</small><strong>{deliveryStatusLabel(order.trangThaiDoiTac)}</strong></span></p> : null}
-                  {order.lyDoDoiTac ? <p className="wide"><AlertTriangle size={17} /><span><small>Phản hồi đối tác</small><strong>{order.lyDoDoiTac}</strong></span></p> : null}
                 </div>
               </section>
             ) : null}
@@ -265,7 +297,7 @@ export default function DeliveryTracking() {
             <div className="delivery-track-money"><p><span>Tạm tính</span><strong>{formatMoney(order.tamTinh)}</strong></p><p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p><p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p>{Number(order.soTienDaHoan || 0) > 0 ? <p><span>Đã hoàn tiền</span><strong>{formatMoney(order.soTienDaHoan)}</strong></p> : null}{Number(order.soTienCanHoan || 0) > 0 ? <p><span>Đang chờ hoàn</span><strong>{formatMoney(order.soTienCanHoan)}</strong></p> : null}<div><span>Tổng cộng</span><strong>{formatMoney(order.tongThanhToan)}</strong></div></div>
 
             {status === 'CHO_THANH_TOAN' && order.thoiGianHetHanThanhToan ? <div className="delivery-eta warning"><Clock3 size={19} /><span><small>Hạn thanh toán VietQR</small><strong>{formatDate(order.thoiGianHetHanThanhToan)}</strong></span></div> : null}
-            {paymentStatus === 'CHO_HOAN_TIEN' ? <div className="delivery-refund-notice"><AlertTriangle size={18} /><span>Nhà hàng đang hoàn {formatMoney(order.soTienCanHoan)}. Trạng thái sẽ cập nhật sau khi thu ngân xác nhận giao dịch hoàn tiền.</span></div> : null}
+            {paymentStatus === 'CHO_HOAN_TIEN' ? <div className="delivery-refund-notice"><AlertTriangle size={18} /><span>Nhà hàng đang xử lý hoàn {formatMoney(order.soTienCanHoan)}. Vui lòng liên hệ hỗ trợ nếu cần thêm thông tin.</span></div> : null}
 
             {order.thoiGianSanSang ? <div className="delivery-eta"><Clock3 size={19} /><span><small>Sẵn sàng bàn giao</small><strong>{formatDate(order.thoiGianSanSang)}</strong></span></div> : null}
             {order.thoiGianBanGiao ? <div className="delivery-eta"><Truck size={19} /><span><small>Đã bàn giao</small><strong>{formatDate(order.thoiGianBanGiao)}</strong></span></div> : null}
@@ -275,9 +307,35 @@ export default function DeliveryTracking() {
             {qr ? <div className="delivery-qr-box"><img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /><strong>{formatMoney(qr.amount)}</strong><small>{qr.bankName} · {qr.accountNo}</small><small>Nội dung: {qr.addInfo}</small></div> : null}
 
             {canCancel ? (
-              <div className="delivery-cancel-box"><strong>Cần hủy đơn?</strong><textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi bếp tiếp nhận" /><button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Hủy đơn</button></div>
+              <div className="delivery-cancel-box"><strong>Cần hủy đơn?</strong><textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi thanh toán" /><button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Hủy đơn</button></div>
             ) : null}
 
+            {status === 'HOAN_THANH' ? (
+              <>
+                <div className="delivery-complete-note"><Check size={18} /><span><strong>Đơn đã giao thành công</strong><small>Cảm ơn bạn đã đặt món tại LUMORA.</small></span></div>
+                <div className="delivery-review-box">
+                  <strong>Đánh giá trải nghiệm</strong>
+                  {reviewSubmitted ? (
+                    <small>Cảm ơn bạn đã gửi đánh giá cho LUMORA.</small>
+                  ) : (
+                    <>
+                      <div className="delivery-review-stars" aria-label="Chọn số sao">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button key={star} type="button" className={reviewRating >= star ? 'active' : ''} onClick={() => setReviewRating(star)} aria-label={`${star} sao`}>
+                            <Star size={20} />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} maxLength={500} placeholder="Chia sẻ cảm nhận của bạn (không bắt buộc)" />
+                      <button type="button" onClick={submitReview} disabled={reviewSubmitting}>
+                        {reviewSubmitting ? <LoaderCircle className="spin" size={17} /> : <Star size={17} />}
+                        {reviewSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : null}
             <a className="delivery-support-phone" href={`tel:${import.meta.env.VITE_RESTAURANT_PHONE || '0979792909'}`}><Phone size={18} /> Liên hệ nhà hàng</a>
           </aside>
         </div>

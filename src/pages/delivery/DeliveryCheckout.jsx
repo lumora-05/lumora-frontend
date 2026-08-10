@@ -9,6 +9,7 @@ import {
   Phone,
   Plus,
   ShoppingBag,
+  TicketPercent,
   Trash2,
   UserRound,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader
 import GooglePlaceAutocomplete from '../../components/maps/GooglePlaceAutocomplete';
 import GoogleRouteMap from '../../components/maps/GoogleRouteMap';
 import { deliveryApi } from '../../api/deliveryApi';
+import { promotionApi } from '../../api/promotionApi';
 import { useCart } from '../../context/CartContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import {
@@ -32,6 +34,7 @@ import {
   googleMapsEnabled,
 } from '../../utils/googleMaps';
 import { imageUrl } from '../../utils/imageUrl';
+import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAddress';
 
 const DISTRICTS = ['Thanh Khê', 'Hải Châu', 'Sơn Trà', 'Ngũ Hành Sơn', 'Cẩm Lệ', 'Liên Chiểu', 'Hòa Vang'];
 
@@ -44,27 +47,48 @@ function itemId(item) {
   return item?.maMonAn ?? item?.id;
 }
 
+function initialDeliveryAddress() {
+  return readDeliveryAddress() || {};
+}
+
 export default function DeliveryCheckout() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
   const requestIdRef = useRef(createRequestId());
   const [submitting, setSubmitting] = useState(false);
-  const [quote, setQuote] = useState(null);
+  const [quote, setQuote] = useState(() => readDeliveryAddress()?.quote || null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
-  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [promotions, setPromotions] = useState([]);
+  const savedAddress = useMemo(initialDeliveryAddress, []);
+  const [selectedPlace, setSelectedPlace] = useState(savedAddress?.selectedPlace || null);
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
-    diaChiChiTiet: '',
-    phuongXa: '',
-    quanHuyen: '',
-    tinhThanh: 'Đà Nẵng',
+    diaChiChiTiet: savedAddress?.form?.diaChiChiTiet || '',
+    phuongXa: savedAddress?.form?.phuongXa || '',
+    quanHuyen: savedAddress?.form?.quanHuyen || '',
+    tinhThanh: savedAddress?.form?.tinhThanh || 'Đà Nẵng',
     ghiChuGiaoHang: '',
+    maCodeKhuyenMai: '',
     phuongThucThanhToan: 'COD',
     ghiChuDonHang: '',
   });
+
+  useEffect(() => {
+    let active = true;
+    promotionApi.getActive()
+      .then((response) => {
+        if (!active) return;
+        const rows = response?.data ?? response ?? [];
+        setPromotions(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (active) setPromotions([]);
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const useGoogleQuote = googleMapsEnabled && Boolean(selectedPlace?.placeId);
@@ -91,7 +115,20 @@ export default function DeliveryCheckout() {
       googlePlaceId: useGoogleQuote ? selectedPlace.placeId : null,
       googleFormattedAddress: useGoogleQuote ? selectedPlace.formattedAddress : null,
     }).then((response) => {
-      if (active) setQuote(unwrapDeliveryResponse(response));
+      if (active) {
+        const value = unwrapDeliveryResponse(response);
+        setQuote(value);
+        saveDeliveryAddress({
+          selectedPlace,
+          form: {
+            diaChiChiTiet: form.diaChiChiTiet,
+            phuongXa: form.phuongXa,
+            quanHuyen: form.quanHuyen,
+            tinhThanh: form.tinhThanh,
+          },
+          quote: value,
+        });
+      }
     }).catch((error) => {
       if (active) {
         setQuote(null);
@@ -110,7 +147,24 @@ export default function DeliveryCheckout() {
   ]);
 
   const deliveryFee = Number(quote?.phiGiaoHang || 0);
-  const total = cart.total + deliveryFee;
+  const promotionCode = form.maCodeKhuyenMai.trim().toUpperCase();
+  const selectedPromotion = useMemo(() => promotions.find(
+    (promotion) => String(promotion?.maCode || '').trim().toUpperCase() === promotionCode,
+  ) || null, [promotions, promotionCode]);
+  const promotionDiscount = useMemo(() => {
+    if (!selectedPromotion || cart.total <= 0) return 0;
+    const minimum = Number(selectedPromotion.giaTriDonToiThieu || 0);
+    if (cart.total < minimum) return 0;
+    const value = Number(selectedPromotion.giaTriGiam || 0);
+    const type = String(selectedPromotion.loaiGiam || '').trim().toUpperCase();
+    let discount = ['PERCENT', 'PHAN_TRAM', 'PERCENTAGE'].includes(type)
+      ? (cart.total * value) / 100
+      : value;
+    const maximum = Number(selectedPromotion.giamToiDa || 0);
+    if (maximum > 0) discount = Math.min(discount, maximum);
+    return Math.max(0, Math.min(cart.total, discount));
+  }, [cart.total, selectedPromotion]);
+  const total = Math.max(0, cart.total - promotionDiscount) + deliveryFee;
   const itemCountLabel = useMemo(() => `${cart.count} suất món`, [cart.count]);
 
   function updateField(field) {
@@ -180,6 +234,7 @@ export default function DeliveryCheckout() {
         googlePlaceId: selectedPlace?.placeId || null,
         googleFormattedAddress: selectedPlace?.formattedAddress || null,
         ghiChuGiaoHang: form.ghiChuGiaoHang.trim() || null,
+        maCodeKhuyenMai: promotionCode || null,
         phuongThucThanhToan: form.phuongThucThanhToan,
         ghiChuDonHang: form.ghiChuDonHang.trim() || null,
         items: cart.items.map((item) => ({
@@ -195,7 +250,7 @@ export default function DeliveryCheckout() {
       sessionStorage.setItem('lumora_delivery_last_token', trackingToken);
       sessionStorage.setItem(`lumora_delivery_order_${trackingToken}`, JSON.stringify(order));
       cart.clear();
-      toast.success('Đặt món thành công. Nhà hàng sẽ kiểm tra khả năng phục vụ trước.');
+      toast.success(form.phuongThucThanhToan === 'COD' ? 'Đặt món thành công. Đơn đã được chuyển xuống bếp.' : 'Đơn đã được kiểm tra. Vui lòng thanh toán VietQR để chuyển xuống bếp.');
       navigate(`/delivery/orders/${encodeURIComponent(trackingToken)}`, {
         replace: true,
         state: { order },
@@ -228,7 +283,7 @@ export default function DeliveryCheckout() {
         <Link to="/delivery"><ArrowLeft size={18} /> Tiếp tục chọn món</Link>
         <span>Hoàn tất đơn hàng</span>
         <h1>Thông tin giao món</h1>
-        <p>Nhà hàng xác nhận khả năng phục vụ trước; VietQR chỉ thanh toán sau khi đơn được nhận.</p>
+        <p>Hệ thống kiểm tra lại món, nguyên liệu, giá và địa chỉ trước khi tạo đơn; đơn hợp lệ được xử lý ngay theo phương thức thanh toán.</p>
       </section>
 
       <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>
@@ -270,7 +325,7 @@ export default function DeliveryCheckout() {
               {quoteLoading ? (
                 <><LoaderCircle className="spin" size={17} /> Google Maps đang tính quãng đường và phí...</>
               ) : quote ? (
-                <><CheckCircle2 size={17} /><span>{quote.googleMaps ? `${formatDistanceMeters(quote.quangDuongMet)} · khoảng ${formatDurationSeconds(quote.thoiGianDuKienGiay)} · ` : `${deliveryAreaLabel(quote.khuVucGiaoHang)} · `}Phí giao <b>{formatMoney(deliveryFee)}</b></span></>
+                <><CheckCircle2 size={17} /><span>{quote.googleMaps ? `${formatDistanceMeters(quote.quangDuongMet)} · nhận dự kiến ${formatDurationSeconds(quote.thoiGianNhanDuKienGiay || quote.thoiGianDuKienGiay)} · ` : `${deliveryAreaLabel(quote.khuVucGiaoHang)} · `}Phí giao <b>{formatMoney(deliveryFee)}</b></span></>
               ) : (
                 <><MapPin size={17} /><span>{quoteError || (googleMapsEnabled ? 'Chọn địa chỉ trong gợi ý Google Maps để tính phí.' : 'Chọn quận/huyện để hệ thống tính phí.')}</span></>
               )}
@@ -281,7 +336,25 @@ export default function DeliveryCheckout() {
           </section>
 
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><CreditCard size={20} /></span><div><h2>Thanh toán</h2><p>Chọn phương thức phù hợp</p></div></div>
+            <div className="delivery-card-title"><span><CreditCard size={20} /></span><div><h2>Khuyến mãi & thanh toán</h2><p>Mã khuyến mãi được backend kiểm tra lại ngay trước khi nhận đơn</p></div></div>
+            <label className="delivery-order-note delivery-promotion-field">
+              <span><TicketPercent size={16} /> Mã khuyến mãi</span>
+              <input
+                list="delivery-active-promotions"
+                value={form.maCodeKhuyenMai}
+                onChange={updateField('maCodeKhuyenMai')}
+                maxLength={50}
+                placeholder="Nhập mã nếu có"
+              />
+              <datalist id="delivery-active-promotions">
+                {promotions.map((promotion) => <option key={promotion.maKhuyenMai || promotion.maCode} value={promotion.maCode}>{promotion.tenKhuyenMai}</option>)}
+              </datalist>
+              {promotionCode ? (
+                selectedPromotion && promotionDiscount > 0
+                  ? <small className="delivery-promotion-hint success">Áp dụng dự kiến: -{formatMoney(promotionDiscount)}</small>
+                  : <small className="delivery-promotion-hint">Backend sẽ kiểm tra hiệu lực, số lượt và giá trị đơn tối thiểu khi bạn đặt món.</small>
+              ) : null}
+            </label>
             <div className="delivery-payment-options">
               <label className={form.phuongThucThanhToan === 'COD' ? 'active' : ''}>
                 <input type="radio" name="payment" value="COD" checked={form.phuongThucThanhToan === 'COD'} onChange={updateField('phuongThucThanhToan')} />
@@ -289,7 +362,7 @@ export default function DeliveryCheckout() {
               </label>
               <label className={form.phuongThucThanhToan === 'VIETQR' ? 'active' : ''}>
                 <input type="radio" name="payment" value="VIETQR" checked={form.phuongThucThanhToan === 'VIETQR'} onChange={updateField('phuongThucThanhToan')} />
-                <span><CreditCard size={22} /></span><div><strong>Chuyển khoản VietQR</strong><small>Nhà hàng nhận đơn trước, sau đó mới mở mã VietQR</small></div><CheckCircle2 size={20} />
+                <span><CreditCard size={22} /></span><div><strong>Chuyển khoản VietQR</strong><small>Tạo mã VietQR sau khi đặt; đơn xuống bếp ngay khi thanh toán được ghi nhận</small></div><CheckCircle2 size={20} />
               </label>
             </div>
             <label className="delivery-order-note"><span>Ghi chú chung cho đơn</span><textarea value={form.ghiChuDonHang} onChange={updateField('ghiChuDonHang')} maxLength={255} placeholder="Ví dụ: Không lấy dụng cụ nhựa..." /></label>
@@ -313,6 +386,7 @@ export default function DeliveryCheckout() {
           </div>
           <div className="delivery-summary-money">
             <p><span>Tạm tính</span><strong>{formatMoney(cart.total)}</strong></p>
+            <p><span>Giảm giá</span><strong>-{formatMoney(promotionDiscount)}</strong></p>
             <p><span>Phí giao hàng</span><strong>{quote ? formatMoney(deliveryFee) : 'Chờ địa chỉ'}</strong></p>
             <div><span>Tổng thanh toán</span><strong>{quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
           </div>
@@ -320,7 +394,7 @@ export default function DeliveryCheckout() {
             {submitting ? <LoaderCircle className="spin" size={19} /> : <ShoppingBag size={19} />}
             {submitting ? 'Đang gửi đơn...' : 'Đặt món giao tận nơi'}
           </button>
-          <small className="delivery-submit-note">Phí giao do backend tính từ quãng đường Google Routes. Đơn chỉ xuống bếp sau khi nhà hàng kiểm tra khả năng phục vụ; VietQR cần xác nhận tiền sau đó.</small>
+          <small className="delivery-submit-note">Backend kiểm tra giờ nhận đơn, phạm vi giao, món còn bán, nguyên liệu, giá và khuyến mãi trước khi tạo đơn. COD chuyển thẳng xuống bếp; VietQR xuống bếp sau khi thanh toán được ghi nhận.</small>
         </aside>
       </form>
     </main>
