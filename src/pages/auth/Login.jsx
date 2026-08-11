@@ -142,10 +142,12 @@ export default function Login() {
 
           <div className="lumora-login-brand">
             <LoginBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
-            <div>
-              <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
-              <span>Restaurant Management</span>
-            </div>
+            {!brandSettings.logoUrl && (
+              <div>
+                <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
+                <span>Restaurant Management</span>
+              </div>
+            )}
           </div>
 
           <div className="lumora-login-copy">
@@ -174,7 +176,7 @@ export default function Login() {
         <div className="lumora-login-panel">
           <div className="lumora-login-mobile-brand">
             <LoginBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
-            <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
+            {!brandSettings.logoUrl && <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>}
           </div>
 
           <div className="lumora-login-form-wrap">
