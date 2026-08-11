@@ -1505,7 +1505,7 @@
   padding:0 max(28px,calc((100vw - 1280px)/2));
   grid-template-columns:minmax(200px,1fr) auto minmax(200px,1fr);
   column-gap:20px;
-  background:rgba(255,252,249,.96);
+  background: #fff;
   border-bottom:1px solid #ece2d8;
   box-shadow:0 8px 24px rgba(85,56,31,.06);
 }
