@@ -17,7 +17,8 @@ const items = [
 const pageMeta = {
   '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
   '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],
-  '/cashier/notifications': ['Thông báo thu ngân', 'Các bàn đang yêu cầu thanh toán'],
+  '/cashier/delivery-orders': ['Đơn giao hàng', 'Thu ngân theo dõi đơn online, thanh toán, bàn giao và các trường hợp ngoại lệ'],
+  '/cashier/notifications': ['Thông báo thu ngân', 'Yêu cầu thanh toán tại bàn và đơn online đang cần theo dõi'],
   '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/cashier': ['Thanh toán', 'Ưu tiên các bàn đã yêu cầu thanh toán lâu nhất'],
 };

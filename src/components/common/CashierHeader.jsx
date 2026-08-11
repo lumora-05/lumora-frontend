@@ -2,11 +2,15 @@ import { Bell, ChevronDown, Clock3, LogOut, Menu, UserRound } from 'lucide-react
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
+import { deliveryApi } from '../../api/deliveryApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
+import { deliveryData, unwrapDeliveryList } from '../../utils/delivery';
+import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
+import StaffAlertToggle from './StaffAlertToggle';
 
 export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
@@ -16,11 +20,19 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const [now, setNow] = useState(new Date());
   const name = user?.hoTen || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Nhân viên thu ngân';
   const avatar = profileAvatarOf(user);
+  useStaffOperationalAlerts('CASHIER', event);
 
   async function loadCount() {
     try {
-      const response = await orderApi.getAll();
-      setQueueCount(unwrap(response).filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length);
+      const [paymentResponse, deliveryResponse] = await Promise.all([
+        orderApi.getAll(),
+        deliveryApi.list('ALL'),
+      ]);
+      const paymentCount = unwrap(paymentResponse)
+        .filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length;
+      const deliveryCount = unwrapDeliveryList(deliveryResponse)
+        .filter((order) => !['HOAN_THANH', 'DA_HUY'].includes(String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase())).length;
+      setQueueCount(paymentCount + deliveryCount);
     } catch {
       // Badge chỉ mang tính hỗ trợ, lỗi chi tiết được hiển thị trong trang danh sách.
     }
@@ -52,7 +64,9 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
       <div className="cashier-header-actions">
         <span className="cashier-live-time"><Clock3 size={17} />{dateLabel}</span>
 
-        <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} yêu cầu thanh toán`}>
+        <StaffAlertToggle channel="CASHIER" />
+
+        <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} công việc cần theo dõi`}>
           <Bell size={21} />
           {queueCount > 0 ? <span>{queueCount > 99 ? '99+' : queueCount}</span> : null}
         </Link>

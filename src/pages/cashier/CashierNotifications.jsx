@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BellRing, Clock3, RefreshCw, WalletCards } from 'lucide-react';
+import { BellRing, Bike, Clock3, RefreshCw, WalletCards } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
+import { deliveryApi } from '../../api/deliveryApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
 import {
@@ -14,9 +15,16 @@ import {
   totalOf,
   unwrap,
 } from '../../utils/cashier';
+import {
+  deliveryData,
+  deliveryStatusLabel,
+  displayOrderCode,
+  unwrapDeliveryList,
+} from '../../utils/delivery';
 
 export default function CashierNotifications() {
   const [orders, setOrders] = useState([]);
+  const [deliveryOrders, setDeliveryOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [now, setNow] = useState(Date.now());
@@ -26,10 +34,14 @@ export default function CashierNotifications() {
     setLoading(true);
     setError('');
     try {
-      const response = await orderApi.getAll();
-      setOrders(unwrap(response));
+      const [paymentResponse, deliveryResponse] = await Promise.all([
+        orderApi.getAll(),
+        deliveryApi.list('ALL'),
+      ]);
+      setOrders(unwrap(paymentResponse));
+      setDeliveryOrders(unwrapDeliveryList(deliveryResponse));
     } catch {
-      setError('Không tải được thông báo thanh toán.');
+      setError('Không tải được thông báo công việc của thu ngân.');
     } finally {
       setLoading(false);
     }
@@ -48,6 +60,10 @@ export default function CashierNotifications() {
     .filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai))
     .sort((a, b) => new Date(paymentRequestTimeOf(a) || 0) - new Date(paymentRequestTimeOf(b) || 0)), [orders]);
 
+  const activeDeliveries = useMemo(() => deliveryOrders
+    .filter((order) => !['HOAN_THANH', 'DA_HUY'].includes(String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase()))
+    .sort((a, b) => new Date(a?.thoiGianDat || 0) - new Date(b?.thoiGianDat || 0)), [deliveryOrders]);
+
   return (
     <section className="page cashier-page cashier-workspace">
       <div className="cashier-page-heading cashier-page-heading-actions">
@@ -57,8 +73,8 @@ export default function CashierNotifications() {
       {error ? <div className="cashier-load-error"><span>{error}</span><button type="button" onClick={load}>Thử lại</button></div> : null}
 
       <div className="cashier-notification-list">
-        {loading ? <div className="cashier-table-empty cashier-loading-card">Đang tải thông báo...</div> : waiting.length === 0 ? (
-          <div className="cashier-notification-empty"><BellRing size={34} /><strong>Không có yêu cầu mới</strong><span>Hiện chưa có bàn nào yêu cầu thanh toán.</span></div>
+        {loading ? <div className="cashier-table-empty cashier-loading-card">Đang tải thông báo...</div> : waiting.length === 0 && activeDeliveries.length === 0 ? (
+          <div className="cashier-notification-empty"><BellRing size={34} /><strong>Không có công việc mới</strong><span>Hiện chưa có yêu cầu thanh toán hoặc đơn online cần theo dõi.</span></div>
         ) : waiting.map((order) => {
           const id = orderIdOf(order);
           const elapsed = elapsedInfo(paymentRequestTimeOf(order), now);
@@ -71,6 +87,22 @@ export default function CashierNotifications() {
                 <small><Clock3 size={14} />{elapsed.label}</small>
               </div>
               <Link to={`/cashier/payment/${id}`}>Xử lý thanh toán</Link>
+            </article>
+          );
+        })}
+
+        {!loading && activeDeliveries.map((order) => {
+          const delivery = deliveryData(order);
+          const status = String(delivery?.trangThaiGiaoHang || '').toUpperCase();
+          return (
+            <article key={`delivery-${order?.maDonHang ?? order?.id}`} className="cashier-notification-card">
+              <div className="cashier-notification-icon"><Bike size={22} /></div>
+              <div className="cashier-notification-content">
+                <div><strong>Đơn giao hàng {displayOrderCode(order)}</strong><span>{deliveryStatusLabel(status)}</span></div>
+                <p>{delivery?.tenNguoiNhan || 'Khách nhận'} · <b>{formatMoney(order?.tongTien)}</b></p>
+                <small><Clock3 size={14} />Thu ngân theo dõi và xử lý thanh toán, bàn giao hoặc ngoại lệ khi cần.</small>
+              </div>
+              <Link to="/cashier/delivery-orders">Theo dõi đơn</Link>
             </article>
           );
         })}
