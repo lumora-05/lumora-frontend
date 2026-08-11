@@ -68,7 +68,7 @@
   top:0;
   z-index:80;
   border-bottom:1px solid rgba(225,216,207,.72);
-  background:rgba(251,250,247,.92);
+  background: #fff;
   backdrop-filter:blur(12px);
   box-shadow:none;
 }
