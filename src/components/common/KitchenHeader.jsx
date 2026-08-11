@@ -47,7 +47,7 @@ export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="kitchen-top-actions">
-        <StaffAlertToggle />
+        <StaffAlertToggle channel="KITCHEN" />
         <Link to="/kitchen/notifications" className="kitchen-notification-button" aria-label={`${newCount} món mới`}>
           <Bell size={21} />
           {newCount > 0 ? <span>{badge}</span> : null}

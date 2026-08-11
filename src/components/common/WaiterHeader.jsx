@@ -256,7 +256,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="waiter-top-actions">
-        <StaffAlertToggle />
+        <StaffAlertToggle channel="WAITER" />
         <div className="waiter-notification-wrap" ref={notificationRef}>
           <button
             type="button"

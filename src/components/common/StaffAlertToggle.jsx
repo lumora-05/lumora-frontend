@@ -9,7 +9,7 @@ import {
   triggerStaffAlert,
 } from '../../utils/staffAlerts';
 
-export default function StaffAlertToggle() {
+export default function StaffAlertToggle({ channel }) {
   const [enabled, setEnabled] = useState(() => isStaffAlertsEnabled());
   const [permission, setPermission] = useState(() => staffNotificationPermission());
   const [busy, setBusy] = useState(false);
@@ -20,7 +20,7 @@ export default function StaffAlertToggle() {
     const prepare = () => {
       if (prepared) return;
       prepared = true;
-      void prepareStaffAlerts();
+      void prepareStaffAlerts(channel);
       document.removeEventListener('pointerdown', prepare);
       document.removeEventListener('keydown', prepare);
     };
@@ -30,26 +30,28 @@ export default function StaffAlertToggle() {
       document.removeEventListener('pointerdown', prepare);
       document.removeEventListener('keydown', prepare);
     };
-  }, [enabled]);
+  }, [enabled, channel]);
 
   async function toggle() {
     if (busy) return;
     if (enabled) {
-      disableStaffAlerts();
+      disableStaffAlerts(channel);
       setEnabled(false);
       return;
     }
 
     setBusy(true);
     try {
-      const result = await enableStaffAlerts();
+      const result = await enableStaffAlerts(channel);
       setEnabled(result.enabled);
       setPermission(result.permission);
       if (result.enabled) {
         triggerStaffAlert({
           title: 'Đã bật cảnh báo Lumora',
           body: result.permission === 'granted'
-            ? 'Âm thanh, rung và thông báo hệ thống đã sẵn sàng.'
+            ? (result.push?.configured
+              ? 'Âm thanh, rung và Push Notification đã sẵn sàng.'
+              : 'Âm thanh, rung và thông báo hệ thống đã sẵn sàng; Firebase Push chưa được cấu hình.')
             : 'Âm thanh và rung đã bật. Thông báo hệ thống đang bị trình duyệt giới hạn.',
           tag: 'lumora-alert-enabled',
         });

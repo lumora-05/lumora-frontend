@@ -1,5 +1,11 @@
+import {
+  disableFirebasePush,
+  enableFirebasePush,
+  prepareFirebasePush,
+  registerStaffServiceWorker,
+} from './firebasePush';
+
 const ENABLED_KEY = 'lumora_staff_operational_alerts_enabled';
-const SW_PATH = '/staff-alert-sw.js';
 
 let audioContext = null;
 
@@ -15,15 +21,6 @@ export function isStaffAlertsEnabled() {
 export function staffNotificationPermission() {
   if (!hasWindow() || !('Notification' in window)) return 'unsupported';
   return Notification.permission;
-}
-
-async function registerAlertServiceWorker() {
-  if (!hasWindow() || !('serviceWorker' in navigator)) return null;
-  try {
-    return await navigator.serviceWorker.register(SW_PATH, { scope: '/' });
-  } catch {
-    return null;
-  }
 }
 
 function ensureAudioContext() {
@@ -51,17 +48,18 @@ async function unlockAudio() {
   }
 }
 
-export async function prepareStaffAlerts() {
+export async function prepareStaffAlerts(channel) {
   if (!isStaffAlertsEnabled()) return;
   await unlockAudio();
-  await registerAlertServiceWorker();
+  await registerStaffServiceWorker();
+  await prepareFirebasePush(channel);
 }
 
-export async function enableStaffAlerts() {
+export async function enableStaffAlerts(channel) {
   if (!hasWindow()) return { enabled: false, permission: 'unsupported' };
   window.localStorage.setItem(ENABLED_KEY, '1');
   await unlockAudio();
-  await registerAlertServiceWorker();
+  await registerStaffServiceWorker();
 
   let permission = staffNotificationPermission();
   if (permission === 'default') {
@@ -72,12 +70,22 @@ export async function enableStaffAlerts() {
     }
   }
 
-  return { enabled: true, permission };
+  let push = { configured: false, registered: false };
+  if (permission === 'granted') {
+    try {
+      push = await enableFirebasePush(channel);
+    } catch {
+      // Âm thanh/rung trong ứng dụng vẫn hoạt động nếu Firebase chưa sẵn sàng.
+    }
+  }
+
+  return { enabled: true, permission, push };
 }
 
-export function disableStaffAlerts() {
+export function disableStaffAlerts(channel) {
   if (!hasWindow()) return;
   window.localStorage.setItem(ENABLED_KEY, '0');
+  void disableFirebasePush(channel);
 }
 
 function playTone(urgent = false) {
