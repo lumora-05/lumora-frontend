@@ -1,4 +1,4 @@
-import { ArrowLeft, Bike, Search, ShoppingBag, UtensilsCrossed } from 'lucide-react';
+import { ArrowLeft, Bike, Search, ShoppingBag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -10,7 +10,6 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
   const [settings, setSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
 
   useEffect(() => {
-    if (!homeStyle) return undefined;
     let active = true;
     systemSettingApi.getPublic()
       .then((response) => {
@@ -20,10 +19,11 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
       })
       .catch(() => {});
     return () => { active = false; };
-  }, [homeStyle]);
+  }, []);
+
+  const logo = imageUrl(settings.logoUrl);
 
   if (homeStyle) {
-    const logo = imageUrl(settings.logoUrl);
     return (
       <header className="delivery-public-header delivery-home-header">
         <div className="delivery-public-header-inner delivery-home-header-inner">
@@ -58,9 +58,17 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
   return (
     <header className={`delivery-public-header ${compact ? 'compact' : ''}`}>
       <div className="delivery-public-header-inner">
-        <Link className="delivery-brand" to="/">
-          <span><UtensilsCrossed size={22} /></span>
-          <div><strong>LUMORA</strong><small>Giao món tận nơi</small></div>
+        <Link className={`delivery-brand${logo ? ' has-restaurant-logo' : ''}`} to="/">
+          {logo ? (
+            <span className="delivery-brand-logo-image">
+              <img src={logo} alt={`Logo ${settings.restaurantName || 'LUMORA'}`} />
+            </span>
+          ) : (
+            <>
+              <span className="delivery-brand-fallback-mark">{String(settings.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
+              <div><strong>{settings.restaurantName || 'LUMORA'}</strong><small>Giao món tận nơi</small></div>
+            </>
+          )}
         </Link>
 
         <nav className="delivery-public-nav" aria-label="Điều hướng đặt món giao tận nơi">

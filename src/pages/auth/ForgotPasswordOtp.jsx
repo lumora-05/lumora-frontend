@@ -14,9 +14,10 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  UtensilsCrossed,
 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
+import { imageUrl } from '../../utils/imageUrl';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import '../../styles/login.css';
 
@@ -50,6 +51,19 @@ function formatCountdown(seconds) {
   return `${minutes}:${remain}`;
 }
 
+function RecoveryBrandLogo({ restaurantName, logoUrl }) {
+  const logo = imageUrl(logoUrl);
+  return logo ? (
+    <span className="lumora-login-brand-logo-image">
+      <img src={logo} alt={`Logo ${restaurantName || 'LUMORA'}`} />
+    </span>
+  ) : (
+    <span className="lumora-login-brand-home-mark" aria-hidden="true">
+      {(restaurantName || 'L').trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
 function readInitialState() {
   const savedEmail = sessionStorage.getItem(EMAIL_KEY) || '';
   const savedToken = sessionStorage.getItem(TOKEN_KEY) || '';
@@ -81,6 +95,20 @@ export default function ForgotPasswordOtp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        if (data) setBrandSettings((current) => ({ ...current, ...data }));
+      })
+      .catch(() => {});
+
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (step !== 2) return undefined;
@@ -272,13 +300,13 @@ export default function ForgotPasswordOtp() {
           <div className="lumora-login-orb lumora-login-orb-two" />
 
           <div className="lumora-login-brand">
-            <div className="lumora-login-brand-mark" aria-hidden="true">
-              <UtensilsCrossed size={22} strokeWidth={2.3} />
-            </div>
-            <div>
-              <strong>LUMORA</strong>
-              <span>Restaurant Management</span>
-            </div>
+            <RecoveryBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
+            {!brandSettings.logoUrl && (
+              <div>
+                <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
+                <span>Restaurant Management</span>
+              </div>
+            )}
           </div>
 
           <div className="lumora-login-copy lumora-recovery-copy">
@@ -316,10 +344,8 @@ export default function ForgotPasswordOtp() {
 
         <div className="lumora-login-panel lumora-recovery-panel">
           <div className="lumora-login-mobile-brand">
-            <div className="lumora-login-brand-mark" aria-hidden="true">
-              <UtensilsCrossed size={22} strokeWidth={2.3} />
-            </div>
-            <strong>LUMORA</strong>
+            <RecoveryBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
+            {!brandSettings.logoUrl && <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>}
           </div>
 
           <div className="lumora-login-form-wrap lumora-recovery-form-wrap">

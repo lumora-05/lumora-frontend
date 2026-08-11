@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { AlertTriangle, BarChart3, Bell, BellRing, Bike, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils, UtensilsCrossed } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bell, BellRing, Bike, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const iconMap = {
@@ -44,7 +44,7 @@ export default function Sidebar({ title, items, logoUrl = '', restaurantName = '
           </>
         ) : (
           <>
-            <div className="brand-logo"><UtensilsCrossed size={28} strokeWidth={2.4} /></div>
+            <div className="brand-logo">{(restaurantName || 'L').trim().charAt(0).toUpperCase()}</div>
             <div className="brand-text">
               <b>LUMORA</b>
               <span>{title}</span>

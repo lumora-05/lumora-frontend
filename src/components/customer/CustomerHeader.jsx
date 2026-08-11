@@ -152,7 +152,7 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
             </>
           ) : (
             <>
-              <span className="customer-site-brand-mark"><UtensilsCrossed size={24} /></span>
+              <span className="customer-site-brand-mark">{String(showcaseBrand.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
               <span>
                 <strong>LUMORA</strong>
                 <small>Restaurant</small>
