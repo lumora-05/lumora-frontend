@@ -98,9 +98,9 @@
 }
 
 .lumora-login-brand-logo-image {
-  width: 170px;
-  height: 70px;
-  flex: 0 0 170px;
+  width: 112px;
+  height: 52px;
+  flex: 0 0 112px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,6 +111,8 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transform: scale(1.9);
+  transform-origin: center;
 }
 
 .lumora-login-brand-home-mark {
@@ -609,9 +611,9 @@
   }
 
   .lumora-login-mobile-brand .lumora-login-brand-logo-image {
-  width: 140px;
-  height: 60px;
-  flex-basis: 140px;
+  width: 100px;
+  height: 46px;
+  flex-basis: 100px;
 }
 
   .lumora-login-mobile-brand .lumora-login-brand-home-mark {
