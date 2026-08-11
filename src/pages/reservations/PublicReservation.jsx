@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   CalendarCheck2,
   CalendarDays,
   Check,
@@ -8,6 +7,7 @@ import {
   Edit3,
   LoaderCircle,
   MapPin,
+  Menu,
   Phone,
   Search,
   ShieldCheck,
@@ -15,6 +15,7 @@ import {
   UserRound,
   UsersRound,
   UtensilsCrossed,
+  X,
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -26,6 +27,8 @@ import { CustomerReservationPreorder, ReservationPreorderDraftModal } from '../.
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { imageUrl } from '../../utils/imageUrl';
+import '../../styles/home.css';
 import {
   canCustomerCancel,
   canCustomerEdit,
@@ -43,6 +46,74 @@ import {
 const VIETNAM_MOBILE_PATTERN = /^0(?:3[2-9]|5[2689]|7[06-9]|8[1-9]|9[0-9])\d{7}$/;
 const HOUR_24_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+
+const DEFAULT_HEADER_SETTINGS = {
+  restaurantName: 'LUMORA',
+  reservationUrl: '/reservations',
+  menuUrl: '/delivery',
+  logoUrl: '',
+};
+
+const RESERVATION_NAV_LINKS = [
+  { label: 'Trang chủ', href: '/#trang-chu' },
+  { label: 'Thực đơn', href: '/delivery' },
+  { label: 'Về chúng tôi', href: '/#gioi-thieu' },
+  { label: 'Đặt món', href: '/#dat-mon' },
+  { label: 'Liên hệ', href: '/#lien-he' },
+];
+
+function ReservationBrand({ settings }) {
+  const logo = imageUrl(settings.logoUrl);
+  return logo ? (
+    <span className="v0-brand-logo-image"><img src={logo} alt={`Logo ${settings.restaurantName}`} /></span>
+  ) : (
+    <span className="v0-brand-mark">{(settings.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
+  );
+}
+
+function ReservationNavbar({ settings }) {
+  const [open, setOpen] = useState(false);
+  const reservationUrl = settings.reservationUrl || '/reservations';
+
+  return (
+    <header className="v0-navbar">
+      <div className="v0-shell v0-navbar-inner">
+        <Link to="/" className="v0-brand"><ReservationBrand settings={settings} /></Link>
+
+        <nav className="v0-nav-desktop">
+          {RESERVATION_NAV_LINKS.map((link) => (
+            <a key={link.href} href={link.href}>{link.label}</a>
+          ))}
+        </nav>
+
+        <div className="v0-book-desktop">
+          <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
+        </div>
+
+        <button
+          type="button"
+          className="v0-menu-button"
+          onClick={() => setOpen((value) => !value)}
+          aria-label="Mở menu"
+          aria-expanded={open}
+        >
+          {open ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="v0-mobile-panel">
+          <nav className="v0-shell v0-mobile-nav">
+            {RESERVATION_NAV_LINKS.map((link) => (
+              <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
+            ))}
+            <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book">Đặt bàn ngay</a>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}
 
 function normalizeVietnamPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 10);
@@ -149,6 +220,7 @@ function ReservationDetail({ item, onEdit, onCancel, defaultDurationMinutes = 12
 
 export default function PublicReservation() {
   const toast = useToast();
+  const [headerSettings, setHeaderSettings] = useState(DEFAULT_HEADER_SETTINGS);
   const [mode, setMode] = useState('create');
   const [areas, setAreas] = useState([]);
   const [reservationPolicy, setReservationPolicy] = useState({
@@ -185,6 +257,7 @@ export default function PublicReservation() {
     systemSettingApi.getPublic()
       .then((response) => {
         const settings = systemSettingData(response);
+        setHeaderSettings((current) => ({ ...current, ...(settings || {}) }));
         const next = {
           defaultDurationMinutes: Number(settings?.reservationDefaultDurationMinutes) || 120,
           preparationMinutes: Math.max(Number(settings?.reservationPreparationMinutes) || 0, 0),
@@ -416,11 +489,8 @@ export default function PublicReservation() {
   }
 
   return (
-    <main className="reservation-public-page">
-      <header className="reservation-public-header">
-        <Link to="/" className="reservation-public-brand"><span><UtensilsCrossed size={22} /></span><div><strong>LUMORA</strong><small>Restaurant</small></div></Link>
-        <Link to="/" className="reservation-public-back"><ArrowLeft size={17} /> Trang chủ</Link>
-      </header>
+    <main className="reservation-public-page v0-home">
+      <ReservationNavbar settings={headerSettings} />
 
       <section className="reservation-public-hero">
         <div className="reservation-public-hero-copy">
