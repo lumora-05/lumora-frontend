@@ -93,7 +93,7 @@ function PreorderItems({ preorder }) {
   );
 }
 
-function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }) {
+function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, draftMode = false }) {
   const toast = useToast();
   const [foods, setFoods] = useState([]);
   const [selection, setSelection] = useState(() => buildSelection(current));
@@ -107,7 +107,7 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }
     setLoading(true);
     Promise.all([
       menuApi.getActive({ skipAuth: true }),
-      reservationApi.customerPreorderDetail(code, phone).catch(() => null),
+      draftMode ? Promise.resolve(null) : reservationApi.customerPreorderDetail(code, phone).catch(() => null),
     ]).then(([menuResponse, preorderResponse]) => {
       if (cancelled) return;
       setFoods(unwrapList(menuResponse));
@@ -120,7 +120,7 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [code, current, phone, toast]);
+  }, [code, current, draftMode, phone, toast]);
 
   const filteredFoods = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -169,6 +169,27 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }
     }));
     try {
       setBusy(true);
+      if (draftMode) {
+        const draftItems = items.map((item) => {
+          const food = foods.find((candidate) => foodId(candidate) === item.maMonAn);
+          const donGia = foodPrice(food);
+          return {
+            ...item,
+            tenMonAn: foodName(food),
+            hinhAnh: food?.hinhAnh || null,
+            donGia,
+            thanhTien: donGia * item.soLuong,
+          };
+        });
+        onSaved({
+          trangThaiDatMonTruoc: 'CHUA_DAT',
+          ghiChuDatMonTruoc: generalNote.trim() || null,
+          tongTienDuKien: total,
+          items: draftItems,
+        });
+        onClose();
+        return;
+      }
       const response = await reservationApi.customerSavePreorder(code, phone, {
         ghiChu: generalNote.trim() || null,
         items,
@@ -186,7 +207,7 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }
   return (
     <section className="reservation-preorder-modal customer" role="dialog" aria-modal="true">
       <header>
-        <div><span>ĐẶT MÓN TRƯỚC</span><h2>Chọn món cho lịch {reservation?.maTraCuu}</h2><p>Món chỉ được chuyển xuống bếp sau khi bạn check-in và được xếp bàn.</p></div>
+        <div><span>ĐẶT MÓN TRƯỚC</span><h2>{draftMode ? 'Chọn món cho yêu cầu đặt bàn' : `Chọn món cho lịch ${reservation?.maTraCuu}`}</h2><p>Món chỉ được chuyển xuống bếp sau khi bạn check-in và được xếp bàn.</p></div>
         <button type="button" onClick={onClose} disabled={busy}><X size={20} /></button>
       </header>
       <div className="reservation-preorder-editor-toolbar">
@@ -222,7 +243,7 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose }
       <label className="reservation-preorder-general-note">Ghi chú chung<textarea rows="3" maxLength="500" value={generalNote} onChange={(event) => setGeneralNote(event.target.value)} placeholder="Ví dụ: chuẩn bị ít cay, phục vụ món khai vị trước..." /></label>
       <footer>
         <button type="button" onClick={onClose} disabled={busy}>Quay lại</button>
-        <button type="button" className="primary" onClick={save} disabled={busy || loading || !selectedEntries.length}>{busy ? <LoaderCircle className="spin" size={17} /> : <Send size={17} />} Gửi nhà hàng duyệt</button>
+        <button type="button" className="primary" onClick={save} disabled={busy || loading || !selectedEntries.length}>{busy ? <LoaderCircle className="spin" size={17} /> : <Send size={17} />} {draftMode ? 'Lưu lựa chọn' : 'Gửi nhà hàng duyệt'}</button>
       </footer>
     </section>
   );
@@ -253,6 +274,20 @@ function CancelPreorderModal({ code, phone, onCancelled, onClose }) {
       <label className="reservation-modal-field">Lý do hủy<textarea autoFocus rows="4" maxLength="500" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Nhập lý do hủy món đặt trước..." /></label>
       <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="danger" onClick={submit} disabled={busy || !reason.trim()}>{busy ? <LoaderCircle className="spin" size={17} /> : <Trash2 size={17} />} Xác nhận hủy</button></footer>
     </section>
+  );
+}
+
+export function ReservationPreorderDraftModal({ current, onSaved, onClose }) {
+  return (
+    <MenuEditorModal
+      reservation={null}
+      code=""
+      phone=""
+      current={current}
+      onSaved={onSaved}
+      onClose={onClose}
+      draftMode
+    />
   );
 }
 
@@ -326,7 +361,7 @@ export function CustomerReservationPreorder({ reservation, code, phone, onChange
             {itemCount > 0 && preorder ? <PreorderItems preorder={preorder} /> : <div className="reservation-preorder-empty compact">Bạn chưa chọn món cho lịch đặt bàn này.</div>}
             {itemCount > 0 ? <div className="reservation-preorder-summary"><span>{itemCount} loại món</span><strong>Tạm tính: {formatMoney(total)}</strong></div> : null}
             {preorder?.ghiChuDatMonTruoc ? <div className="reservation-preorder-note"><b>Ghi chú chung:</b> {preorder.ghiChuDatMonTruoc}</div> : null}
-            {preorder?.thoiGianDuKienChuyenBep ? <div className="reservation-preorder-kitchen-time"><Clock3 size={16} /> Dự kiến chuẩn bị từ {reservationDateTime(preorder.thoiGianDuKienChuyenBep)}</div> : null}
+            {preorder?.thoiGianDuKienChuyenBep ? <div className="reservation-preorder-kitchen-time"><Clock3 size={16} /> Mốc chuẩn bị tham khảo: {reservationDateTime(preorder.thoiGianDuKienChuyenBep)}</div> : null}
           </>
         )}
         {(editable || cancellable) ? <footer>
@@ -419,13 +454,13 @@ export function StaffReservationPreorderModal({ item, onClose, onUpdated }) {
           {status === 'CHO_XAC_NHAN' && bookingStatus === 'CHO_XAC_NHAN' ? <div className="reservation-preorder-send-info"><Clock3 size={21} /><p>Khách đã chọn món cùng yêu cầu đặt bàn. Hãy xác nhận lịch đặt bàn trước khi duyệt thực đơn; món hiện chưa chuyển xuống bếp.</p></div> : null}
           {status === 'CHO_XAC_NHAN' ? (
             <div className="reservation-preorder-review-grid">
-              <label>Chuẩn bị trước giờ đến<select value={preparationMinutes} onChange={(event) => setPreparationMinutes(event.target.value)}><option value="15">15 phút</option><option value="30">30 phút</option><option value="45">45 phút</option><option value="60">60 phút</option><option value="90">90 phút</option><option value="120">120 phút</option><option value="180">180 phút</option></select></label>
+              <label>Thời gian chế biến dự kiến<select value={preparationMinutes} onChange={(event) => setPreparationMinutes(event.target.value)}><option value="15">15 phút</option><option value="30">30 phút</option><option value="45">45 phút</option><option value="60">60 phút</option><option value="90">90 phút</option><option value="120">120 phút</option><option value="180">180 phút</option></select></label>
               <label>Ghi chú khi duyệt<textarea rows="3" maxLength="500" value={confirmNote} onChange={(event) => setConfirmNote(event.target.value)} placeholder="Không bắt buộc" /></label>
               <label className="wide">Lý do nếu yêu cầu khách chỉnh sửa<textarea rows="3" maxLength="500" value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} placeholder="Ví dụ: Một món đang hết nguyên liệu" /></label>
             </div>
           ) : null}
           {status === 'DA_XAC_NHAN' ? <div className={`reservation-preorder-send-info ${canSend ? 'ready' : ''}`}><ChefHat size={21} /><p>{canSend ? 'Khách đã được xếp bàn. Có thể chuyển toàn bộ món đặt trước xuống bếp.' : 'Thực đơn đã duyệt. Chỉ được chuyển xuống bếp sau khi khách check-in và được xếp bàn thực tế.'}</p></div> : null}
-          {preorder?.thoiGianDuKienChuyenBep ? <div className="reservation-preorder-kitchen-time"><Clock3 size={16} /> Thời điểm dự kiến chuẩn bị: {reservationDateTime(preorder.thoiGianDuKienChuyenBep)}</div> : null}
+          {preorder?.thoiGianDuKienChuyenBep ? <div className="reservation-preorder-kitchen-time"><Clock3 size={16} /> Mốc chuẩn bị tham khảo: {reservationDateTime(preorder.thoiGianDuKienChuyenBep)}</div> : null}
           {status === 'DA_CHUYEN_BEP' ? <div className="reservation-preorder-approved"><CheckCircle2 size={19} /><p>Đã chuyển xuống bếp{preorder?.maDonHang ? ` và tạo đơn #${preorder.maDonHang}` : ''} lúc {reservationDateTime(preorder?.thoiGianChuyenBep)}.</p></div> : null}
         </div>
       )}

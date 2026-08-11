@@ -22,8 +22,9 @@ import { Link } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import LumoraChatbot from '../../components/customer/LumoraChatbot';
-import { CustomerReservationPreorder } from '../../components/reservation/ReservationPreorder';
+import { CustomerReservationPreorder, ReservationPreorderDraftModal } from '../../components/reservation/ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
+import { formatMoney } from '../../utils/formatMoney';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import {
   canCustomerCancel,
@@ -170,6 +171,10 @@ export default function PublicReservation() {
   const [editing, setEditing] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [preorderChoice, setPreorderChoice] = useState('TABLE_ONLY');
+  const [draftPreorder, setDraftPreorder] = useState(null);
+  const [preorderDraftOpen, setPreorderDraftOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const socketEvent = useWebSocket(reservation?.maTraCuu ? [`/topic/customer/reservations/${reservation.maTraCuu}`] : []);
 
   useEffect(() => {
@@ -292,6 +297,56 @@ export default function PublicReservation() {
     };
   }
 
+  async function persistReservation() {
+    try {
+      setSubmitting(true);
+      const response = editing
+        ? await reservationApi.customerUpdate(lookup.code, lookup.phone, payload())
+        : await reservationApi.customerCreate(payload());
+      let data = reservationData(response);
+      const code = data?.maTraCuu || lookup.code;
+      const phone = data?.soDienThoai || normalizeVietnamPhone(form.soDienThoai);
+      let preorderError = null;
+
+      if (!editing && preorderChoice === 'PREORDER' && draftPreorder?.items?.length) {
+        try {
+          await reservationApi.customerSavePreorder(code, phone, {
+            ghiChu: draftPreorder?.ghiChuDatMonTruoc || null,
+            items: draftPreorder.items.map((item) => ({
+              maMonAn: Number(item.maMonAn),
+              soLuong: Number(item.soLuong),
+              ghiChu: item.ghiChu || null,
+            })),
+          });
+          const detailResponse = await reservationApi.customerDetail(code, phone);
+          data = reservationData(detailResponse);
+        } catch (errorValue) {
+          preorderError = errorValue;
+        }
+      }
+
+      setReservation(data);
+      setLookup({ code, phone });
+      setEditing(false);
+      setReviewOpen(false);
+      setMode('lookup');
+
+      if (preorderError) {
+        toast.error(`Đã tạo lịch ${code}, nhưng món đặt trước chưa được lưu. Bạn có thể chọn lại món trong phần tra cứu.`);
+      } else {
+        toast.success(messageOf(response, editing
+          ? 'Đã cập nhật yêu cầu đặt bàn.'
+          : preorderChoice === 'PREORDER' && draftPreorder?.items?.length
+            ? 'Đã gửi yêu cầu đặt bàn kèm món đặt trước.'
+            : 'Đã gửi yêu cầu đặt bàn.'));
+      }
+    } catch (errorValue) {
+      toast.error(errorMessageOf(errorValue, editing ? 'Không thể cập nhật đặt bàn.' : 'Không thể gửi yêu cầu đặt bàn.'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function submitReservation(event) {
     event.preventDefault();
     const error = validateForm();
@@ -299,22 +354,16 @@ export default function PublicReservation() {
       toast.error(error);
       return;
     }
-    try {
-      setSubmitting(true);
-      const response = editing
-        ? await reservationApi.customerUpdate(lookup.code, lookup.phone, payload())
-        : await reservationApi.customerCreate(payload());
-      const data = reservationData(response);
-      setReservation(data);
-      setLookup({ code: data?.maTraCuu || lookup.code, phone: data?.soDienThoai || form.soDienThoai });
-      setEditing(false);
-      setMode('lookup');
-      toast.success(messageOf(response, editing ? 'Đã cập nhật yêu cầu đặt bàn.' : 'Đã gửi yêu cầu đặt bàn.'));
-    } catch (errorValue) {
-      toast.error(errorMessageOf(errorValue, editing ? 'Không thể cập nhật đặt bàn.' : 'Không thể gửi yêu cầu đặt bàn.'));
-    } finally {
-      setSubmitting(false);
+    if (!editing) {
+      if (preorderChoice === 'PREORDER' && !draftPreorder?.items?.length) {
+        toast.error('Vui lòng chọn món trước hoặc chuyển sang Chỉ đặt bàn.');
+        setPreorderDraftOpen(true);
+        return;
+      }
+      setReviewOpen(true);
+      return;
     }
+    await persistReservation();
   }
 
   function startEdit() {
@@ -389,7 +438,7 @@ export default function PublicReservation() {
 
       <section className="reservation-public-shell">
         <div className="reservation-public-tabs">
-          <button type="button" className={mode === 'create' ? 'active' : ''} onClick={() => { setMode('create'); if (!editing) setReservation(null); }}><CalendarDays size={18} /> {editing ? 'Chỉnh sửa đặt bàn' : 'Đặt bàn mới'}</button>
+          <button type="button" className={mode === 'create' ? 'active' : ''} onClick={() => { setMode('create'); if (!editing) { setReservation(null); setPreorderChoice('TABLE_ONLY'); setDraftPreorder(null); } }}><CalendarDays size={18} /> {editing ? 'Chỉnh sửa đặt bàn' : 'Đặt bàn mới'}</button>
           <button type="button" className={mode === 'lookup' ? 'active' : ''} onClick={() => { setMode('lookup'); setEditing(false); }}><Search size={18} /> Tra cứu đặt bàn</button>
         </div>
 
@@ -433,8 +482,27 @@ export default function PublicReservation() {
               <label className="wide"><span>Ghi chú</span><textarea maxLength="500" rows="4" value={form.ghiChu} onChange={(e) => updateField('ghiChu', e.target.value)} placeholder="Ví dụ: cần ghế trẻ em, khách lớn tuổi, dịp sinh nhật..." /><small>{form.ghiChu.length}/500</small></label>
             </div>
 
-            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn. Sau khi gửi yêu cầu, bạn có thể chọn món trước ngay mà không cần chờ nhà hàng xác nhận bàn. Món chỉ được lưu cùng lịch và chưa chuyển xuống bếp. {reservationPolicy.openingHours ? `Giờ phục vụ: ${reservationPolicy.openingHours}.` : ''}</p></div>
-            <button className="reservation-public-submit" type="submit" disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={19} /> : <CalendarCheck2 size={19} />}{editing ? 'Lưu thay đổi' : 'Gửi yêu cầu đặt bàn'}</button>
+            {!editing ? (
+              <section className="reservation-public-preorder-choice">
+                <div className="reservation-public-preorder-choice-head">
+                  <div><span><UtensilsCrossed size={18} /></span><div><h3>Bạn có muốn đặt món trước?</h3><p>Chọn món trước để nhà hàng chủ động chuẩn bị khi bạn đến. Đây là tùy chọn, không bắt buộc.</p></div></div>
+                </div>
+                <div className="reservation-public-preorder-choice-actions">
+                  <button type="button" className={preorderChoice === 'TABLE_ONLY' ? 'active' : ''} onClick={() => { setPreorderChoice('TABLE_ONLY'); setDraftPreorder(null); }}>Chỉ đặt bàn</button>
+                  <button type="button" className={preorderChoice === 'PREORDER' ? 'active' : ''} onClick={() => { setPreorderChoice('PREORDER'); setPreorderDraftOpen(true); }}><UtensilsCrossed size={16} /> Đặt món trước</button>
+                </div>
+                {preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? (
+                  <div className="reservation-public-preorder-draft">
+                    <div><strong>{draftPreorder.items.length} loại món đã chọn</strong><b>{formatMoney(draftPreorder.tongTienDuKien || 0)}</b></div>
+                    <p>{draftPreorder.items.map((item) => `${item.tenMonAn} ×${item.soLuong}`).join(' · ')}</p>
+                    <button type="button" onClick={() => setPreorderDraftOpen(true)}>Chỉnh sửa món</button>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
+            <div className="reservation-public-form-note"><ShieldCheck size={18} /><p>Khách chỉ chọn khu vực mong muốn, nhà hàng sẽ sắp xếp bàn phù hợp. {preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? 'Món đặt trước sẽ được gửi cùng yêu cầu sau khi bạn xác nhận và chỉ chuyển xuống bếp khi bạn đã đến, được xếp bàn.' : 'Bạn có thể chỉ đặt bàn mà không cần chọn món trước.'} {reservationPolicy.openingHours ? `Giờ phục vụ: ${reservationPolicy.openingHours}.` : ''}</p></div>
+            <button className="reservation-public-submit" type="submit" disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={19} /> : <CalendarCheck2 size={19} />}{editing ? 'Lưu thay đổi' : 'Tiếp tục xác nhận'}</button>
           </form>
         ) : (
           <div className="reservation-public-lookup">
@@ -460,6 +528,42 @@ export default function PublicReservation() {
           </div>
         )}
       </section>
+
+      {preorderDraftOpen ? (
+        <div className="reservation-manage-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setPreorderDraftOpen(false)}>
+          <ReservationPreorderDraftModal
+            current={draftPreorder}
+            onSaved={(value) => { setDraftPreorder(value); setPreorderChoice('PREORDER'); }}
+            onClose={() => setPreorderDraftOpen(false)}
+          />
+        </div>
+      ) : null}
+
+      {reviewOpen ? (
+        <div className="reservation-cancel-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !submitting && setReviewOpen(false)}>
+          <section className="reservation-public-review-modal" role="dialog" aria-modal="true">
+            <header><span><CalendarCheck2 size={22} /></span><div><h3>Xác nhận đặt bàn</h3><p>Kiểm tra thông tin trước khi gửi cho nhà hàng.</p></div></header>
+            <div className="reservation-public-review-grid">
+              <p><span>Khách hàng</span><strong>{form.hoTenKhach}</strong></p>
+              <p><span>Số điện thoại</span><strong>{form.soDienThoai}</strong></p>
+              <p><span>Ngày giờ đến</span><strong>{reservationDateTime(form.ngayGioDen)}</strong></p>
+              <p><span>Số khách</span><strong>{form.soLuongKhach} người</strong></p>
+              <p><span>Khu vực</span><strong>{form.khuVucMongMuon || 'Nhà hàng tự sắp xếp'}</strong></p>
+              <p><span>Thời lượng</span><strong>{form.thoiLuongPhut} phút</strong></p>
+            </div>
+            {form.ghiChu ? <div className="reservation-public-review-note"><b>Ghi chú đặt bàn:</b> {form.ghiChu}</div> : null}
+            <div className="reservation-public-review-preorder">
+              <div><h4>Món đặt trước</h4><strong>{preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? formatMoney(draftPreorder.tongTienDuKien || 0) : 'Không đặt món trước'}</strong></div>
+              {preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? (
+                <div className="reservation-public-review-items">
+                  {draftPreorder.items.map((item) => <p key={item.maMonAn}><span>{item.tenMonAn} ×{item.soLuong}</span><b>{formatMoney(item.thanhTien || 0)}</b></p>)}
+                </div>
+              ) : <p className="reservation-public-review-empty">Bạn chỉ đặt bàn. Có thể chọn món trước sau trong phần tra cứu khi lịch vẫn còn cho phép.</p>}
+            </div>
+            <footer><button type="button" onClick={() => setReviewOpen(false)} disabled={submitting}>Quay lại</button><button type="button" className="primary" onClick={persistReservation} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={17} /> : <CalendarCheck2 size={17} />} Xác nhận đặt bàn</button></footer>
+          </section>
+        </div>
+      ) : null}
 
       {cancelOpen ? (
         <div className="reservation-cancel-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !submitting && setCancelOpen(false)}>
