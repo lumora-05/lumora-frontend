@@ -139,6 +139,7 @@ function Navbar({ settings }) {
         </nav>
 
         <div className="v0-book-desktop">
+          <a href="/login" className="v0-button v0-button-outline v0-pill">Đăng nhập</a>
           <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
         </div>
 
@@ -159,7 +160,8 @@ function Navbar({ settings }) {
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
-            <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book">Đặt bàn ngay</a>
+            <a href="/login" className="v0-button v0-button-outline v0-pill v0-mobile-login" onClick={() => setOpen(false)}>Đăng nhập</a>
+            <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book" onClick={() => setOpen(false)}>Đặt bàn ngay</a>
           </nav>
         </div>
       )}

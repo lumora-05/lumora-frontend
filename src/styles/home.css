@@ -60,7 +60,7 @@
 .v0-nav-desktop { display: flex; align-items: center; gap: 32px; }
 .v0-nav-desktop a { color: var(--v0-muted-fg); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .2s ease; }
 .v0-nav-desktop a:hover { color: var(--v0-foreground); }
-.v0-book-desktop { display: block; }
+.v0-book-desktop { display: flex; align-items: center; gap: 10px; }
 .v0-menu-button {
   display: none; width: 40px; height: 40px; align-items: center; justify-content: center; border: 0; border-radius: 6px;
   background: transparent; color: var(--v0-foreground); cursor: pointer;
@@ -69,7 +69,8 @@
 .v0-mobile-nav { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; padding-bottom: 12px; }
 .v0-mobile-nav a { padding: 10px 8px; border-radius: 6px; color: var(--v0-muted-fg); font-size: 14px; font-weight: 500; text-decoration: none; }
 .v0-mobile-nav a:hover { background: var(--v0-secondary); color: var(--v0-foreground); }
-.v0-mobile-book { margin-top: 8px; width: 100%; }
+.v0-mobile-login { margin-top: 8px; width: 100%; }
+.v0-mobile-book { margin-top: 4px; width: 100%; }
 
 .v0-button {
   min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 10px;

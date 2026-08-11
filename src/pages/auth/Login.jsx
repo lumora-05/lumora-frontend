@@ -15,6 +15,8 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
+import { imageUrl } from '../../utils/imageUrl';
 import { useAuth } from '../../context/AuthContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import '../../styles/login.css';
@@ -37,6 +39,19 @@ const roleItems = [
   { icon: ReceiptText, label: 'Thu ngân' },
 ];
 
+function LoginBrandLogo({ restaurantName, logoUrl }) {
+  const logo = imageUrl(logoUrl);
+  return logo ? (
+    <span className="lumora-login-brand-logo-image">
+      <img src={logo} alt={`Logo ${restaurantName || 'LUMORA'}`} />
+    </span>
+  ) : (
+    <span className="lumora-login-brand-home-mark" aria-hidden="true">
+      {(restaurantName || 'L').trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
 export default function Login() {
   const toast = useToast();
   const navigate = useNavigate();
@@ -45,6 +60,24 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const data = systemSettingData(response);
+        if (data) {
+          setBrandSettings((current) => ({ ...current, ...data }));
+        }
+      })
+      .catch(() => {
+        // Giữ thương hiệu mặc định nếu backend tạm thời không phản hồi.
+      });
+
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (user?.role) navigate(getHomePath(user.role), { replace: true });
@@ -108,11 +141,9 @@ export default function Login() {
           <div className="lumora-login-orb lumora-login-orb-two" />
 
           <div className="lumora-login-brand">
-            <div className="lumora-login-brand-mark" aria-hidden="true">
-              <UtensilsCrossed size={22} strokeWidth={2.3} />
-            </div>
+            <LoginBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
             <div>
-              <strong>LUMORA</strong>
+              <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
               <span>Restaurant Management</span>
             </div>
           </div>
@@ -142,10 +173,8 @@ export default function Login() {
 
         <div className="lumora-login-panel">
           <div className="lumora-login-mobile-brand">
-            <div className="lumora-login-brand-mark" aria-hidden="true">
-              <UtensilsCrossed size={22} strokeWidth={2.3} />
-            </div>
-            <strong>LUMORA</strong>
+            <LoginBrandLogo restaurantName={brandSettings.restaurantName} logoUrl={brandSettings.logoUrl} />
+            <strong>{brandSettings.restaurantName || 'LUMORA'}</strong>
           </div>
 
           <div className="lumora-login-form-wrap">
