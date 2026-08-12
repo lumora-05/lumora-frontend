@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Bike,
   ChefHat,
   Clock,
   Heart,
@@ -8,9 +7,7 @@ import {
   Mail,
   MapPin,
   Menu,
-  MousePointerClick,
   Phone,
-  Plus,
   Star,
   UtensilsCrossed,
   X,
@@ -27,16 +24,15 @@ const DEFAULT_SETTINGS = {
   email: 'xinchao@lumora.vn',
   openingHours: '10:00 - 22:00 hằng ngày',
   reservationUrl: '/reservations',
-  menuUrl: '/delivery',
+  menuUrl: '/menu',
   logoUrl: '',
   bannerUrl: '',
 };
 
 const navLinks = [
   { label: 'Trang chủ', href: '#trang-chu' },
-  { label: 'Thực đơn', href: '/delivery' },
+  { label: 'Thực đơn', href: '/menu' },
   { label: 'Về chúng tôi', href: '#gioi-thieu' },
-  { label: 'Đặt món', href: '#dat-mon' },
   { label: 'Liên hệ', href: '#lien-he' },
 ];
 
@@ -89,26 +85,6 @@ const highlights = [
   },
 ];
 
-const steps = [
-  {
-    icon: MousePointerClick,
-    step: '01',
-    title: 'Chọn món yêu thích',
-    desc: 'Duyệt thực đơn và thêm những món bạn muốn vào giỏ chỉ trong vài giây.',
-  },
-  {
-    icon: UtensilsCrossed,
-    step: '02',
-    title: 'Xác nhận đơn hàng',
-    desc: 'Chọn ăn tại nhà hàng hoặc giao tận nơi, rồi xác nhận đặt món.',
-  },
-  {
-    icon: Bike,
-    step: '03',
-    title: 'Thưởng thức',
-    desc: 'Món ăn được chuẩn bị nóng hổi và phục vụ nhanh chóng đến bạn.',
-  },
-];
 
 function Brand({ settings }) {
   const logo = imageUrl(settings.logoUrl);
@@ -171,7 +147,7 @@ function Navbar({ settings }) {
 
 function Hero({ settings }) {
   const banner = imageUrl(settings.bannerUrl) || '/lunora-hero.png';
-  const menuUrl = settings.menuUrl && !String(settings.menuUrl).startsWith('#') ? settings.menuUrl : '/delivery';
+  const menuUrl = settings.menuUrl && !String(settings.menuUrl).startsWith('#') ? settings.menuUrl : '/menu';
 
   return (
     <section id="trang-chu" className="v0-hero">
@@ -189,13 +165,13 @@ function Hero({ settings }) {
         <h1 className="v0-serif">Hương vị đánh thức mọi giác quan tại {settings.restaurantName}</h1>
 
         <p>
-          Nơi những nguyên liệu tươi ngon nhất được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc gọi món trực
-          tuyến chỉ trong vài chạm.
+          Nơi những nguyên liệu tươi ngon nhất được chế biến bởi đội ngũ đầu bếp tận tâm,
+          mang đến trải nghiệm ẩm thực chỉn chu trong từng món ăn.
         </p>
 
         <div className="v0-hero-actions">
-          <a href={menuUrl} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt món ngay</a>
-          <a href="/delivery" className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
+          <a href={settings.reservationUrl || '/reservations'} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</a>
+          <a href={menuUrl} className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
         </div>
 
         <div className="v0-hero-meta">
@@ -256,10 +232,6 @@ function FeaturedMenu({ restaurantName }) {
               <p>{dish.desc}</p>
               <div className="v0-dish-bottom">
                 <span className="v0-serif v0-price">{dish.price}</span>
-                <button type="button" className="v0-button v0-button-primary v0-dish-add v0-pill">
-                  <Plus size={16} />
-                  Thêm
-                </button>
               </div>
             </div>
           </article>
@@ -267,7 +239,7 @@ function FeaturedMenu({ restaurantName }) {
       </div>
 
       <div className="v0-menu-more">
-        <a href="/delivery" className="v0-button v0-button-outline v0-button-lg v0-pill">Xem toàn bộ thực đơn</a>
+        <a href="/menu" className="v0-button v0-button-outline v0-button-lg v0-pill">Xem toàn bộ thực đơn</a>
       </div>
     </section>
   );
@@ -316,40 +288,6 @@ function About({ restaurantName }) {
   );
 }
 
-function OrderCta({ settings }) {
-  return (
-    <section id="dat-mon" className="v0-shell v0-section v0-order-section">
-      <div className="v0-section-head">
-        <span className="v0-eyebrow">Đặt món dễ dàng</span>
-        <h2 className="v0-serif">Chỉ 3 bước để có bữa ăn ngon</h2>
-      </div>
-
-      <div className="v0-step-grid">
-        {steps.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={item.step} className="v0-step-card">
-              <span className="v0-step-icon"><Icon size={28} /></span>
-              <span className="v0-serif v0-step-no">{item.step}</span>
-              <h3 className="v0-serif">{item.title}</h3>
-              <p>{item.desc}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="v0-dark-cta">
-        <h3 className="v0-serif">Sẵn sàng thưởng thức cùng {settings.restaurantName}?</h3>
-        <p>Đặt bàn trước để giữ chỗ cho những dịp đặc biệt, hoặc gọi món trực tuyến để nhận ngay tại nhà.</p>
-        <div className="v0-dark-actions">
-          <a href={settings.reservationUrl || '/reservations'} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</a>
-          <a href="/delivery" className="v0-button v0-button-dark-outline v0-button-lg v0-pill">Gọi món giao tận nơi</a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Footer({ settings }) {
   return (
     <footer id="lien-he" className="v0-footer">
@@ -363,9 +301,8 @@ function Footer({ settings }) {
           <div>
             <h4 className="v0-serif">Khám phá</h4>
             <ul>
-              <li><a href="/delivery">Thực đơn</a></li>
+              <li><a href="/menu">Thực đơn</a></li>
               <li><a href="#gioi-thieu">Về chúng tôi</a></li>
-              <li><a href="#dat-mon">Đặt món</a></li>
             </ul>
           </div>
 
@@ -415,7 +352,6 @@ export default function Home() {
       <Hero settings={settings} />
       <FeaturedMenu restaurantName={settings.restaurantName} />
       <About restaurantName={settings.restaurantName} />
-      <OrderCta settings={settings} />
       <Footer settings={settings} />
     </main>
   );

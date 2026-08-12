@@ -50,15 +50,14 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index).pa
 const DEFAULT_HEADER_SETTINGS = {
   restaurantName: 'LUMORA',
   reservationUrl: '/reservations',
-  menuUrl: '/delivery',
+  menuUrl: '/menu',
   logoUrl: '',
 };
 
 const RESERVATION_NAV_LINKS = [
   { label: 'Trang chủ', href: '/#trang-chu' },
-  { label: 'Thực đơn', href: '/delivery' },
+  { label: 'Thực đơn', href: '/menu' },
   { label: 'Về chúng tôi', href: '/#gioi-thieu' },
-  { label: 'Đặt món', href: '/#dat-mon' },
   { label: 'Liên hệ', href: '/#lien-he' },
 ];
 

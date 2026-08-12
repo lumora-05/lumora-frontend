@@ -2,13 +2,11 @@ import { Bell, ChevronDown, Clock3, LogOut, Menu, UserRound } from 'lucide-react
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
-import { deliveryApi } from '../../api/deliveryApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
-import { deliveryData, unwrapDeliveryList } from '../../utils/delivery';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 import StaffAlertToggle from './StaffAlertToggle';
 
@@ -24,15 +22,10 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
 
   async function loadCount() {
     try {
-      const [paymentResponse, deliveryResponse] = await Promise.all([
-        orderApi.getAll(),
-        deliveryApi.list('ALL'),
-      ]);
+      const paymentResponse = await orderApi.getAll();
       const paymentCount = unwrap(paymentResponse)
         .filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length;
-      const deliveryCount = unwrapDeliveryList(deliveryResponse)
-        .filter((order) => !['HOAN_THANH', 'DA_HUY'].includes(String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase())).length;
-      setQueueCount(paymentCount + deliveryCount);
+      setQueueCount(paymentCount);
     } catch {
       // Badge chỉ mang tính hỗ trợ, lỗi chi tiết được hiển thị trong trang danh sách.
     }

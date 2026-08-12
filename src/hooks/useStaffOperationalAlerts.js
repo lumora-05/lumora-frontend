@@ -65,21 +65,6 @@ export function useStaffOperationalAlerts(role, event) {
       return;
     }
 
-    if (roleKey === 'CASHIER' && ['DELIVERY_ORDER_WAITING_PAYMENT', 'DELIVERY_ORDER_SENT_TO_KITCHEN'].includes(type)) {
-      const id = data?.maDonHang ?? data?.id;
-      const waitingPayment = type === 'DELIVERY_ORDER_WAITING_PAYMENT';
-      lastReminderAt.current = Date.now();
-      triggerStaffAlert({
-        title: waitingPayment ? 'Có đơn online chờ thanh toán' : 'Có đơn online mới',
-        body: waitingPayment
-          ? `Đơn ${id ? `#DH${id}` : 'mới'} đang chờ ghi nhận VietQR.`
-          : `Đơn ${id ? `#DH${id}` : 'mới'} đã được hệ thống xác nhận và chuyển xuống bếp.`,
-        tag: `cashier-delivery-${id || 'latest'}-${type}`,
-        url: '/cashier/delivery-orders',
-      });
-      return;
-    }
-
     if (roleKey !== 'WAITER') return;
 
     if (type === 'NEW_ORDER' || type === 'ORDER_ITEMS_ADDED') {
