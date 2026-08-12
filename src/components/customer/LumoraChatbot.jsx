@@ -326,7 +326,7 @@ export default function LumoraChatbot({ qrToken = '' }) {
     if (location.pathname === '/') {
       document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      navigate('/#menu');
+      navigate('/menu');
       window.setTimeout(() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' }), 80);
     }
     setOpen(false);

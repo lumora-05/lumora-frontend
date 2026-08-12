@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, ChefHat, History, UserRound, Utensils, X } from 'lucide-react';
+import { Bell, Bike, ChefHat, History, UserRound, Utensils, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import KitchenHeader from '../components/common/KitchenHeader';
@@ -8,7 +8,9 @@ import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
   '/kitchen/menu': ['Tình trạng món', 'Tra cứu và cập nhật nhanh món đang phục vụ hoặc đã hết'],
-  '/kitchen/history': ['Lịch sử chế biến', 'Tra cứu các phiếu bếp đã hoàn tất'],  '/kitchen/notifications': ['Thông báo bếp', 'Theo dõi món mới và các phiếu đang chờ lâu'],
+  '/kitchen/history': ['Lịch sử chế biến', 'Tra cứu các phiếu bếp đã hoàn tất'],
+  '/kitchen/delivery-orders': ['Đơn giao hàng', 'Theo dõi các đơn giao hàng đã được nhà hàng xác nhận và chuyển xuống bếp'],
+  '/kitchen/notifications': ['Thông báo bếp', 'Theo dõi món mới và các phiếu đang chờ lâu'],
   '/kitchen/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/kitchen': ['Bảng chế biến', 'Ưu tiên và xử lý món ăn theo thời gian thực'],
 };
@@ -16,7 +18,9 @@ const pageMeta = {
 const items = [
   { to: '/kitchen', label: 'Bảng chế biến', icon: 'kitchen', mobileIcon: ChefHat },
   { to: '/kitchen/menu', label: 'Tình trạng món', icon: 'menu', mobileIcon: Utensils },
-  { to: '/kitchen/history', label: 'Lịch sử chế biến', icon: 'history', mobileIcon: History },  { to: '/kitchen/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
+  { to: '/kitchen/history', label: 'Lịch sử chế biến', icon: 'history', mobileIcon: History },
+  { to: '/kitchen/delivery-orders', label: 'Đơn giao hàng', icon: 'delivery', mobileIcon: Bike },
+  { to: '/kitchen/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
 ];
 
 export default function KitchenLayout() {

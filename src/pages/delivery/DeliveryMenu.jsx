@@ -1,16 +1,24 @@
 import {
-  BookOpenText,
+  Bike,
   ChefHat,
+  Clock3,
   LoaderCircle,
+  MapPin,
+  Plus,
   Search,
+  ShieldCheck,
+  ShoppingBag,
   UtensilsCrossed,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
-import { errorMessageOf } from '../../context/ToastContext';
+import { useCart } from '../../context/CartContext';
+import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { categoryApi, menuApi } from '../../api/menuApi';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+
 
 function unwrapRows(response) {
   const data = response?.data ?? response ?? [];
@@ -36,13 +44,17 @@ function categoryName(category) {
   return category?.tenDanhMuc ?? category?.name ?? 'Danh mục';
 }
 
+
 export default function DeliveryMenu() {
+  const cart = useCart();
+  const toast = useToast();
   const [foods, setFoods] = useState([]);
   const [categories, setCategories] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
 
   useEffect(() => {
     let active = true;
@@ -57,7 +69,7 @@ export default function DeliveryMenu() {
       })
       .catch((requestError) => {
         if (!active) return;
-        setError(errorMessageOf(requestError, 'Không thể tải thực đơn.'));
+        setError(errorMessageOf(requestError, 'Không thể tải thực đơn giao hàng.'));
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -80,6 +92,28 @@ export default function DeliveryMenu() {
     });
   }, [foods, keyword, selectedCategory]);
 
+  function addToCart(food) {
+    const id = foodId(food);
+    const existing = cart.items.find((item) => String(foodId(item)) === String(id));
+    if (!existing && cart.items.length >= 30) {
+      toast.error('Một đơn chỉ được chọn tối đa 30 loại món.');
+      return;
+    }
+    if (Number(existing?.soLuong || 0) >= 50) {
+      toast.error('Mỗi món chỉ được đặt tối đa 50 suất trong một đơn.');
+      return;
+    }
+    if (cart.count >= 100) {
+      toast.error('Một đơn chỉ được đặt tối đa 100 suất món.');
+      return;
+    }
+    cart.add(food, 1);
+    toast.success(`Đã thêm ${food?.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+      id: 'delivery-add-cart',
+      duration: 1200,
+    });
+  }
+
   return (
     <main className="delivery-public-page delivery-home-menu">
       <DeliveryPublicHeader homeStyle />
@@ -91,17 +125,24 @@ export default function DeliveryMenu() {
         </div>
         <div className="delivery-public-container delivery-hero-grid">
           <div>
-            <span className="delivery-eyebrow"><BookOpenText size={16} /> Thực đơn LUMORA</span>
-            <h1 className="delivery-home-serif">Khám phá hương vị<br /><em>tại LUMORA.</em></h1>
+            <span className="delivery-eyebrow"><Bike size={16} /> Thực đơn trực tuyến · Giao tận nơi</span>
+            <h1 className="delivery-home-serif">Hương vị LUMORA<br /><em>giao đến tận cửa.</em></h1>
             <p>
-              Xem danh sách món ăn, giá bán và thông tin món đang phục vụ tại nhà hàng.
+              Xem thực đơn và chọn món trước; địa chỉ, phạm vi giao, phí giao và thời gian nhận dự kiến
+              sẽ được hệ thống kiểm tra ở bước thanh toán.
             </p>
+            <div className="delivery-hero-benefits">
+              <span><Clock3 size={17} /> Thời gian nhận dự kiến rõ ràng</span>
+              <span><MapPin size={17} /> Phí giao theo địa chỉ thực tế</span>
+              <span><ShieldCheck size={17} /> COD hoặc VietQR</span>
+            </div>
           </div>
-          <div className="delivery-hero-card delivery-menu-info-card">
-            <div className="delivery-hero-icon"><ChefHat size={34} /></div>
-            <strong>Thực đơn hiện tại</strong>
-            <span>{foods.length} món đang phục vụ</span>
-            <b>{categories.length} danh mục</b>
+          <div className="delivery-hero-card">
+            <div className="delivery-hero-icon"><ShoppingBag size={34} /></div>
+            <strong>Giỏ hàng của bạn</strong>
+            <span>{cart.count} suất món</span>
+            <b>{formatMoney(cart.total)}</b>
+            <Link to="/menu/checkout">Kiểm tra và đặt món</Link>
           </div>
         </div>
       </section>
@@ -109,8 +150,8 @@ export default function DeliveryMenu() {
       <section className="delivery-public-container delivery-menu-section">
         <div className="delivery-menu-toolbar">
           <div>
-            <span>Thực đơn</span>
-            <h2 className="delivery-home-serif">Chọn món bạn muốn khám phá</h2>
+            <span>Thực đơn trực tuyến</span>
+            <h2 className="delivery-home-serif">Chọn món bạn yêu thích</h2>
           </div>
           <label>
             <Search size={20} />
@@ -161,9 +202,10 @@ export default function DeliveryMenu() {
                 <div className="delivery-food-body">
                   <small>{food?.danhMuc?.tenDanhMuc || food?.tenDanhMuc || 'Món ăn LUMORA'}</small>
                   <h3 className="delivery-home-serif">{food?.tenMonAn || 'Món ăn'}</h3>
-                  <p>{food?.moTa || 'Món ăn được chuẩn bị chỉn chu từ nguyên liệu được nhà hàng tuyển chọn.'}</p>
+                  <p>{food?.moTa || 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.'}</p>
                   <div>
                     <strong>{formatMoney(food?.gia)}</strong>
+                    <button type="button" onClick={() => addToCart(food)}><Plus size={18} /> Thêm</button>
                   </div>
                 </div>
               </article>
@@ -171,6 +213,14 @@ export default function DeliveryMenu() {
           </div>
         )}
       </section>
+
+      {cart.count > 0 ? (
+        <Link className="delivery-floating-cart" to="/menu/checkout">
+          <ShoppingBag size={20} />
+          <span>{cart.count} suất món</span>
+          <strong>{formatMoney(cart.total)}</strong>
+        </Link>
+      ) : null}
     </main>
   );
 }

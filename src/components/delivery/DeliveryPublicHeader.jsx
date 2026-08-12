@@ -1,10 +1,12 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bike, Search, ShoppingBag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { imageUrl } from '../../utils/imageUrl';
 
 export default function DeliveryPublicHeader({ compact = false, homeStyle = false }) {
+  const cart = useCart();
   const [settings, setSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
 
   useEffect(() => {
@@ -33,16 +35,20 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
             )}
           </Link>
 
-          <nav className="delivery-public-nav delivery-home-nav" aria-label="Điều hướng thực đơn">
+          <nav className="delivery-public-nav delivery-home-nav" aria-label="Điều hướng thực đơn trực tuyến">
             <Link to="/#trang-chu">Trang chủ</Link>
             <NavLink to="/menu" end>Thực đơn</NavLink>
             <Link to="/#gioi-thieu">Về chúng tôi</Link>
-            <Link to="/reservations">Đặt bàn</Link>
+            <Link to="/#dat-mon">Đặt món</Link>
             <Link to="/#lien-he">Liên hệ</Link>
           </nav>
 
           <div className="delivery-header-actions">
-            <Link className="delivery-back-home" to="/"><ArrowLeft size={17} /> Trang chủ</Link>
+            <Link className="delivery-cart-button delivery-home-cart-button" to="/menu/checkout">
+              <ShoppingBag size={18} />
+              <span>Giỏ hàng</span>
+              <b>{cart?.count || 0}</b>
+            </Link>
           </div>
         </div>
       </header>
@@ -60,17 +66,23 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
           ) : (
             <>
               <span className="delivery-brand-fallback-mark">{String(settings.restaurantName || 'L').trim().charAt(0).toUpperCase()}</span>
-              <div><strong>{settings.restaurantName || 'LUMORA'}</strong><small>Thực đơn nhà hàng</small></div>
+              <div><strong>{settings.restaurantName || 'LUMORA'}</strong><small>Giao món tận nơi</small></div>
             </>
           )}
         </Link>
 
-        <nav className="delivery-public-nav" aria-label="Điều hướng thực đơn">
-          <NavLink to="/menu" end>Thực đơn</NavLink>
+        <nav className="delivery-public-nav" aria-label="Điều hướng đặt món giao tận nơi">
+          <NavLink to="/menu" end><Bike size={17} /> Thực đơn giao hàng</NavLink>
+          <NavLink to="/menu/lookup"><Search size={17} /> Tra cứu đơn</NavLink>
         </nav>
 
         <div className="delivery-header-actions">
           <Link className="delivery-back-home" to="/"><ArrowLeft size={17} /> Trang chủ</Link>
+          <Link className="delivery-cart-button" to="/menu/checkout">
+            <ShoppingBag size={18} />
+            <span>Giỏ hàng</span>
+            <b>{cart?.count || 0}</b>
+          </Link>
         </div>
       </div>
     </header>

@@ -345,3 +345,50 @@
 .open-map-state{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;gap:7px;color:#65717c;background:rgba(247,249,251,.9);font-size:10px;font-weight:800}.open-map-state.error{color:#9a4438}
 .delivery-map-fallback{display:block;margin-top:8px;color:#8b642b;font-size:9px;line-height:1.45}
 @media(max-width:680px){.open-map-shell{height:205px}.delivery-map-address strong{font-size:10px}}
+
+/* ===== Checkout đặt món online chuẩn: địa chỉ phân cấp, hẹn giờ, xác nhận cuối ===== */
+.delivery-form-grid .delivery-form-wide{grid-column:1/-1}
+.delivery-address-grid{align-items:start}
+.delivery-time-options{margin-top:2px}
+.delivery-schedule-field input{min-height:44px;padding:0 12px;border:1px solid #dce2e8;border-radius:12px;outline:0;color:#303944;background:#fff;font:inherit;box-sizing:border-box}
+.delivery-schedule-field input:focus{border-color:#f08a50;box-shadow:0 0 0 3px rgba(240,106,32,.08)}
+.delivery-confirm-backdrop{position:fixed;z-index:1300;inset:0;padding:22px;display:flex;align-items:center;justify-content:center;background:rgba(23,28,34,.56);backdrop-filter:blur(4px)}
+.delivery-confirm-modal{position:relative;width:min(620px,100%);max-height:min(90vh,820px);padding:28px;overflow:auto;border:1px solid rgba(255,255,255,.7);border-radius:22px;background:#fff;box-shadow:0 30px 90px rgba(12,18,25,.28)}
+.delivery-confirm-close{position:absolute;top:17px;right:17px;width:36px;height:36px;padding:0;border:1px solid #e4e8ed;border-radius:10px;display:grid;place-items:center;color:#66717d;background:#fff;cursor:pointer}
+.delivery-confirm-close:disabled{opacity:.55;cursor:not-allowed}
+.delivery-confirm-kicker{display:block;padding-right:44px;color:#ee641b;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
+.delivery-confirm-modal h2{margin:7px 44px 0 0;color:#29323c;font-size:26px;letter-spacing:-.025em}
+.delivery-confirm-intro{margin:9px 44px 0 0;color:#78838e;font-size:12px;line-height:1.6}
+.delivery-confirm-info{margin-top:20px;padding:15px;border:1px solid #e6e9ed;border-radius:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#fafbfc}
+.delivery-confirm-info p{margin:0;padding:8px 9px;border-radius:10px;background:#fff}
+.delivery-confirm-info p.wide{grid-column:1/-1}
+.delivery-confirm-info span,.delivery-confirm-info strong{display:block}
+.delivery-confirm-info span{color:#9099a3;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.delivery-confirm-info strong{margin-top:4px;color:#35404b;font-size:11px;line-height:1.45}
+.delivery-confirm-items{margin-top:15px;padding:4px 0;border-top:1px solid #e9ecef;border-bottom:1px solid #e9ecef}
+.delivery-confirm-items p,.delivery-confirm-money p,.delivery-confirm-money>div{margin:0;padding:8px 1px;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#697581;font-size:11px}
+.delivery-confirm-items strong,.delivery-confirm-money strong{color:#303a45;white-space:nowrap}
+.delivery-confirm-money{margin-top:8px}
+.delivery-confirm-money>div{margin-top:4px;padding-top:13px;border-top:1px dashed #dfe4e8;color:#303944;font-size:13px;font-weight:900}
+.delivery-confirm-money>div strong{color:#e95f18;font-size:20px}
+.delivery-confirm-actions{margin-top:20px;display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.delivery-confirm-actions button{min-height:46px;padding:0 16px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.delivery-confirm-actions button.secondary{border:1px solid #dde2e7;color:#5d6874;background:#fff}
+.delivery-confirm-actions button.primary{border:0;color:#fff;background:linear-gradient(90deg,#ff7d15,#f4510b);box-shadow:0 10px 22px rgba(244,81,11,.18)}
+.delivery-confirm-actions button:disabled{opacity:.6;cursor:not-allowed}
+.delivery-order-badge.cho-den-gio,.delivery-current-status.cho-den-gio{color:#64509b;background:#f1edff}
+.delivery-current-status.cho-xac-nhan{color:#79500e;background:#fff7e5}
+.delivery-cancel-box>small{display:block;margin:-2px 0 8px;color:#87919b;font-size:9px;line-height:1.5}
+.delivery-timeline{grid-template-columns:repeat(var(--delivery-step-count,7),1fr)}
+
+@media(max-width:900px){
+  .delivery-timeline{grid-template-columns:repeat(var(--delivery-step-count,7),100px)}
+}
+@media(max-width:680px){
+  .delivery-form-grid .delivery-form-wide{grid-column:auto}
+  .delivery-confirm-backdrop{padding:0;align-items:flex-end}
+  .delivery-confirm-modal{width:100%;max-height:94vh;padding:22px 18px;border-radius:22px 22px 0 0;box-sizing:border-box}
+  .delivery-confirm-info{grid-template-columns:1fr}
+  .delivery-confirm-info p.wide{grid-column:auto}
+  .delivery-confirm-actions{grid-template-columns:1fr}
+}
