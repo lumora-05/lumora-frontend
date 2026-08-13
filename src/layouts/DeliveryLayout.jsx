@@ -1,5 +1,10 @@
 import { Outlet } from 'react-router-dom';
+import { CartProvider } from '../context/CartContext';
 
 export default function DeliveryLayout() {
-  return <Outlet />;
+  return (
+    <CartProvider qrToken="delivery">
+      <Outlet />
+    </CartProvider>
+  );
 }
