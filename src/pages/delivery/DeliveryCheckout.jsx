@@ -20,7 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
-import OpenStreetMapRouteMap from '../../components/maps/OpenStreetMapRouteMap';
+import GoogleMapsEmbed from '../../components/maps/GoogleMapsEmbed';
 import { deliveryApi } from '../../api/deliveryApi';
 import { promotionApi } from '../../api/promotionApi';
 import { useCart } from '../../context/CartContext';
@@ -367,7 +367,7 @@ export default function DeliveryCheckout() {
                 <div><strong>{quote.diaChiDayDu}</strong><small>Địa chỉ đã được backend xác thực trước khi đặt hàng.</small></div>
               </div>
             ) : null}
-            {quote?.encodedPolyline ? <OpenStreetMapRouteMap routeGeometry={quote.encodedPolyline} destinationLabel={quote.diaChiDayDu} /> : null}
+            {quote?.encodedPolyline ? <GoogleMapsEmbed routeGeometry={quote.encodedPolyline} destinationLabel={quote.diaChiDayDu} /> : null}
             <label className="delivery-order-note"><span>Ghi chú giao hàng</span><input value={form.ghiChuGiaoHang} onChange={updateField('ghiChuGiaoHang')} maxLength={500} placeholder="Gọi trước khi đến, giao tại cổng..." /></label>
             <div className={`delivery-quote-box ${quoteError ? 'error' : ''}`}>
               {quoteLoading ? (
