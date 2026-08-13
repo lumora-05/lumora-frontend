@@ -81,7 +81,6 @@ export default function DeliveryCheckout() {
     soNha: savedAddress?.form?.soNha || '',
     tenDuong: savedAddress?.form?.tenDuong || '',
     phuongXa: savedAddress?.form?.phuongXa || '',
-    quanHuyen: savedAddress?.form?.quanHuyen || '',
     tinhThanh: savedAddress?.form?.tinhThanh || 'Đà Nẵng',
     thongTinDiaChi: savedAddress?.form?.thongTinDiaChi || '',
     ghiChuGiaoHang: '',
@@ -108,13 +107,11 @@ export default function DeliveryCheckout() {
 
   const structuredAddressReady = useMemo(() => [
     form.tinhThanh,
-    form.quanHuyen,
     form.phuongXa,
     form.soNha,
     form.tenDuong,
   ].every((value) => String(value || '').trim()), [
     form.tinhThanh,
-    form.quanHuyen,
     form.phuongXa,
     form.soNha,
     form.tenDuong,
@@ -134,7 +131,6 @@ export default function DeliveryCheckout() {
       setQuoteError('');
       deliveryApi.quote({
         tinhThanh: form.tinhThanh.trim(),
-        quanHuyen: form.quanHuyen.trim(),
         phuongXa: form.phuongXa.trim(),
         soNha: form.soNha.trim(),
         tenDuong: form.tenDuong.trim(),
@@ -152,7 +148,6 @@ export default function DeliveryCheckout() {
               soNha: form.soNha,
               tenDuong: form.tenDuong,
               phuongXa: form.phuongXa,
-              quanHuyen: form.quanHuyen,
               tinhThanh: form.tinhThanh,
               thongTinDiaChi: form.thongTinDiaChi,
             },
@@ -179,7 +174,6 @@ export default function DeliveryCheckout() {
   }, [
     structuredAddressReady,
     form.tinhThanh,
-    form.quanHuyen,
     form.phuongXa,
     form.soNha,
     form.tenDuong,
@@ -211,7 +205,6 @@ export default function DeliveryCheckout() {
   const displayAddress = quote?.diaChiDayDu || [
     `${form.soNha} ${form.tenDuong}`.trim(),
     form.phuongXa,
-    form.quanHuyen,
     form.tinhThanh,
   ].filter(Boolean).join(', ');
 
@@ -230,7 +223,7 @@ export default function DeliveryCheckout() {
     if (form.emailNguoiNhan.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailNguoiNhan.trim())) {
       return 'Email không đúng định dạng.';
     }
-    if (!structuredAddressReady) return 'Vui lòng nhập đầy đủ tỉnh/thành, quận/huyện, phường/xã, số nhà và tên đường.';
+    if (!structuredAddressReady) return 'Vui lòng nhập đầy đủ tỉnh/thành, phường/xã, số nhà và tên đường.';
     if (quoteLoading) return 'Hệ thống đang xác định địa chỉ và tính phí giao hàng.';
     if (quoteError) return quoteError;
     if (!quote) return 'Vui lòng chờ hệ thống xác thực địa chỉ và tính phí giao hàng.';
@@ -270,7 +263,6 @@ export default function DeliveryCheckout() {
         soNha: form.soNha.trim(),
         tenDuong: form.tenDuong.trim(),
         phuongXa: form.phuongXa.trim(),
-        quanHuyen: form.quanHuyen.trim(),
         tinhThanh: form.tinhThanh.trim(),
         thongTinDiaChi: form.thongTinDiaChi.trim() || null,
         diaChiChiTiet: null,
@@ -353,7 +345,6 @@ export default function DeliveryCheckout() {
             <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>Nhập riêng từng thành phần để hạn chế nhầm địa danh trùng tên</p></div></div>
             <div className="delivery-form-grid two delivery-address-grid">
               <label><span>Tỉnh / Thành phố *</span><div><MapPin size={18} /><input required list="delivery-city-suggestions" value={form.tinhThanh} onChange={updateField('tinhThanh')} maxLength={100} placeholder="Đà Nẵng" /></div></label>
-              <label><span>Quận / Huyện *</span><div><MapPin size={18} /><input required value={form.quanHuyen} onChange={updateField('quanHuyen')} maxLength={100} placeholder="Thanh Khê" /></div></label>
               <label><span>Phường / Xã *</span><div><MapPin size={18} /><input required value={form.phuongXa} onChange={updateField('phuongXa')} maxLength={120} placeholder="Xuân Hà" /></div></label>
               <label><span>Số nhà *</span><div><Home size={18} /><input required value={form.soNha} onChange={updateField('soNha')} maxLength={50} placeholder="139" /></div></label>
               <label><span>Tên đường *</span><div><MapPin size={18} /><input required value={form.tenDuong} onChange={updateField('tenDuong')} maxLength={200} placeholder="Nguyễn Thị Thập" /></div></label>
