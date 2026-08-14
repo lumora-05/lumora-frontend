@@ -392,3 +392,19 @@
   .delivery-confirm-info p.wide{grid-column:auto}
   .delivery-confirm-actions{grid-template-columns:1fr}
 }
+
+/* Searchable province/ward dropdown for the 2-level Vietnam address model. */
+.delivery-search-field{position:relative}
+.delivery-search-select{position:relative!important;overflow:visible!important}
+.delivery-search-select>input{padding-right:30px}
+.delivery-search-select.disabled{background:#f7f8fa!important;opacity:.75}
+.delivery-search-select.disabled input{cursor:not-allowed}
+.delivery-search-chevron,.delivery-search-status{position:absolute;right:12px;flex:0 0 auto;color:#8b96a2;pointer-events:none}
+.delivery-search-select.open{border-color:#ef6a25!important;box-shadow:0 0 0 3px rgba(239,106,37,.09)}
+.delivery-search-menu{position:absolute!important;z-index:80;top:calc(100% + 6px);left:-1px;right:-1px;min-height:0!important;max-height:300px!important;padding:0!important;border:1px solid #d9dfe5!important;border-radius:12px!important;display:block!important;background:#fff!important;box-shadow:0 14px 34px rgba(15,23,42,.14)!important;overflow:hidden!important}
+.delivery-search-hint{height:40px;padding:0 13px;border-bottom:1px solid #edf0f3;display:flex;align-items:center;color:#9aa3ad;font-size:11px;font-weight:700;background:#fbfcfd}
+.delivery-search-options{max-height:255px;overflow-y:auto;padding:5px}
+.delivery-search-options button{width:100%;min-height:39px;padding:8px 11px;border:0;border-radius:8px;display:flex;align-items:center;color:#34404c;background:#fff;text-align:left;font-size:13px;font-weight:750;cursor:pointer}
+.delivery-search-options button:hover,.delivery-search-options button.active{color:#fff;background:#f0641a}
+.delivery-search-empty{padding:16px 12px;color:#89939e;text-align:center;font-size:11px;font-weight:700}
+.delivery-admin-address-warning{margin-top:12px;padding:10px 12px;border:1px solid #f4d4c3;border-radius:11px;color:#a6532b;background:#fff8f4;font-size:11px;line-height:1.5}

@@ -3,6 +3,7 @@ import {
   Banknote,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
   CreditCard,
   Home,
   LoaderCircle,
@@ -62,6 +63,99 @@ function formatReceiveTime(value) {
   });
 }
 
+
+const VIETNAM_ADMIN_API = 'https://provinces.open-api.vn/api/v2';
+
+function normalizeAdminText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim();
+}
+
+function provinceDisplayName(value) {
+  return String(value || '').replace(/^(thành phố|tỉnh)\s+/i, '').trim();
+}
+
+function SearchableAddressSelect({
+  label,
+  value,
+  placeholder,
+  options,
+  loading = false,
+  disabled = false,
+  emptyText = 'Không tìm thấy dữ liệu phù hợp.',
+  onChange,
+  onSelect,
+}) {
+  const [open, setOpen] = useState(false);
+  const fieldRef = useRef(null);
+  const query = normalizeAdminText(value);
+  const filteredOptions = useMemo(() => {
+    const rows = Array.isArray(options) ? options : [];
+    if (!query) return rows;
+    return rows.filter((option) => normalizeAdminText(option.label).includes(query));
+  }, [options, query]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!fieldRef.current?.contains(event.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  return (
+    <label className="delivery-search-field">
+      <span>{label} *</span>
+      <div ref={fieldRef} className={`delivery-search-select ${open ? 'open' : ''} ${disabled ? 'disabled' : ''}`}>
+        <MapPin size={18} />
+        <input
+          required
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+            if (!open) setOpen(true);
+          }}
+          onFocus={() => !disabled && setOpen(true)}
+          onClick={() => !disabled && setOpen(true)}
+          placeholder={placeholder}
+          autoComplete="off"
+          disabled={disabled}
+          aria-expanded={open}
+        />
+        {loading ? <LoaderCircle className="spin delivery-search-status" size={17} /> : <ChevronDown className="delivery-search-chevron" size={18} />}
+        {open && !disabled ? (
+          <div className="delivery-search-menu" role="listbox">
+            <div className="delivery-search-hint">Gõ để tìm kiếm</div>
+            <div className="delivery-search-options">
+              {filteredOptions.length ? filteredOptions.map((option) => (
+                <button
+                  key={option.code ?? option.label}
+                  type="button"
+                  className={normalizeAdminText(option.label) === query ? 'active' : ''}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onSelect(option);
+                    setOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              )) : (
+                <div className="delivery-search-empty">{loading ? 'Đang tải dữ liệu...' : emptyText}</div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </label>
+  );
+}
+
 export default function DeliveryCheckout() {
   const cart = useCart();
   const toast = useToast();
@@ -74,6 +168,12 @@ export default function DeliveryCheckout() {
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
   const savedAddress = useMemo(initialDeliveryAddress, []);
+  const [provinces, setProvinces] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [provinceLoading, setProvinceLoading] = useState(true);
+  const [wardLoading, setWardLoading] = useState(false);
+  const [adminAddressError, setAdminAddressError] = useState('');
+  const wardCacheRef = useRef(new Map());
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
@@ -81,7 +181,7 @@ export default function DeliveryCheckout() {
     soNha: savedAddress?.form?.soNha || '',
     tenDuong: savedAddress?.form?.tenDuong || '',
     phuongXa: savedAddress?.form?.phuongXa || '',
-    tinhThanh: savedAddress?.form?.tinhThanh || 'Đà Nẵng',
+    tinhThanh: savedAddress?.form?.tinhThanh || '',
     thongTinDiaChi: savedAddress?.form?.thongTinDiaChi || '',
     ghiChuGiaoHang: '',
     maCodeKhuyenMai: '',
@@ -90,6 +190,84 @@ export default function DeliveryCheckout() {
     thoiGianNhanMongMuon: '',
     ghiChuDonHang: '',
   });
+
+  useEffect(() => {
+    let active = true;
+    setProvinceLoading(true);
+    fetch(`${VIETNAM_ADMIN_API}/p/`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((rows) => {
+        if (!active) return;
+        const values = (Array.isArray(rows) ? rows : []).map((row) => ({
+          code: row.code,
+          label: provinceDisplayName(row.name),
+        }));
+        setProvinces(values);
+        setAdminAddressError('');
+      })
+      .catch(() => {
+        if (!active) return;
+        setProvinces([]);
+        setAdminAddressError('Không tải được danh sách tỉnh/thành. Bạn vẫn có thể nhập địa chỉ thủ công.');
+      })
+      .finally(() => {
+        if (active) setProvinceLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const selectedProvince = useMemo(() => {
+    const current = normalizeAdminText(form.tinhThanh);
+    if (!current) return null;
+    return provinces.find((province) => normalizeAdminText(province.label) === current) || null;
+  }, [form.tinhThanh, provinces]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedProvince?.code) {
+      setWards([]);
+      setWardLoading(false);
+      return undefined;
+    }
+
+    const cacheKey = String(selectedProvince.code);
+    const cached = wardCacheRef.current.get(cacheKey);
+    if (cached) {
+      setWards(cached);
+      setWardLoading(false);
+      return undefined;
+    }
+
+    setWardLoading(true);
+    fetch(`${VIETNAM_ADMIN_API}/w/?province=${encodeURIComponent(selectedProvince.code)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((rows) => {
+        if (!active) return;
+        const values = (Array.isArray(rows) ? rows : []).map((row) => ({
+          code: row.code,
+          label: String(row.name || '').trim(),
+        }));
+        wardCacheRef.current.set(cacheKey, values);
+        setWards(values);
+        setAdminAddressError('');
+      })
+      .catch(() => {
+        if (!active) return;
+        setWards([]);
+        setAdminAddressError('Không tải được danh sách phường/xã. Bạn vẫn có thể nhập địa chỉ thủ công.');
+      })
+      .finally(() => {
+        if (active) setWardLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [selectedProvince?.code]);
 
   useEffect(() => {
     let active = true;
@@ -344,13 +522,31 @@ export default function DeliveryCheckout() {
           <section className="delivery-checkout-card">
             <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>Nhập riêng từng thành phần để hạn chế nhầm địa danh trùng tên</p></div></div>
             <div className="delivery-form-grid two delivery-address-grid">
-              <label><span>Tỉnh / Thành phố *</span><div><MapPin size={18} /><input required list="delivery-city-suggestions" value={form.tinhThanh} onChange={updateField('tinhThanh')} maxLength={100} placeholder="Đà Nẵng" /></div></label>
-              <label><span>Phường / Xã *</span><div><MapPin size={18} /><input required value={form.phuongXa} onChange={updateField('phuongXa')} maxLength={120} placeholder="Xuân Hà" /></div></label>
+              <SearchableAddressSelect
+                label="Tỉnh / Thành phố"
+                value={form.tinhThanh}
+                placeholder="Chọn Tỉnh / Thành phố"
+                options={provinces}
+                loading={provinceLoading}
+                onChange={(value) => setForm((current) => ({ ...current, tinhThanh: value, phuongXa: '' }))}
+                onSelect={(option) => setForm((current) => ({ ...current, tinhThanh: option.label, phuongXa: '' }))}
+              />
+              <SearchableAddressSelect
+                label="Phường / Xã"
+                value={form.phuongXa}
+                placeholder={form.tinhThanh ? 'Chọn Phường / Xã' : 'Chọn Tỉnh / Thành phố trước'}
+                options={wards}
+                loading={wardLoading}
+                disabled={!form.tinhThanh.trim()}
+                emptyText={selectedProvince ? 'Không tìm thấy phường/xã phù hợp.' : 'Chọn một tỉnh/thành trong danh sách để tải phường/xã.'}
+                onChange={(value) => setForm((current) => ({ ...current, phuongXa: value }))}
+                onSelect={(option) => setForm((current) => ({ ...current, phuongXa: option.label }))}
+              />
               <label><span>Số nhà *</span><div><Home size={18} /><input required value={form.soNha} onChange={updateField('soNha')} maxLength={50} placeholder="139" /></div></label>
               <label><span>Tên đường *</span><div><MapPin size={18} /><input required value={form.tenDuong} onChange={updateField('tenDuong')} maxLength={200} placeholder="Nguyễn Thị Thập" /></div></label>
               <label><span>Thông tin chi tiết</span><div><Home size={18} /><input value={form.thongTinDiaChi} onChange={updateField('thongTinDiaChi')} maxLength={500} placeholder="Tòa nhà, tầng, cổng..." /></div></label>
             </div>
-            <datalist id="delivery-city-suggestions"><option value="Đà Nẵng" /></datalist>
+            {adminAddressError ? <div className="delivery-admin-address-warning">{adminAddressError}</div> : null}
 
             {quote?.quangDuongMet && quote?.diaChiDayDu ? (
               <div className="delivery-map-address">
