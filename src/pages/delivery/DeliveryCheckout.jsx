@@ -7,7 +7,6 @@ import {
   CreditCard,
   Home,
   LoaderCircle,
-  Mail,
   MapPin,
   Minus,
   Phone,
@@ -177,7 +176,6 @@ export default function DeliveryCheckout() {
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
-    emailNguoiNhan: '',
     soNha: savedAddress?.form?.soNha || '',
     tenDuong: savedAddress?.form?.tenDuong || '',
     phuongXa: savedAddress?.form?.phuongXa || '',
@@ -398,9 +396,6 @@ export default function DeliveryCheckout() {
     const phone = normalizePhone(form.soDienThoaiNhan);
     if (!/^\+?[0-9]{9,15}$/.test(phone)) return 'Số điện thoại nhận hàng không hợp lệ.';
     if (!form.tenNguoiNhan.trim()) return 'Vui lòng nhập họ tên người nhận.';
-    if (form.emailNguoiNhan.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailNguoiNhan.trim())) {
-      return 'Email không đúng định dạng.';
-    }
     if (!structuredAddressReady) return 'Vui lòng nhập đầy đủ tỉnh/thành, phường/xã, số nhà và tên đường.';
     if (quoteLoading) return 'Hệ thống đang xác định địa chỉ và tính phí giao hàng.';
     if (quoteError) return quoteError;
@@ -437,7 +432,6 @@ export default function DeliveryCheckout() {
         clientRequestId: requestIdRef.current,
         tenNguoiNhan: form.tenNguoiNhan.trim(),
         soDienThoaiNhan: phone,
-        emailNguoiNhan: form.emailNguoiNhan.trim() || null,
         soNha: form.soNha.trim(),
         tenDuong: form.tenDuong.trim(),
         phuongXa: form.phuongXa.trim(),
@@ -511,17 +505,22 @@ export default function DeliveryCheckout() {
       <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>
         <div className="delivery-checkout-main">
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><UserRound size={20} /></span><div><h2>Thông tin người nhận</h2><p>Không bắt buộc đăng nhập tài khoản</p></div></div>
-            <div className="delivery-form-grid two">
-              <label><span>Họ tên người nhận *</span><div><UserRound size={18} /><input required value={form.tenNguoiNhan} onChange={updateField('tenNguoiNhan')} maxLength={120} placeholder="Nguyễn Văn A" /></div></label>
-              <label><span>Số điện thoại *</span><div><Phone size={18} /><input required value={form.soDienThoaiNhan} onChange={updateField('soDienThoaiNhan')} maxLength={20} placeholder="0901234567" inputMode="tel" /></div></label>
-              <label className="delivery-form-wide"><span>Email (không bắt buộc)</span><div><Mail size={18} /><input type="email" value={form.emailNguoiNhan} onChange={updateField('emailNguoiNhan')} maxLength={120} placeholder="email@example.com" /></div></label>
-            </div>
-          </section>
+            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin giao hàng</h2><p>Nhập thông tin người nhận và địa chỉ giao món</p></div></div>
 
-          <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Địa chỉ giao hàng</h2><p>Nhập riêng từng thành phần để hạn chế nhầm địa danh trùng tên</p></div></div>
-            <div className="delivery-form-grid two delivery-address-grid">
+            <div className="delivery-checkout-subsection">
+              <h3>Người nhận</h3>
+              <div className="delivery-form-grid two">
+                <label><span>Họ tên người nhận *</span><div><UserRound size={18} /><input required value={form.tenNguoiNhan} onChange={updateField('tenNguoiNhan')} maxLength={120} placeholder="Nguyễn Văn A" /></div></label>
+                <label><span>Số điện thoại *</span><div><Phone size={18} /><input required value={form.soDienThoaiNhan} onChange={updateField('soDienThoaiNhan')} maxLength={20} placeholder="0901234567" inputMode="tel" /></div></label>
+              </div>
+            </div>
+
+            <div className="delivery-checkout-divider" />
+
+            <div className="delivery-checkout-subsection">
+              <h3>Địa chỉ nhận hàng</h3>
+              <p className="delivery-checkout-subsection-note">Nhập riêng từng thành phần để hạn chế nhầm địa danh trùng tên</p>
+              <div className="delivery-form-grid two delivery-address-grid">
               <SearchableAddressSelect
                 label="Tỉnh / Thành phố"
                 value={form.tinhThanh}
@@ -564,6 +563,7 @@ export default function DeliveryCheckout() {
               ) : (
                 <><MapPin size={17} /><span>{quoteError || 'Nhập đầy đủ địa chỉ để hệ thống kiểm tra phạm vi và tính phí giao hàng.'}</span></>
               )}
+            </div>
             </div>
           </section>
 

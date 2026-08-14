@@ -348,6 +348,9 @@
 
 /* ===== Checkout đặt món online chuẩn: địa chỉ phân cấp, hẹn giờ, xác nhận cuối ===== */
 .delivery-form-grid .delivery-form-wide{grid-column:1/-1}
+.delivery-checkout-subsection h3{margin:0 0 14px;color:#3d4752;font-size:13px;font-weight:900}
+.delivery-checkout-subsection-note{margin:-7px 0 14px;color:#89929d;font-size:10px;line-height:1.5}
+.delivery-checkout-divider{height:1px;margin:21px 0;background:#edf0f3}
 .delivery-address-grid{align-items:start}
 .delivery-time-options{margin-top:2px}
 .delivery-schedule-field input{min-height:44px;padding:0 12px;border:1px solid #dce2e8;border-radius:12px;outline:0;color:#303944;background:#fff;font:inherit;box-sizing:border-box}
