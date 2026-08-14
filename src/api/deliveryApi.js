@@ -3,6 +3,17 @@ import axiosClient from './axiosClient';
 const publicConfig = { skipAuth: true };
 
 export const deliveryApi = {
+  addressSuggestions: ({ query, tinhThanh, phuongXa }) => axiosClient.get(
+    '/customer/delivery/address-suggestions',
+    {
+      ...publicConfig,
+      params: {
+        query,
+        tinhThanh,
+        ...(phuongXa ? { phuongXa } : {}),
+      },
+    },
+  ),
   quote: (data) => axiosClient.post('/customer/delivery/quote', data, publicConfig),
   create: (data) => axiosClient.post('/customer/delivery/orders', data, publicConfig),
   track: (trackingToken) => axiosClient.get(
