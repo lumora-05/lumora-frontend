@@ -435,19 +435,64 @@
 .delivery-address-selection-help{display:block!important;margin-top:-1px;color:#8b949e!important;font-size:9px!important;font-weight:650!important;line-height:1.45}
 .delivery-address-selection-help.success{color:#27845a!important}
 
-/* Fix checkout address layout: keep address fields in normal content flow. */
-.delivery-address-grid{
-  height:auto!important;
-  min-height:0!important;
-  grid-auto-rows:max-content;
-  align-content:start;
+
+/* ===== FIX CHECKOUT: loại bỏ khoảng trắng bất thường trong khối địa chỉ ===== */
+.delivery-checkout-grid{
+  align-items:start!important;
 }
-.delivery-address-grid>*,
-.delivery-address-grid>.delivery-form-wide{
+
+.delivery-checkout-main{
+  display:grid!important;
+  grid-auto-rows:max-content!important;
+  align-content:start!important;
   min-height:0!important;
   height:auto!important;
-  align-self:start;
 }
+
+.delivery-checkout-card{
+  min-height:0!important;
+  height:auto!important;
+  align-self:start!important;
+}
+
+.delivery-checkout-subsection{
+  min-height:0!important;
+  height:auto!important;
+}
+
+.delivery-address-grid,
+.delivery-address-grid.delivery-form-grid{
+  display:grid!important;
+  min-height:0!important;
+  height:auto!important;
+  grid-auto-rows:max-content!important;
+  align-items:start!important;
+  align-content:start!important;
+}
+
+.delivery-address-grid > *,
+.delivery-address-grid > .delivery-form-wide{
+  min-height:0!important;
+  height:auto!important;
+  align-self:start!important;
+}
+
+.delivery-address-autocomplete-field,
 .delivery-address-grid .delivery-address-autocomplete-field{
+  min-height:0!important;
+  height:auto!important;
   margin-bottom:0!important;
+}
+
+.delivery-address-selection-help{
+  position:static!important;
+  min-height:0!important;
+  height:auto!important;
+}
+
+.delivery-map-address,
+.open-map-shell,
+.delivery-order-note,
+.delivery-quote-box{
+  flex:none!important;
 }
