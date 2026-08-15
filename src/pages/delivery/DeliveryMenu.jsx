@@ -236,14 +236,22 @@ export default function DeliveryMenu() {
             ) : null}
             {filteredFoods.map((food, index) => (
               <article className="delivery-food-card" key={foodId(food) ?? index}>
-                <div className="delivery-food-image">
+                <Link
+                  className="delivery-food-image delivery-food-image-link"
+                  to={`/menu/foods/${foodId(food)}`}
+                  aria-label={`Xem chi tiết ${localizedFoodName(food, language, 'món ăn')}`}
+                >
                   {food?.hinhAnh
                     ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                     : <span><ChefHat size={42} /></span>}
-                </div>
+                </Link>
                 <div className="delivery-food-body">
                   <small>{localizedFoodCategory(food, language, 'Món ăn LUMORA')}</small>
-                  <h3 className="delivery-home-serif">{localizedFoodName(food, language, 'Món ăn')}</h3>
+                  <h3 className="delivery-home-serif">
+                    <Link className="delivery-food-title-link" to={`/menu/foods/${foodId(food)}`}>
+                      {localizedFoodName(food, language, 'Món ăn')}
+                    </Link>
+                  </h3>
                   <p>{localizedFoodDescription(food, language, language === 'en' ? 'Carefully prepared and packaged for delivery.' : 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.')}</p>
                   <div>
                     <strong>{formatMoney(food?.gia)}</strong>

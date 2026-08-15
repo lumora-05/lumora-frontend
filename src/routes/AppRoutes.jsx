@@ -50,6 +50,7 @@ import WaiterReservations from '../pages/waiter/WaiterReservations';
 import ProtectedRoute from './ProtectedRoute';
 import DeliveryLayout from '../layouts/DeliveryLayout';
 import DeliveryMenu from '../pages/delivery/DeliveryMenu';
+import DeliveryFoodDetail from '../pages/delivery/DeliveryFoodDetail';
 import DeliveryCheckout from '../pages/delivery/DeliveryCheckout';
 import DeliveryLookup from '../pages/delivery/DeliveryLookup';
 import DeliveryTracking from '../pages/delivery/DeliveryTracking';
@@ -64,6 +65,7 @@ export default function AppRoutes(){return <Routes>
   <Route path="/forgot-password" element={<ForgotPasswordOtp/>}/>
   <Route path="/menu" element={<DeliveryLayout/>}>
     <Route index element={<DeliveryMenu/>}/>
+    <Route path="foods/:foodId" element={<DeliveryFoodDetail/>}/>
     <Route path="checkout" element={<DeliveryCheckout/>}/>
     <Route path="lookup" element={<DeliveryLookup/>}/>
     <Route path="orders/:trackingCode" element={<DeliveryTracking/>}/>

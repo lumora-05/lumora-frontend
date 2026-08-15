@@ -650,3 +650,67 @@
   .delivery-account-choice-modal{width:100%;padding:26px 20px 24px;border-radius:22px 22px 0 0}
   .delivery-account-choice-modal h2{margin-inline:30px;font-size:23px}
 }
+
+
+/* ===== Trang chi tiết món ăn trực tuyến ===== */
+.delivery-food-image-link{display:grid;text-decoration:none;cursor:pointer}
+.delivery-food-title-link{color:inherit;text-decoration:none}
+.delivery-food-title-link:hover{color:var(--lumora-home-orange)}
+
+.delivery-food-detail-page{min-height:100vh;background:var(--lumora-home-bg,#fbfaf7)}
+.delivery-food-detail-shell{padding:34px 0 96px}
+.delivery-food-detail-breadcrumb{margin:2px 0 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#968b83;font-size:12px}
+.delivery-food-detail-breadcrumb a{color:#766d66;text-decoration:none}
+.delivery-food-detail-breadcrumb a:hover{color:var(--lumora-home-orange,#d97832)}
+.delivery-food-detail-breadcrumb strong{overflow:hidden;max-width:420px;color:#423b36;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.delivery-food-detail-grid{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(390px,.97fr);gap:64px;align-items:start}
+.delivery-food-detail-image-wrap{min-width:0}
+.delivery-food-detail-image{overflow:hidden;aspect-ratio:1/1;border:1px solid var(--lumora-home-border,#e9e2da);border-radius:22px;display:grid;place-items:center;color:var(--lumora-home-orange,#d97832);background:#f5eee7;box-shadow:0 14px 34px rgba(62,49,38,.08)}
+.delivery-food-detail-image img{width:100%;height:100%;object-fit:cover}
+.delivery-food-detail-content{min-width:0;padding-top:10px}
+.delivery-food-detail-category{display:inline-block;color:var(--lumora-home-orange,#d97832);font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase}
+.delivery-food-detail-content h1{margin:12px 0 13px;color:var(--lumora-home-text,#3a342f);font-size:clamp(34px,4vw,50px);font-weight:600;line-height:1.12;letter-spacing:-.02em}
+.delivery-food-detail-price{display:block;color:var(--lumora-home-orange,#d97832);font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:600}
+.delivery-food-detail-description{max-width:620px;margin:18px 0 0;color:var(--lumora-home-muted,#7e756d);font-size:14px;line-height:1.75}
+.delivery-food-detail-status-card{margin-top:27px;padding:19px 20px;border:1px solid var(--lumora-home-border,#e9e2da);border-radius:15px;display:grid;grid-template-columns:1fr 1fr;gap:0;background:#fffdfa}
+.delivery-food-detail-status-card>div{min-width:0;display:grid;gap:5px}
+.delivery-food-detail-status-card>div+div{padding-left:22px;border-left:1px solid var(--lumora-home-border,#e9e2da)}
+.delivery-food-detail-status-card span,.delivery-food-detail-purchase span{color:#91877f;font-size:11px;font-weight:600}
+.delivery-food-detail-status-card strong{overflow:hidden;color:#443d38;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.delivery-food-detail-status-card strong.available{color:#2f7d4a}
+.delivery-food-detail-status-card strong.unavailable{color:#b84c3d}
+.delivery-food-detail-purchase{margin-top:23px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:end}
+.delivery-food-detail-quantity-block{display:grid;gap:8px}
+.delivery-food-detail-quantity{height:44px;border:1px solid var(--lumora-home-border,#e9e2da);border-radius:12px;display:grid;grid-template-columns:42px 48px 42px;align-items:center;background:#fffdfa}
+.delivery-food-detail-quantity button{height:100%;padding:0;border:0;display:grid;place-items:center;color:#6f665f;background:transparent;cursor:pointer}
+.delivery-food-detail-quantity strong{text-align:center;color:#3f3833;font-size:14px}
+.delivery-food-detail-total{display:grid;justify-items:end;gap:6px}
+.delivery-food-detail-total strong{color:#4a423c;font-family:'Playfair Display',Georgia,serif;font-size:20px}
+.delivery-food-detail-add{width:100%;min-height:50px;margin-top:20px;padding:0 20px;border:0;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;background:var(--lumora-home-orange,#d97832);font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s ease,opacity .15s ease}
+.delivery-food-detail-add:hover:not(:disabled){transform:translateY(-1px)}
+.delivery-food-detail-add:disabled{cursor:not-allowed;opacity:.55}
+.delivery-food-detail-back{width:max-content;margin-top:15px;display:inline-flex;align-items:center;gap:6px;color:#746b64;text-decoration:none;font-size:12px;font-weight:650}
+.delivery-food-detail-back:hover{color:var(--lumora-home-orange,#d97832)}
+.delivery-food-detail-state{min-height:420px}
+.delivery-food-detail-error-actions{display:flex;gap:9px;flex-wrap:wrap}
+.delivery-food-detail-error-actions button,.delivery-food-detail-error-actions a{min-height:40px;padding:0 15px;border:1px solid #e2d8cf;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:#5e554f;background:#fff;text-decoration:none;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.delivery-food-detail-error-actions button{border-color:#df7d42;color:#fff;background:#d97832}
+
+@media(max-width:900px){
+  .delivery-food-detail-grid{grid-template-columns:1fr;gap:32px}
+  .delivery-food-detail-image{max-height:660px;aspect-ratio:1.15/1}
+  .delivery-food-detail-content{padding-top:0}
+}
+@media(max-width:680px){
+  .delivery-food-detail-shell{width:100%!important;padding:24px 12px 76px;box-sizing:border-box}
+  .delivery-food-detail-breadcrumb{margin-bottom:18px}
+  .delivery-food-detail-grid{gap:23px}
+  .delivery-food-detail-image{aspect-ratio:1/1;border-radius:16px}
+  .delivery-food-detail-content h1{font-size:34px}
+  .delivery-food-detail-price{font-size:26px}
+  .delivery-food-detail-status-card{grid-template-columns:1fr;gap:14px}
+  .delivery-food-detail-status-card>div+div{padding:14px 0 0;border-top:1px solid var(--lumora-home-border,#e9e2da);border-left:0}
+  .delivery-food-detail-purchase{grid-template-columns:1fr;gap:15px}
+  .delivery-food-detail-total{justify-items:start}
+  .delivery-food-detail-quantity{grid-template-columns:44px 54px 44px}
+}
