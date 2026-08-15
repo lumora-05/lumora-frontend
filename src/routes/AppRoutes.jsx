@@ -55,6 +55,8 @@ import DeliveryLookup from '../pages/delivery/DeliveryLookup';
 import DeliveryTracking from '../pages/delivery/DeliveryTracking';
 import DeliveryOrderManage from '../pages/admin/DeliveryOrderManage';
 import SystemSettings from '../pages/admin/SystemSettings';
+import CustomerAccountAuth from '../pages/delivery/CustomerAccountAuth';
+import CustomerAccount from '../pages/delivery/CustomerAccount';
 export default function AppRoutes(){return <Routes>
   <Route path="/" element={<Home/>}/>
   <Route path="/login" element={<Login/>}/>
@@ -65,6 +67,8 @@ export default function AppRoutes(){return <Routes>
     <Route path="checkout" element={<DeliveryCheckout/>}/>
     <Route path="lookup" element={<DeliveryLookup/>}/>
     <Route path="orders/:trackingCode" element={<DeliveryTracking/>}/>
+    <Route path="account/login" element={<CustomerAccountAuth/>}/>
+    <Route path="account" element={<CustomerAccount/>}/>
   </Route>
   <Route path="/delivery" element={<Navigate to="/menu" replace/>}/>
   <Route path="/delivery/checkout" element={<Navigate to="/menu/checkout" replace/>}/>

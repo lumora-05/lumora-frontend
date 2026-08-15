@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   Award,
   History,
+  Lock,
+  PackageSearch,
   Pencil,
   Plus,
   Search,
   SlidersHorizontal,
+  Unlock,
   UserRound,
   X,
 } from 'lucide-react';
@@ -23,6 +26,27 @@ const TRANSACTION_LABELS = {
   EARN: 'Cộng từ hóa đơn',
   REDEEM: 'Đổi điểm',
   ADJUST: 'Điều chỉnh',
+};
+
+const ORDER_STATUS_LABELS = {
+  CHO_THANH_TOAN: 'Chờ thanh toán',
+  CHO_XAC_NHAN: 'Chờ xác nhận',
+  CHO_DEN_GIO: 'Chờ đến giờ',
+  DANG_CHUAN_BI: 'Đang chuẩn bị',
+  CHO_TAI_XE_NHAN: 'Chờ tài xế nhận',
+  DANG_GIAO: 'Đang giao',
+  CHO_DOI_SOAT: 'Chờ đối soát',
+  HOAN_THANH: 'Hoàn thành',
+  DA_HUY: 'Đã hủy',
+  HUY: 'Đã hủy',
+};
+
+const ORDER_TYPE_LABELS = {
+  GIAO_HANG: 'Giao tận nơi',
+  DELIVERY: 'Giao tận nơi',
+  MANG_VE: 'Đến lấy',
+  PICKUP: 'Đến lấy',
+  TAI_BAN: 'Tại bàn',
 };
 
 function normalizePhone(value) {
@@ -49,6 +73,11 @@ export default function CustomerLoyaltyManage() {
   const [historyCustomer, setHistoryCustomer] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [orderCustomer, setOrderCustomer] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [statusLoadingId, setStatusLoadingId] = useState(null);
 
   const [adjustCustomer, setAdjustCustomer] = useState(null);
   const [adjustment, setAdjustment] = useState(emptyAdjustment);
@@ -166,6 +195,47 @@ export default function CustomerLoyaltyManage() {
     setTransactions([]);
   }
 
+  async function openOrders(customer) {
+    setOrderCustomer(customer);
+    setOrdersLoading(true);
+    setOrders([]);
+    try {
+      const response = await loyaltyApi.orders(customer.maKhachHang);
+      setOrders(response?.data || response || []);
+    } catch (error) {
+      toast.error(errorMessageOf(error, 'Không thể tải lịch sử đơn hàng.'));
+    } finally {
+      setOrdersLoading(false);
+    }
+  }
+
+  function closeOrders() {
+    setOrderCustomer(null);
+    setOrders([]);
+  }
+
+  async function toggleAccountStatus(customer) {
+    if (!customer?.coTaiKhoan || statusLoadingId) return;
+    const locking = customer.trangThai === 'HOAT_DONG';
+    const confirmed = window.confirm(
+      locking
+        ? `Khóa tài khoản của ${customer.hoTen || customer.soDienThoai}? Khách sẽ không thể đăng nhập cho đến khi được mở khóa.`
+        : `Mở khóa tài khoản của ${customer.hoTen || customer.soDienThoai}?`
+    );
+    if (!confirmed) return;
+
+    setStatusLoadingId(customer.maKhachHang);
+    try {
+      const response = await loyaltyApi.updateStatus(customer.maKhachHang, locking ? 'KHOA' : 'HOAT_DONG');
+      toast.success(messageOf(response, locking ? 'Đã khóa tài khoản khách hàng.' : 'Đã mở khóa tài khoản khách hàng.'));
+      loadCustomers();
+    } catch (error) {
+      toast.error(errorMessageOf(error, 'Không thể cập nhật trạng thái tài khoản.'));
+    } finally {
+      setStatusLoadingId(null);
+    }
+  }
+
   function openAdjust(customer) {
     setAdjustCustomer(customer);
     setAdjustment(emptyAdjustment);
@@ -250,9 +320,11 @@ export default function CustomerLoyaltyManage() {
                 <th>STT</th>
                 <th>Khách hàng</th>
                 <th>Số điện thoại</th>
+                <th>Loại khách</th>
+                <th>Số đơn</th>
                 <th>Điểm hiện có</th>
                 <th>Tổng chi tiêu</th>
-                <th>Trạng thái</th>
+                <th>Trạng thái tài khoản</th>
                 <th>Cập nhật gần nhất</th>
                 <th>Thao tác</th>
               </tr>
@@ -263,24 +335,42 @@ export default function CustomerLoyaltyManage() {
                   <td>{page * size + index + 1}</td>
                   <td><strong>{customer.hoTen || 'Chưa cập nhật'}</strong></td>
                   <td>{customer.soDienThoai || '—'}</td>
+                  <td><span className={`loyalty-customer-type ${customer.coTaiKhoan ? 'member' : 'guest'}`}>{customer.coTaiKhoan ? 'Thành viên' : 'Khách vãng lai'}</span></td>
+                  <td><strong>{Number(customer.soDonHang || 0)}</strong></td>
                   <td><span className="loyalty-points-badge"><Award size={14} />{Number(customer.diemTichLuy || 0)} điểm</span></td>
                   <td><strong>{formatMoney(customer.tongChiTieu)}</strong></td>
-                  <td><span className={`loyalty-status ${customer.trangThai === 'HOAT_DONG' ? 'active' : 'inactive'}`}>{customer.trangThai === 'HOAT_DONG' ? 'Hoạt động' : 'Ngừng hoạt động'}</span></td>
+                  <td>
+                    {customer.coTaiKhoan ? (
+                      <span className={`loyalty-status ${customer.trangThai === 'HOAT_DONG' ? 'active' : 'inactive'}`}>{customer.trangThai === 'HOAT_DONG' ? 'Hoạt động' : 'Đã khóa'}</span>
+                    ) : <span className="loyalty-status guest">Chưa có tài khoản</span>}
+                  </td>
                   <td>{dateTimeText(customer.thoiGianCapNhat)}</td>
                   <td>
                     <div className="loyalty-admin-actions">
                       <button type="button" title="Sửa thông tin" onClick={() => openEdit(customer)}><Pencil size={17} /></button>
                       <button type="button" title="Lịch sử điểm" onClick={() => openHistory(customer)}><History size={17} /></button>
+                      <button type="button" title="Lịch sử đơn hàng" onClick={() => openOrders(customer)}><PackageSearch size={17} /></button>
                       <button type="button" className="adjust" title="Điều chỉnh điểm" onClick={() => openAdjust(customer)}><SlidersHorizontal size={17} /></button>
+                      {customer.coTaiKhoan ? (
+                        <button
+                          type="button"
+                          className={customer.trangThai === 'HOAT_DONG' ? 'lock-account' : 'unlock-account'}
+                          title={customer.trangThai === 'HOAT_DONG' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                          disabled={statusLoadingId === customer.maKhachHang}
+                          onClick={() => toggleAccountStatus(customer)}
+                        >
+                          {customer.trangThai === 'HOAT_DONG' ? <Lock size={17} /> : <Unlock size={17} />}
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
               ))}
               {loading ? (
-                <tr><td colSpan="8" className="loyalty-admin-empty">Đang tải danh sách khách hàng...</td></tr>
+                <tr><td colSpan="10" className="loyalty-admin-empty">Đang tải danh sách khách hàng...</td></tr>
               ) : null}
               {!loading && rows.length === 0 ? (
-                <tr><td colSpan="8" className="loyalty-admin-empty">Không tìm thấy khách hàng phù hợp.</td></tr>
+                <tr><td colSpan="10" className="loyalty-admin-empty">Không tìm thấy khách hàng phù hợp.</td></tr>
               ) : null}
             </tbody>
           </table>
@@ -349,6 +439,40 @@ export default function CustomerLoyaltyManage() {
                   ))}
                   {historyLoading ? <tr><td colSpan="6" className="loyalty-admin-empty">Đang tải lịch sử điểm...</td></tr> : null}
                   {!historyLoading && transactions.length === 0 ? <tr><td colSpan="6" className="loyalty-admin-empty">Khách hàng chưa có giao dịch điểm.</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {orderCustomer ? (
+        <div className="loyalty-modal-backdrop" onMouseDown={closeOrders}>
+          <div className="loyalty-modal loyalty-history-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="loyalty-modal-head">
+              <div><h3>Lịch sử đơn hàng</h3><p>{orderCustomer.hoTen} · {orderCustomer.soDienThoai}</p></div>
+              <button type="button" onClick={closeOrders}><X size={20} /></button>
+            </div>
+            <div className="loyalty-history-summary">
+              <article><span>Tổng số đơn</span><strong>{Number(orderCustomer.soDonHang || orders.length || 0)} đơn</strong></article>
+              <article><span>Tổng chi tiêu</span><strong>{formatMoney(orderCustomer.tongChiTieu)}</strong></article>
+            </div>
+            <div className="loyalty-history-table-wrap">
+              <table className="loyalty-history-table loyalty-order-history-table">
+                <thead><tr><th>Mã đơn</th><th>Loại đơn</th><th>Nguồn đơn</th><th>Trạng thái</th><th>Tổng tiền</th><th>Thời gian đặt</th></tr></thead>
+                <tbody>
+                  {!ordersLoading && orders.map((item) => (
+                    <tr key={item.maDonHang}>
+                      <td><strong>DH{String(item.maDonHang).padStart(7, '0')}</strong></td>
+                      <td>{ORDER_TYPE_LABELS[item.loaiDon] || item.loaiDon || '—'}</td>
+                      <td>{item.nguonDon === 'WEBSITE' ? 'Website' : item.nguonDon === 'QR' ? 'QR tại bàn' : item.nguonDon || '—'}</td>
+                      <td><span className="loyalty-order-status">{ORDER_STATUS_LABELS[item.trangThai] || item.trangThai || '—'}</span></td>
+                      <td><strong>{formatMoney(item.tongTien)}</strong></td>
+                      <td>{dateTimeText(item.thoiGianDat)}</td>
+                    </tr>
+                  ))}
+                  {ordersLoading ? <tr><td colSpan="6" className="loyalty-admin-empty">Đang tải lịch sử đơn hàng...</td></tr> : null}
+                  {!ordersLoading && orders.length === 0 ? <tr><td colSpan="6" className="loyalty-admin-empty">Khách hàng chưa có đơn hàng được liên kết.</td></tr> : null}
                 </tbody>
               </table>
             </div>

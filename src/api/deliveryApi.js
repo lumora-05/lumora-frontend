@@ -1,6 +1,15 @@
 import axiosClient from './axiosClient';
+import { getCustomerToken } from '../utils/customerSession';
 
 const publicConfig = { skipAuth: true };
+
+const optionalCustomerConfig = () => {
+  const token = getCustomerToken();
+  return {
+    skipAuth: true,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+};
 
 export const deliveryApi = {
   addressSuggestions: ({ query, tinhThanh, phuongXa }) => axiosClient.get(
@@ -15,7 +24,7 @@ export const deliveryApi = {
     },
   ),
   quote: (data) => axiosClient.post('/customer/delivery/quote', data, publicConfig),
-  create: (data) => axiosClient.post('/customer/delivery/orders', data, publicConfig),
+  create: (data) => axiosClient.post('/customer/delivery/orders', data, optionalCustomerConfig()),
   track: (trackingToken) => axiosClient.get(
     `/customer/delivery/orders/${encodeURIComponent(trackingToken)}`,
     publicConfig,

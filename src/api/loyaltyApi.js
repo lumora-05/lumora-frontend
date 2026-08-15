@@ -9,4 +9,6 @@ export const loyaltyApi = {
   updateCustomer: (id, data) => axiosClient.put(`/loyalty/customers/${id}`, data),
   adjustPoints: (id, data) => axiosClient.post(`/loyalty/customers/${id}/adjust-points`, data),
   transactions: (id, params = {}) => axiosClient.get(`/loyalty/customers/${id}/transactions`, { params }),
+  orders: (id) => axiosClient.get(`/loyalty/customers/${id}/orders`),
+  updateStatus: (id, trangThai) => axiosClient.patch(`/loyalty/customers/${id}/status`, { trangThai }),
 };
