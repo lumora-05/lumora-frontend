@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Bot,
   Building2,
   CalendarClock,
   Clock3,
@@ -57,7 +56,6 @@ const TABS = [
   { id: 'branding', label: 'Thương hiệu & giao diện', icon: ImagePlus },
   { id: 'reservation', label: 'Đặt bàn', icon: CalendarClock },  { id: 'payment', label: 'Thanh toán', icon: CreditCard },
   { id: 'loyalty', label: 'Tích điểm', icon: Coins },
-  { id: 'chatbot', label: 'Chatbot', icon: Bot },
 ];
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -539,48 +537,6 @@ export default function SystemSettings() {
           </div>
         )}
 
-        {activeTab === 'chatbot' && (
-          <div className="system-settings-card">
-            {cardHead(Bot, 'Chatbot', 'Quản lý trạng thái và giới hạn hoạt động của chatbot AI trên website.')}
-            <div className="system-settings-form-grid">
-              <div className="system-settings-toggle-row full">
-                <div>
-                  <strong>Bật chatbot AI</strong>
-                  <small>Cho phép khách hàng sử dụng trợ lý chatbot trên website.</small>
-                </div>
-                <button
-                  type="button"
-                  className={`system-settings-switch ${form.chatbotEnabled ? 'on' : ''}`}
-                  aria-pressed={form.chatbotEnabled}
-                  onClick={() => setForm((current) => ({ ...current, chatbotEnabled: !current.chatbotEnabled }))}
-                >
-                  <span />
-                </button>
-              </div>
-              <label className="full">
-                <span>Model</span>
-                <div className="system-settings-input"><Bot size={17} /><input name="chatbotModel" value={form.chatbotModel} onChange={changeField} maxLength={120} placeholder="gpt-5-mini" /></div>
-              </label>
-              <label>
-                <span>Thời gian chờ phản hồi</span>
-                <div className="system-settings-input suffix"><input type="number" min="5" max="120" name="chatbotTimeoutSeconds" value={form.chatbotTimeoutSeconds} onChange={changeField} /><em>giây</em></div>
-              </label>
-              <label>
-                <span>Giới hạn đầu ra</span>
-                <div className="system-settings-input suffix"><input type="number" min="100" max="10000" step="50" name="chatbotMaxOutputTokens" value={form.chatbotMaxOutputTokens} onChange={changeField} /><em>token</em></div>
-              </label>
-              <label>
-                <span>Số tin nhắn lịch sử</span>
-                <div className="system-settings-input"><input type="number" min="0" max="50" name="chatbotMaxHistoryMessages" value={form.chatbotMaxHistoryMessages} onChange={changeField} /></div>
-              </label>
-              <label>
-                <span>Ngưỡng tin cậy tối thiểu</span>
-                <div className="system-settings-input suffix"><input type="number" min="0" max="100" step="1" name="chatbotMinimumConfidencePercent" value={form.chatbotMinimumConfidencePercent} onChange={changeField} /><em>%</em></div>
-              </label>
-            </div>
-            <p className="system-settings-note">API key và base URL vẫn được quản lý an toàn bằng biến môi trường của backend, không hiển thị hoặc lưu từ trang này.</p>
-          </div>
-        )}
 
         {activeTab !== 'branding' && (
           <div className="system-settings-actions standalone">
