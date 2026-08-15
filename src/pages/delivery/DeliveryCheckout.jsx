@@ -64,6 +64,7 @@ function formatReceiveTime(value) {
 
 
 const VIETNAM_ADMIN_API = 'https://provinces.open-api.vn/api/v2';
+const RESTAURANT_PICKUP_ADDRESS = '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng';
 
 function normalizeAdminText(value) {
   return String(value || '')
@@ -303,6 +304,7 @@ export default function DeliveryCheckout() {
     tinhThanh: savedAddress?.form?.tinhThanh || '',
     thongTinDiaChi: savedAddress?.form?.thongTinDiaChi || '',
     ghiChuGiaoHang: '',
+    phuongThucNhanHang: 'GIAO_TAN_NOI',
     maCodeKhuyenMai: '',
     phuongThucThanhToan: 'COD',
     loaiThoiGianNhan: 'SOM_NHAT',
@@ -402,6 +404,8 @@ export default function DeliveryCheckout() {
     return () => { active = false; };
   }, []);
 
+  const isPickup = form.phuongThucNhanHang === 'TU_DEN_LAY';
+
   const administrativeAddressReady = useMemo(() => [
     form.tinhThanh,
     form.phuongXa,
@@ -462,7 +466,7 @@ export default function DeliveryCheckout() {
   ]);
 
   useEffect(() => {
-    if (!addressSelectionToken || !administrativeAddressReady) {
+    if (isPickup || !addressSelectionToken || !administrativeAddressReady) {
       setQuote(null);
       setQuoteLoading(false);
       return undefined;
@@ -517,6 +521,7 @@ export default function DeliveryCheckout() {
     return () => { active = false; };
   }, [
     administrativeAddressReady,
+    isPickup,
     addressSelectionToken,
     addressQuery,
     selectedAddressLabel,
@@ -526,7 +531,7 @@ export default function DeliveryCheckout() {
     form.tenDuong,
   ]);
 
-  const deliveryFee = Number(quote?.phiGiaoHang || 0);
+  const deliveryFee = isPickup ? 0 : Number(quote?.phiGiaoHang || 0);
   const promotionCode = form.maCodeKhuyenMai.trim().toUpperCase();
   const selectedPromotion = useMemo(() => promotions.find(
     (promotion) => String(promotion?.maCode || '').trim().toUpperCase() === promotionCode,
@@ -548,7 +553,7 @@ export default function DeliveryCheckout() {
   const itemCountLabel = useMemo(() => `${cart.count} suất món`, [cart.count]);
   const minScheduledTime = useMemo(() => toLocalInputValue(new Date(Date.now() + 30 * 60 * 1000)), []);
   const maxScheduledTime = useMemo(() => toLocalInputValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), []);
-  const displayAddress = quote?.diaChiDayDu || selectedAddressLabel || [
+  const displayAddress = isPickup ? RESTAURANT_PICKUP_ADDRESS : quote?.diaChiDayDu || selectedAddressLabel || [
     addressQuery.trim(),
     form.phuongXa,
     form.tinhThanh,
@@ -611,12 +616,14 @@ export default function DeliveryCheckout() {
     const phone = normalizePhone(form.soDienThoaiNhan);
     if (!/^\+?[0-9]{9,15}$/.test(phone)) return 'Số điện thoại nhận hàng không hợp lệ.';
     if (!form.tenNguoiNhan.trim()) return 'Vui lòng nhập họ tên người nhận.';
-    if (!administrativeAddressReady) return 'Vui lòng chọn đầy đủ Tỉnh/Thành phố và Phường/Xã.';
-    if (!addressQuery.trim()) return 'Vui lòng nhập số nhà và tên đường.';
-    if (!addressSelectionToken) return 'Vui lòng chọn đúng địa chỉ trong danh sách gợi ý.';
-    if (quoteLoading) return 'Hệ thống đang xác định địa chỉ và tính phí giao hàng.';
-    if (quoteError) return quoteError;
-    if (!quote) return 'Vui lòng chờ hệ thống xác thực địa chỉ và tính phí giao hàng.';
+    if (!isPickup) {
+      if (!administrativeAddressReady) return 'Vui lòng chọn đầy đủ Tỉnh/Thành phố và Phường/Xã.';
+      if (!addressQuery.trim()) return 'Vui lòng nhập số nhà và tên đường.';
+      if (!addressSelectionToken) return 'Vui lòng chọn đúng địa chỉ trong danh sách gợi ý.';
+      if (quoteLoading) return 'Hệ thống đang xác định địa chỉ và tính phí giao hàng.';
+      if (quoteError) return quoteError;
+      if (!quote) return 'Vui lòng chờ hệ thống xác thực địa chỉ và tính phí giao hàng.';
+    }
     if (form.loaiThoiGianNhan === 'HEN_GIO' && !form.thoiGianNhanMongMuon) return 'Vui lòng chọn thời gian nhận mong muốn.';
     if (cart.count > 100 || cart.items.some((item) => Number(item.soLuong || 0) > 50)) {
       return 'Một đơn tối đa 100 suất và mỗi món tối đa 50 suất.';
@@ -649,15 +656,16 @@ export default function DeliveryCheckout() {
         clientRequestId: requestIdRef.current,
         tenNguoiNhan: form.tenNguoiNhan.trim(),
         soDienThoaiNhan: phone,
-        soNha: form.soNha.trim() || null,
-        tenDuong: form.tenDuong.trim() || null,
-        phuongXa: form.phuongXa.trim(),
-        tinhThanh: form.tinhThanh.trim(),
-        thongTinDiaChi: form.thongTinDiaChi.trim() || null,
-        diaChiChiTiet: suggestionStreetText({ label: selectedAddressLabel }, addressQuery) || null,
+        phuongThucNhanHang: form.phuongThucNhanHang,
+        soNha: isPickup ? null : (form.soNha.trim() || null),
+        tenDuong: isPickup ? null : (form.tenDuong.trim() || null),
+        phuongXa: isPickup ? null : form.phuongXa.trim(),
+        tinhThanh: isPickup ? null : form.tinhThanh.trim(),
+        thongTinDiaChi: isPickup ? null : (form.thongTinDiaChi.trim() || null),
+        diaChiChiTiet: isPickup ? null : (suggestionStreetText({ label: selectedAddressLabel }, addressQuery) || null),
         googlePlaceId: null,
         googleFormattedAddress: null,
-        addressSelectionToken,
+        addressSelectionToken: isPickup ? null : addressSelectionToken,
         ghiChuGiaoHang: form.ghiChuGiaoHang.trim() || null,
         maCodeKhuyenMai: promotionCode || null,
         phuongThucThanhToan: form.phuongThucThanhToan,
@@ -716,14 +724,14 @@ export default function DeliveryCheckout() {
       <section className="delivery-public-container delivery-checkout-heading">
         <Link to="/menu"><ArrowLeft size={18} /> Tiếp tục chọn món</Link>
         <span>Hoàn tất đơn hàng</span>
-        <h1>Thông tin giao món</h1>
-        <p>Chọn khu vực, tìm địa chỉ cụ thể rồi chọn đúng gợi ý để hệ thống dùng chính xác vị trí giao hàng và tính phí.</p>
+        <h1>Thông tin nhận món</h1>
+        <p>Chọn giao tận nơi hoặc đến lấy tại nhà hàng, sau đó hoàn tất thông tin nhận món.</p>
       </section>
 
       <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>
         <div className="delivery-checkout-main">
           <section className="delivery-checkout-card">
-            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin giao hàng</h2><p>Nhập thông tin người nhận và địa chỉ giao món</p></div></div>
+            <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin nhận hàng</h2><p>Nhập thông tin người nhận và chọn cách nhận món</p></div></div>
 
             <div className="delivery-checkout-subsection">
               <h3>Người nhận</h3>
@@ -735,6 +743,36 @@ export default function DeliveryCheckout() {
 
             <div className="delivery-checkout-divider" />
 
+            <div className="delivery-checkout-subsection">
+              <h3>Phương thức nhận hàng</h3>
+              <div className="delivery-receive-methods">
+                <label className={form.phuongThucNhanHang === 'GIAO_TAN_NOI' ? 'active' : ''}>
+                  <input type="radio" name="receive-method" value="GIAO_TAN_NOI" checked={form.phuongThucNhanHang === 'GIAO_TAN_NOI'} onChange={updateField('phuongThucNhanHang')} />
+                  <span><MapPin size={20} /></span>
+                  <div><strong>Giao tận nơi</strong><small>Nhập địa chỉ để hệ thống tính quãng đường và phí giao hàng</small></div>
+                  <CheckCircle2 size={19} />
+                </label>
+                <label className={form.phuongThucNhanHang === 'TU_DEN_LAY' ? 'active' : ''}>
+                  <input type="radio" name="receive-method" value="TU_DEN_LAY" checked={form.phuongThucNhanHang === 'TU_DEN_LAY'} onChange={(event) => { updateField('phuongThucNhanHang')(event); setQuote(null); setQuoteError(''); setQuoteLoading(false); }} />
+                  <span><ShoppingBag size={20} /></span>
+                  <div><strong>Đến lấy tại nhà hàng</strong><small>Không tính phí giao hàng, nhận món tại Lumora</small></div>
+                  <CheckCircle2 size={19} />
+                </label>
+              </div>
+            </div>
+
+            <div className="delivery-checkout-divider" />
+
+            {isPickup ? (
+              <div className="delivery-checkout-subsection">
+                <h3>Địa điểm nhận món</h3>
+                <div className="delivery-pickup-location">
+                  <MapPin size={19} />
+                  <div><strong>Lumora Restaurant</strong><span>{RESTAURANT_PICKUP_ADDRESS}</span></div>
+                </div>
+                <label className="delivery-order-note"><span>Ghi chú nhận hàng</span><input value={form.ghiChuGiaoHang} onChange={updateField('ghiChuGiaoHang')} maxLength={500} placeholder="Ví dụ: Gọi khi món sẵn sàng..." /></label>
+              </div>
+            ) : (
             <div className="delivery-checkout-subsection">
               <h3>Địa chỉ nhận hàng</h3>
               <p className="delivery-checkout-subsection-note">Chọn khu vực trước, sau đó nhập địa chỉ cụ thể và chọn đúng gợi ý trên bản đồ</p>
@@ -805,6 +843,7 @@ export default function DeliveryCheckout() {
               )}
             </div>
             </div>
+            )}
           </section>
 
           <section className="delivery-checkout-card">
@@ -866,8 +905,8 @@ export default function DeliveryCheckout() {
           <div className="delivery-summary-money">
             <p><span>Tạm tính</span><strong>{formatMoney(cart.total)}</strong></p>
             <p><span>Giảm giá</span><strong>-{formatMoney(promotionDiscount)}</strong></p>
-            <p><span>Phí giao hàng</span><strong>{quote ? formatMoney(deliveryFee) : 'Chờ địa chỉ'}</strong></p>
-            <div><span>Tổng thanh toán</span><strong>{quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
+            <p><span>Phí giao hàng</span><strong>{isPickup ? formatMoney(0) : (quote ? formatMoney(deliveryFee) : 'Chờ địa chỉ')}</strong></p>
+            <div><span>Tổng thanh toán</span><strong>{isPickup || quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
           </div>
           <button className="delivery-submit-order" type="submit" disabled={submitting}>
             <CheckCircle2 size={19} /> Xem lại & xác nhận
@@ -887,8 +926,9 @@ export default function DeliveryCheckout() {
             <div className="delivery-confirm-info">
               <p><span>Người nhận</span><strong>{form.tenNguoiNhan}</strong></p>
               <p><span>Số điện thoại</span><strong>{form.soDienThoaiNhan}</strong></p>
-              <p className="wide"><span>Địa chỉ</span><strong>{displayAddress}</strong></p>
-              {form.thongTinDiaChi ? <p className="wide"><span>Chi tiết</span><strong>{form.thongTinDiaChi}</strong></p> : null}
+              <p className="wide"><span>Phương thức nhận</span><strong>{isPickup ? 'Đến lấy tại nhà hàng' : 'Giao tận nơi'}</strong></p>
+              <p className="wide"><span>{isPickup ? 'Địa điểm nhận' : 'Địa chỉ'}</span><strong>{displayAddress}</strong></p>
+              {!isPickup && form.thongTinDiaChi ? <p className="wide"><span>Chi tiết</span><strong>{form.thongTinDiaChi}</strong></p> : null}
               <p><span>Thời gian nhận</span><strong>{form.loaiThoiGianNhan === 'HEN_GIO' ? formatReceiveTime(form.thoiGianNhanMongMuon) : 'Giao sớm nhất'}</strong></p>
               <p><span>Thanh toán</span><strong>{form.phuongThucThanhToan === 'COD' ? 'COD' : 'VietQR'}</strong></p>
             </div>

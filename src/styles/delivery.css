@@ -496,3 +496,21 @@
 .delivery-quote-box{
   flex:none!important;
 }
+
+/* ===== Phương thức nhận hàng: giao tận nơi / đến lấy tại nhà hàng ===== */
+.delivery-receive-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.delivery-receive-methods label{position:relative;min-height:82px;padding:14px;border:1px solid #dfe4e9;border-radius:15px;display:flex;align-items:center;gap:11px;cursor:pointer;background:#fff}
+.delivery-receive-methods label.active{border-color:#f47c38;background:#fff8f3;box-shadow:0 0 0 2px rgba(244,124,56,.08)}
+.delivery-receive-methods input{position:absolute;opacity:0;pointer-events:none}
+.delivery-receive-methods label>span{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#eb641c;background:#fff0e6;flex:none}
+.delivery-receive-methods label>div{flex:1;min-width:0}
+.delivery-receive-methods strong{display:block;color:#303944;font-size:13px}
+.delivery-receive-methods small{display:block;margin-top:4px;color:#89929c;font-size:10px;line-height:1.4}
+.delivery-receive-methods label>svg{color:#d8dde3;flex:none}
+.delivery-receive-methods label.active>svg{color:#f06a20}
+.delivery-pickup-location{padding:15px;border:1px solid #dce5df;border-radius:14px;display:flex;align-items:flex-start;gap:11px;background:#f7fcf9}
+.delivery-pickup-location>svg{flex:none;margin-top:1px;color:#24885a}
+.delivery-pickup-location strong,.delivery-pickup-location span{display:block}
+.delivery-pickup-location strong{color:#2f3944;font-size:13px}
+.delivery-pickup-location span{margin-top:4px;color:#6f7b86;font-size:11px;line-height:1.5}
+@media(max-width:680px){.delivery-receive-methods{grid-template-columns:1fr}}

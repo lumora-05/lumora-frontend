@@ -48,6 +48,13 @@ const BASE_STEPS = [
   { code: 'HOAN_THANH', label: 'Đã giao', icon: Check },
 ];
 
+const PICKUP_STEPS = [
+  { code: 'CHO_XAC_NHAN', label: 'Chờ nhà hàng xác nhận', icon: Clock3 },
+  { code: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị', icon: ChefHat },
+  { code: 'CHO_KHACH_NHAN', label: 'Sẵn sàng nhận món', icon: PackageCheck },
+  { code: 'HOAN_THANH', label: 'Đã nhận món', icon: Check },
+];
+
 const VIETQR_PAYMENT_STEP = { code: 'CHO_THANH_TOAN', label: 'Chờ thanh toán', icon: CreditCard };
 const SCHEDULED_STEP = { code: 'CHO_DEN_GIO', label: 'Đã xác nhận · chờ đến giờ', icon: Clock3 };
 
@@ -122,12 +129,14 @@ export default function DeliveryTracking() {
   const steps = useMemo(() => {
     const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
     const receiveType = String(order?.loaiThoiGianNhan || '').toUpperCase();
+    const receiveMethod = String(order?.phuongThucNhanHang || 'GIAO_TAN_NOI').toUpperCase();
+    const sourceSteps = receiveMethod === 'TU_DEN_LAY' ? PICKUP_STEPS : BASE_STEPS;
     const base = receiveType === 'HEN_GIO'
-      ? [BASE_STEPS[0], SCHEDULED_STEP, ...BASE_STEPS.slice(1)]
-      : BASE_STEPS;
+      ? [sourceSteps[0], SCHEDULED_STEP, ...sourceSteps.slice(1)]
+      : sourceSteps;
     if (paymentMethod !== 'VIETQR') return [ORDER_PLACED_STEP, ...base];
     return [ORDER_PLACED_STEP, VIETQR_PAYMENT_STEP, ...base];
-  }, [order?.phuongThucThanhToan, order?.loaiThoiGianNhan]);
+  }, [order?.phuongThucThanhToan, order?.loaiThoiGianNhan, order?.phuongThucNhanHang]);
 
   const currentStep = useMemo(() => {
     const rawCode = String(order?.trangThaiGiaoHang || '').toUpperCase();
@@ -277,7 +286,7 @@ export default function DeliveryTracking() {
               <div className="delivery-recipient-grid">
                 <p><UserRound size={17} /><span><small>Người nhận</small><strong>{order.tenNguoiNhan}</strong></span></p>
                 <p><Phone size={17} /><span><small>Số điện thoại</small><strong>{order.soDienThoaiNhanChe}</strong></span></p>
-                <p className="wide"><MapPin size={17} /><span><small>Địa chỉ</small><strong>{order.diaChiGiaoHang}</strong></span></p>
+                <p className="wide"><MapPin size={17} /><span><small>{order.phuongThucNhanHang === 'TU_DEN_LAY' ? 'Địa điểm nhận' : 'Địa chỉ'}</small><strong>{order.phuongThucNhanHang === 'TU_DEN_LAY' ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang}</strong></span></p>
                 {order.quangDuongMet ? <p><Truck size={17} /><span><small>Quãng đường giao hàng</small><strong>{formatDistanceMeters(order.quangDuongMet)}</strong></span></p> : null}
                 {order.loaiThoiGianNhan === 'HEN_GIO' && order.thoiGianNhanMongMuon ? <p><Clock3 size={17} /><span><small>Thời gian nhận đã hẹn</small><strong>{formatDate(order.thoiGianNhanMongMuon)}</strong></span></p> : null}
                 {order.loaiThoiGianNhan !== 'HEN_GIO' && order.thoiGianNhanDuKienGiay ? <p><Clock3 size={17} /><span><small>Thời gian nhận dự kiến</small><strong>{formatDurationSeconds(order.thoiGianNhanDuKienGiay)}</strong></span></p> : null}
