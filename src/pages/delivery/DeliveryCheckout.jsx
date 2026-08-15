@@ -203,7 +203,7 @@ function DeliveryAddressAutocomplete({
 
   return (
     <label className="delivery-form-wide delivery-address-autocomplete-field">
-      <span>Địa chỉ cụ thể *</span>
+      <span>Số nhà, tên đường *</span>
       <div ref={fieldRef} className={`delivery-address-autocomplete ${open ? 'open' : ''} ${selected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}>
         <MapPin size={18} />
         <input
