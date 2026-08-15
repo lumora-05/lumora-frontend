@@ -27,6 +27,7 @@ export function continueAsGuest() {
 
 export function saveCustomerSession(auth) {
   if (!auth?.token) return;
+
   localStorage.setItem(TOKEN_KEY, auth.token);
   localStorage.setItem(USER_KEY, JSON.stringify({
     maKhachHang: auth.maKhachHang,
@@ -34,6 +35,7 @@ export function saveCustomerSession(auth) {
     soDienThoai: auth.soDienThoai || '',
     diemTichLuy: Number(auth.diemTichLuy || 0),
   }));
+
   sessionStorage.removeItem(GUEST_CONTINUE_KEY);
   window.dispatchEvent(new Event(EVENT_NAME));
 }
@@ -48,6 +50,7 @@ export function clearCustomerSession() {
 export function onCustomerSessionChange(callback) {
   window.addEventListener(EVENT_NAME, callback);
   window.addEventListener('storage', callback);
+
   return () => {
     window.removeEventListener(EVENT_NAME, callback);
     window.removeEventListener('storage', callback);
