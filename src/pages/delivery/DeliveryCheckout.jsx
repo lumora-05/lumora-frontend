@@ -724,7 +724,7 @@ export default function DeliveryCheckout() {
   if (!cart.items.length) {
     return (
       <main className="delivery-public-page">
-        <DeliveryPublicHeader compact />
+        <DeliveryPublicHeader homeStyle />
         <section className="delivery-public-container delivery-empty-cart">
           <span><ShoppingBag size={42} /></span>
           <h1>Giỏ hàng đang trống</h1>
@@ -737,12 +737,9 @@ export default function DeliveryCheckout() {
 
   return (
     <main className="delivery-public-page">
-      <DeliveryPublicHeader compact />
-      <section className="delivery-public-container delivery-checkout-heading">
+      <DeliveryPublicHeader homeStyle />
+      <section className="delivery-public-container delivery-checkout-heading delivery-checkout-heading-simple">
         <Link to="/menu"><ArrowLeft size={18} /> Tiếp tục chọn món</Link>
-        <span>Hoàn tất đơn hàng</span>
-        <h1>Thông tin nhận món</h1>
-        <p>Chọn giao tận nơi hoặc đến lấy tại nhà hàng, sau đó hoàn tất thông tin nhận món.</p>
       </section>
 
       <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>

@@ -44,7 +44,7 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
             <Link to="/#trang-chu">Trang chủ</Link>
             <NavLink to="/menu" end>Thực đơn</NavLink>
             <Link to="/#gioi-thieu">Về chúng tôi</Link>
-            <Link to="/#dat-mon">Đặt món</Link>
+            <Link to="/reservations">Đặt bàn</Link>
             <Link to="/#lien-he">Liên hệ</Link>
           </nav>
 
