@@ -3,6 +3,7 @@ export const EN_TEXT = {
   'Thực đơn': 'Menu',
   'Về chúng tôi': 'About us',
   'Đặt món': 'Order',
+  'Đặt bàn': 'Reserve',
   'Liên hệ': 'Contact',
   'Đăng nhập': 'Sign in',
   'Đăng ký': 'Sign up',

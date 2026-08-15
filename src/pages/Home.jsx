@@ -39,7 +39,7 @@ const navLinks = [
   { label: 'Trang chủ', href: '#trang-chu' },
   { label: 'Thực đơn', href: '/menu' },
   { label: 'Về chúng tôi', href: '#gioi-thieu' },
-  { label: 'Đặt món', href: '#dat-mon' },
+  { label: 'Đặt bàn', href: '/reservations' },
   { label: 'Liên hệ', href: '#lien-he' },
 ];
 
