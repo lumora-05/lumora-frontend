@@ -31,6 +31,8 @@ import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtil
 import { imageUrl } from '../../utils/imageUrl';
 import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAddress';
 import { getCustomerUser, onCustomerSessionChange } from '../../utils/customerSession';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodName, localizedPromotionName } from '../../utils/localizedContent';
 
 function createRequestId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -275,6 +277,7 @@ export default function DeliveryCheckout() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const requestIdRef = useRef(createRequestId());
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -882,7 +885,7 @@ export default function DeliveryCheckout() {
             <label className="delivery-order-note delivery-promotion-field">
               <span><TicketPercent size={16} /> Mã khuyến mãi</span>
               <input list="delivery-active-promotions" value={form.maCodeKhuyenMai} onChange={updateField('maCodeKhuyenMai')} maxLength={50} placeholder="Nhập mã nếu có" />
-              <datalist id="delivery-active-promotions">{promotions.map((promotion) => <option key={promotion.maKhuyenMai || promotion.maCode} value={promotion.maCode}>{promotion.tenKhuyenMai}</option>)}</datalist>
+              <datalist id="delivery-active-promotions">{promotions.map((promotion) => <option key={promotion.maKhuyenMai || promotion.maCode} value={promotion.maCode}>{localizedPromotionName(promotion, language, promotion.tenKhuyenMai || promotion.maCode)}</option>)}</datalist>
               {promotionCode ? (selectedPromotion && promotionDiscount > 0
                 ? <small className="delivery-promotion-hint success">Áp dụng dự kiến: -{formatMoney(promotionDiscount)}</small>
                 : <small className="delivery-promotion-hint">Backend sẽ kiểm tra hiệu lực, số lượt và giá trị đơn tối thiểu khi bạn đặt món.</small>) : null}
@@ -906,8 +909,8 @@ export default function DeliveryCheckout() {
           <div className="delivery-summary-items">
             {cart.items.map((item) => (
               <article key={itemId(item)}>
-                <div className="delivery-summary-image">{item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={item.tenMonAn} /> : <ShoppingBag size={22} />}</div>
-                <div className="delivery-summary-copy"><strong>{item.tenMonAn}</strong><span>{formatMoney(item.gia)}</span><input value={item.ghiChu || ''} onChange={(event) => cart.updateNote(itemId(item), event.target.value)} maxLength={255} placeholder="Ghi chú món..." /></div>
+                <div className="delivery-summary-image">{item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} /> : <ShoppingBag size={22} />}</div>
+                <div className="delivery-summary-copy"><strong>{localizedFoodName(item, language, 'Món ăn')}</strong><span>{formatMoney(item.gia)}</span><input value={item.ghiChu || ''} onChange={(event) => cart.updateNote(itemId(item), event.target.value)} maxLength={255} placeholder="Ghi chú món..." /></div>
                 <div className="delivery-summary-qty">
                   <button type="button" onClick={() => item.soLuong <= 1 ? cart.remove(itemId(item)) : cart.updateQty(itemId(item), item.soLuong - 1)}>{item.soLuong <= 1 ? <Trash2 size={15} /> : <Minus size={15} />}</button>
                   <b>{item.soLuong}</b>
@@ -948,7 +951,7 @@ export default function DeliveryCheckout() {
             </div>
 
             <div className="delivery-confirm-items">
-              {cart.items.map((item) => <p key={itemId(item)}><span>{item.soLuong} × {item.tenMonAn}</span><strong>{formatMoney(Number(item.gia || 0) * Number(item.soLuong || 0))}</strong></p>)}
+              {cart.items.map((item) => <p key={itemId(item)}><span>{item.soLuong} × {localizedFoodName(item, language, 'Món ăn')}</span><strong>{formatMoney(Number(item.gia || 0) * Number(item.soLuong || 0))}</strong></p>)}
             </div>
             <div className="delivery-confirm-money">
               <p><span>Tạm tính</span><strong>{formatMoney(cart.total)}</strong></p>

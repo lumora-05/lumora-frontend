@@ -22,6 +22,8 @@ import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext'
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { reservationData, reservationDateTime, reservationStatus } from '../../utils/reservations';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodCategory, localizedFoodName } from '../../utils/localizedContent';
 
 export const PREORDER_STATUS_META = {
   CHUA_DAT: { label: 'Chưa đặt món', tone: 'neutral' },
@@ -50,8 +52,8 @@ function foodId(food) {
   return Number(food?.maMonAn ?? food?.id);
 }
 
-function foodName(food) {
-  return food?.tenMonAn || food?.name || 'Món ăn';
+function foodName(food, language = 'vi') {
+  return localizedFoodName(food, language, 'Món ăn');
 }
 
 function foodPrice(food) {
@@ -72,6 +74,7 @@ function buildSelection(preorder) {
 }
 
 function PreorderItems({ preorder }) {
+  const { language } = useLanguage();
   const items = Array.isArray(preorder?.items) ? preorder.items : [];
   if (!items.length) return <div className="reservation-preorder-empty">Chưa có món nào trong thực đơn đặt trước.</div>;
   return (
@@ -79,10 +82,10 @@ function PreorderItems({ preorder }) {
       {items.map((item) => (
         <article key={item?.maChiTietDatMonTruoc || item?.maMonAn}>
           <div className="reservation-preorder-item-image">
-            {item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={item?.tenMonAn || 'Món ăn'} /> : <UtensilsCrossed size={21} />}
+            {item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={foodName(item, language)} /> : <UtensilsCrossed size={21} />}
           </div>
           <div>
-            <strong>{item?.tenMonAn || 'Món ăn'}</strong>
+            <strong>{foodName(item, language)}</strong>
             <small>{formatMoney(item?.donGia)} × {item?.soLuong || 0}</small>
             {item?.ghiChu ? <em>Ghi chú: {item.ghiChu}</em> : null}
           </div>
@@ -95,6 +98,7 @@ function PreorderItems({ preorder }) {
 
 function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, draftMode = false }) {
   const toast = useToast();
+  const { language } = useLanguage();
   const [foods, setFoods] = useState([]);
   const [selection, setSelection] = useState(() => buildSelection(current));
   const [generalNote, setGeneralNote] = useState(current?.ghiChuDatMonTruoc || '');
@@ -125,8 +129,8 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, 
   const filteredFoods = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) return foods;
-    return foods.filter((food) => foodName(food).toLowerCase().includes(keyword));
-  }, [foods, query]);
+    return foods.filter((food) => foodName(food, language).toLowerCase().includes(keyword));
+  }, [foods, query, language]);
 
   const selectedEntries = useMemo(() => Object.entries(selection)
     .filter(([, value]) => Number(value?.quantity) > 0), [selection]);
@@ -175,7 +179,7 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, 
           const donGia = foodPrice(food);
           return {
             ...item,
-            tenMonAn: foodName(food),
+            tenMonAn: foodName(food, language),
             hinhAnh: food?.hinhAnh || null,
             donGia,
             thanhTien: donGia * item.soLuong,
@@ -223,11 +227,11 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, 
             return (
               <article key={id} className={quantity ? 'selected' : ''}>
                 <div className="reservation-preorder-food-image">
-                  {food?.hinhAnh ? <img src={imageUrl(food.hinhAnh)} alt={foodName(food)} /> : <UtensilsCrossed size={24} />}
+                  {food?.hinhAnh ? <img src={imageUrl(food.hinhAnh)} alt={foodName(food, language)} /> : <UtensilsCrossed size={24} />}
                 </div>
                 <div className="reservation-preorder-food-main">
-                  <strong>{foodName(food)}</strong>
-                  <small>{food?.danhMuc?.tenDanhMuc || 'Món ăn'}</small>
+                  <strong>{foodName(food, language)}</strong>
+                  <small>{localizedFoodCategory(food, language, 'Món ăn')}</small>
                   <b>{formatMoney(foodPrice(food))}</b>
                   {quantity ? <input maxLength="250" value={selected?.note || ''} onChange={(event) => updateItemNote(id, event.target.value)} placeholder="Ghi chú cho món (không bắt buộc)" /> : null}
                 </div>

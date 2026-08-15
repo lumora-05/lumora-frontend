@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import LumoraChatbot from '../../components/customer/LumoraChatbot';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { CustomerReservationPreorder, ReservationPreorderDraftModal } from '../../components/reservation/ReservationPreorder';
 import { errorMessageOf, messageOf, useToast } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
@@ -86,6 +87,7 @@ function ReservationNavbar({ settings }) {
         </nav>
 
         <div className="v0-book-desktop">
+          <LanguageSwitcher compact />
           <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
         </div>
 
@@ -106,6 +108,7 @@ function ReservationNavbar({ settings }) {
             {RESERVATION_NAV_LINKS.map((link) => (
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
+            <LanguageSwitcher />
             <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book">Đặt bàn ngay</a>
           </nav>
         </div>

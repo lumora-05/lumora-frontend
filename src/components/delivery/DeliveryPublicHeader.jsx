@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { imageUrl } from '../../utils/imageUrl';
 import { getCustomerUser, onCustomerSessionChange } from '../../utils/customerSession';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 export default function DeliveryPublicHeader({ compact = false, homeStyle = false }) {
   const cart = useCart();
@@ -48,6 +49,7 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
           </nav>
 
           <div className="delivery-header-actions">
+            <LanguageSwitcher compact />
             <Link className="delivery-customer-account-link delivery-home-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
               <UserRound size={18} /><span>{customer ? customer.hoTen?.split(' ').slice(-1)[0] || 'Tài khoản' : 'Đăng nhập'}</span>
             </Link>
@@ -84,6 +86,7 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
         </nav>
 
         <div className="delivery-header-actions">
+          <LanguageSwitcher compact />
           <Link className="delivery-customer-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
             <UserRound size={17} /><span>{customer ? 'Tài khoản' : 'Đăng nhập'}</span>
           </Link>

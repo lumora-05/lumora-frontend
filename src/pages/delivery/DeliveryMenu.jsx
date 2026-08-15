@@ -22,6 +22,8 @@ import { categoryApi, menuApi } from '../../api/menuApi';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { continueAsGuest, getCustomerUser, hasContinuedAsGuest } from '../../utils/customerSession';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedCategoryName, localizedFoodCategory, localizedFoodDescription, localizedFoodName } from '../../utils/localizedContent';
 
 
 function unwrapRows(response) {
@@ -44,16 +46,13 @@ function foodCategoryId(food) {
   return food?.danhMuc?.maDanhMuc ?? food?.maDanhMuc ?? food?.categoryId;
 }
 
-function categoryName(category) {
-  return category?.tenDanhMuc ?? category?.name ?? 'Danh mục';
-}
-
 const PENDING_ADD_KEY = 'lumora_delivery_pending_add';
 
 export default function DeliveryMenu() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [foods, setFoods] = useState([]);
   const [categories, setCategories] = useState([]);
   const [keyword, setKeyword] = useState('');
@@ -101,16 +100,16 @@ export default function DeliveryMenu() {
   }, []);
 
   const filteredFoods = useMemo(() => {
-    const query = keyword.trim().toLocaleLowerCase('vi');
+    const query = keyword.trim().toLocaleLowerCase(language === 'en' ? 'en' : 'vi');
     return foods.filter((food) => {
       const matchesCategory = selectedCategory === 'ALL'
         || String(foodCategoryId(food)) === String(selectedCategory);
       const matchesKeyword = !query
-        || String(food?.tenMonAn || '').toLocaleLowerCase('vi').includes(query)
-        || String(food?.moTa || '').toLocaleLowerCase('vi').includes(query);
+        || String(localizedFoodName(food, language, '')).toLocaleLowerCase(language === 'en' ? 'en' : 'vi').includes(query)
+        || String(localizedFoodDescription(food, language, '')).toLocaleLowerCase(language === 'en' ? 'en' : 'vi').includes(query);
       return matchesCategory && matchesKeyword;
     });
-  }, [foods, keyword, selectedCategory]);
+  }, [foods, keyword, selectedCategory, language]);
 
   function performAddToCart(food) {
     const id = foodId(food);
@@ -128,7 +127,7 @@ export default function DeliveryMenu() {
       return;
     }
     cart.add(food, 1);
-    toast.success(`Đã thêm ${food?.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+    toast.success(`Đã thêm ${localizedFoodName(food, language, 'món ăn')} vào giỏ hàng`, {
       id: 'delivery-add-cart',
       duration: 1200,
     });
@@ -221,7 +220,7 @@ export default function DeliveryMenu() {
               className={String(selectedCategory) === String(categoryId(category)) ? 'active' : ''}
               onClick={() => setSelectedCategory(String(categoryId(category)))}
             >
-              {categoryName(category)}
+              {localizedCategoryName(category, language, 'Danh mục')}
             </button>
           ))}
         </div>
@@ -239,13 +238,13 @@ export default function DeliveryMenu() {
               <article className="delivery-food-card" key={foodId(food) ?? index}>
                 <div className="delivery-food-image">
                   {food?.hinhAnh
-                    ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
+                    ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                     : <span><ChefHat size={42} /></span>}
                 </div>
                 <div className="delivery-food-body">
-                  <small>{food?.danhMuc?.tenDanhMuc || food?.tenDanhMuc || 'Món ăn LUMORA'}</small>
-                  <h3 className="delivery-home-serif">{food?.tenMonAn || 'Món ăn'}</h3>
-                  <p>{food?.moTa || 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.'}</p>
+                  <small>{localizedFoodCategory(food, language, 'Món ăn LUMORA')}</small>
+                  <h3 className="delivery-home-serif">{localizedFoodName(food, language, 'Món ăn')}</h3>
+                  <p>{localizedFoodDescription(food, language, language === 'en' ? 'Carefully prepared and packaged for delivery.' : 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.')}</p>
                   <div>
                     <strong>{formatMoney(food?.gia)}</strong>
                     <button type="button" onClick={() => addToCart(food)}><Plus size={18} /> Thêm</button>
@@ -278,7 +277,7 @@ export default function DeliveryMenu() {
             <div className="delivery-account-choice-food">
               <ShoppingBag size={18} />
               <span>Món đang chọn</span>
-              <strong>{authChoiceFood?.tenMonAn || 'Món ăn'}</strong>
+              <strong>{localizedFoodName(authChoiceFood, language, 'Món ăn')}</strong>
             </div>
             <div className="delivery-account-choice-actions">
               <button type="button" className="primary" onClick={loginBeforeAdding}>

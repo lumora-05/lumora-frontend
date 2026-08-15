@@ -23,6 +23,8 @@ import { promotionApi } from '../../api/promotionApi';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodName } from '../../utils/localizedContent';
 import {
   canCustomerRequestCancellation,
   cancellationReasonLabel,
@@ -95,6 +97,7 @@ function formatDateTime(value) {
 }
 
 export default function OrderSuccess() {
+  const { language } = useLanguage();
   const { qrToken, orderId } = useParams();
   const location = useLocation();
   const toast = useToast();
@@ -286,7 +289,7 @@ export default function OrderSuccess() {
                     return (
                       <article className={`customer-order-item-row ${cancelled ? 'cancelled' : ''}`} key={itemId}>
                         <div className="customer-order-item-main">
-                          <strong>{item?.monAn?.tenMonAn || item?.tenMonAn || item?.tenMon || 'Món ăn'}</strong>
+                          <strong>{localizedFoodName(item?.monAn || item, language, 'Món ăn')}</strong>
                           <span>× {item?.soLuong || 0}{item?.ghiChu ? ` · ${item.ghiChu}` : ''}</span>
                           {(pendingCancellation || cancelled) ? (
                             <small>{item?.lyDoHuy || cancellationReasonLabel(item?.maLyDoHuy)}{item?.ghiChuHuy ? ` · ${item.ghiChuHuy}` : ''}</small>

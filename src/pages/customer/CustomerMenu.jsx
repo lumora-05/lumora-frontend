@@ -23,6 +23,8 @@ import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedCategoryName, localizedFoodDescription, localizedFoodName } from '../../utils/localizedContent';
 import '../../styles/home.css';
 
 const PAGE_SIZE = 8;
@@ -33,10 +35,6 @@ function foodId(food) {
 
 function categoryId(cat) {
   return cat.maDanhMuc ?? cat.id;
-}
-
-function categoryName(cat) {
-  return cat.tenDanhMuc ?? cat.name ?? 'Danh mục';
 }
 
 function categoryIconType(name = '') {
@@ -71,16 +69,8 @@ function mergeFoods(current, incoming) {
   return Array.from(merged.values());
 }
 
-function foodDescription(food) {
-  return food?.moTaNgan
-    ?? food?.moTa
-    ?? food?.mota
-    ?? food?.description
-    ?? 'Hương vị hấp dẫn, được chuẩn bị từ nguyên liệu tươi ngon tại LUMORA.';
-}
-
-function foodBadge(food, index) {
-  const text = `${food?.tenMonAn ?? ''} ${foodDescription(food)}`.toLowerCase();
+function foodBadge(food, index, language) {
+  const text = `${localizedFoodName(food, language, '')} ${localizedFoodDescription(food, language, '')}`.toLowerCase();
   if (text.includes('salad') || text.includes('healthy') || text.includes('rau')) {
     return { tone: 'healthy', label: 'Healthy' };
   }
@@ -95,6 +85,7 @@ export default function CustomerMenu() {
   const { qrToken } = useParams();
   const cart = useCart();
   const toast = useToast();
+  const { language } = useLanguage();
   const requestSequence = useRef(0);
   const [foods, setFoods] = useState([]);
   const [cats, setCats] = useState([]);
@@ -196,9 +187,9 @@ export default function CustomerMenu() {
 
   const categoryList = useMemo(() => cats.map((item) => ({
     id: String(categoryId(item)),
-    name: categoryName(item),
-    iconType: categoryIconType(categoryName(item)),
-  })), [cats]);
+    name: localizedCategoryName(item, language, 'Danh mục'),
+    iconType: categoryIconType(localizedCategoryName(item, language, 'Danh mục')),
+  })), [cats, language]);
 
   const tableName = table?.tenBan || table?.soBan || 'Bàn';
   const currentTitle = cat === 'all'
@@ -207,7 +198,7 @@ export default function CustomerMenu() {
 
   function handleAdd(food) {
     cart.add(food);
-    toast.success(`Đã thêm ${food.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+    toast.success(`Đã thêm ${localizedFoodName(food, language, 'món ăn')} vào giỏ hàng`, {
       id: 'customer-add-to-cart',
       duration: 1000,
     });
@@ -285,23 +276,23 @@ export default function CustomerMenu() {
                 <div className="v0-dish-grid">
                   {!foods.length ? <div className="customer-menu-empty customer-menu-home-empty">Không tìm thấy món phù hợp.</div> : null}
                   {foods.map((food, index) => {
-                    const badge = foodBadge(food, index);
+                    const badge = foodBadge(food, index, language);
                     const detailUrl = `/table/${qrToken}/foods/${foodId(food)}`;
                     return (
                       <article className="v0-dish-card" key={foodId(food) || index}>
                         <div className="v0-dish-image-wrap">
                           <Link className="customer-menu-home-image-link" to={detailUrl}>
                             {food.hinhAnh
-                              ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
+                              ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                               : <span className="customer-menu-home-image-placeholder"><UtensilsCrossed size={42} /></span>}
                           </Link>
                           {badge ? <span className="v0-dish-tag">{badge.label}</span> : null}
                         </div>
                         <div className="v0-dish-body">
                           <h3 className="v0-serif">
-                            <Link className="customer-menu-home-title-link" to={detailUrl}>{food.tenMonAn}</Link>
+                            <Link className="customer-menu-home-title-link" to={detailUrl}>{localizedFoodName(food, language, 'Món ăn')}</Link>
                           </h3>
-                          <p>{foodDescription(food)}</p>
+                          <p>{localizedFoodDescription(food, language, language === 'en' ? 'Freshly prepared with carefully selected ingredients at LUMORA.' : 'Hương vị hấp dẫn, được chuẩn bị từ nguyên liệu tươi ngon tại LUMORA.')}</p>
                           <div className="v0-dish-bottom">
                             <span className="v0-serif v0-price">{formatMoney(food.gia)}</span>
                             <button type="button" className="v0-button v0-button-primary v0-dish-add v0-pill" onClick={() => handleAdd(food)}>

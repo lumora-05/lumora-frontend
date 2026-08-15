@@ -24,6 +24,7 @@ import {
   saveCustomerSession,
 } from '../../utils/customerSession';
 import { unwrapDeliveryResponse } from '../../utils/delivery';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import '../../styles/login.css';
 
 const customerBenefits = [
@@ -130,6 +131,7 @@ export default function CustomerAccountAuth() {
 
   return (
     <main className="lumora-login-page">
+      <div className="lumora-customer-auth-language"><LanguageSwitcher /></div>
       <section className="lumora-login-shell" aria-label="Đăng nhập khách hàng LUMORA">
         <aside className="lumora-login-showcase">
           <div className="lumora-login-orb lumora-login-orb-one" />

@@ -18,6 +18,9 @@ import {
 import { menuApi } from '../api/menuApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { imageUrl } from '../utils/imageUrl';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
+import { useLanguage } from '../context/LanguageContext';
+import { localizedFoodDescription, localizedFoodName } from '../utils/localizedContent';
 import '../styles/home.css';
 
 const DEFAULT_SETTINGS = {
@@ -43,31 +46,42 @@ const navLinks = [
 const DEFAULT_DISHES = [
   {
     name: 'Bò lúc lắc',
+    nameEn: 'Shaking beef',
     desc: 'Thăn bò áp chảo cùng ớt chuông, hành tây và sốt tiêu đen đậm đà.',
+    descEn: 'Seared beef tenderloin with bell peppers, onion, and rich black pepper sauce.',
     price: '185.000đ',
     img: '/dish-bo-luc-lac.png',
     tag: 'Bán chạy',
+    tagEn: 'Best seller',
   },
   {
     name: 'Cá hồi áp chảo',
+    nameEn: 'Pan-seared salmon',
     desc: 'Cá hồi Na Uy áp chảo giòn da, sốt bơ chanh và rau mầm tươi.',
+    descEn: 'Crispy-skin Norwegian salmon with lemon butter sauce and fresh microgreens.',
     price: '245.000đ',
     img: '/dish-ca-hoi.png',
     tag: 'Đặc sắc',
+    tagEn: 'Signature',
   },
   {
     name: 'Salad vườn xanh',
+    nameEn: 'Garden green salad',
     desc: 'Rau hữu cơ, bơ, cà chua bi và hạt óc chó cùng sốt dầu giấm.',
+    descEn: 'Organic greens, avocado, cherry tomatoes, and walnuts with vinaigrette.',
     price: '95.000đ',
     img: '/dish-salad.png',
     tag: 'Healthy',
   },
   {
     name: 'Bánh lava socola',
+    nameEn: 'Chocolate lava cake',
     desc: 'Bánh socola tan chảy nóng hổi kèm kem vani và trái mọng.',
+    descEn: 'Warm molten chocolate cake served with vanilla ice cream and berries.',
     price: '78.000đ',
     img: '/dish-dessert.png',
     tag: 'Tráng miệng',
+    tagEn: 'Dessert',
   },
 ];
 
@@ -139,6 +153,7 @@ function Navbar({ settings }) {
         </nav>
 
         <div className="v0-book-desktop">
+          <LanguageSwitcher compact />
           <a href="/login" className="v0-button v0-button-outline v0-pill">Đăng nhập</a>
           <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
         </div>
@@ -160,6 +175,7 @@ function Navbar({ settings }) {
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
+            <LanguageSwitcher />
             <a href="/login" className="v0-button v0-button-outline v0-pill v0-mobile-login" onClick={() => setOpen(false)}>Đăng nhập</a>
             <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book" onClick={() => setOpen(false)}>Đặt bàn ngay</a>
           </nav>
@@ -211,6 +227,7 @@ function Hero({ settings }) {
 }
 
 function FeaturedMenu({ restaurantName }) {
+  const { language } = useLanguage();
   const [dishes, setDishes] = useState(DEFAULT_DISHES);
 
   useEffect(() => {
@@ -223,11 +240,11 @@ function FeaturedMenu({ restaurantName }) {
         if (foods.length === 0) return;
 
         setDishes(foods.map((food) => ({
-          name: food.tenMonAn,
-          desc: food.moTa || 'Món ăn trong thực đơn nhà hàng',
+          name: localizedFoodName(food, language, 'Món ăn'),
+          desc: localizedFoodDescription(food, language, language === 'en' ? 'A dish from our restaurant menu.' : 'Món ăn trong thực đơn nhà hàng'),
           price: `${new Intl.NumberFormat('vi-VN').format(Number(food.gia || 0))}đ`,
           img: imageUrl(food.hinhAnh) || '/dish-bo-luc-lac.png',
-          tag: 'Bán chạy',
+          tag: language === 'en' ? 'Best seller' : 'Bán chạy',
         })));
       })
       .catch(() => {
@@ -235,7 +252,7 @@ function FeaturedMenu({ restaurantName }) {
       });
 
     return () => { active = false; };
-  }, []);
+  }, [language]);
 
   return (
     <section id="thuc-don" className="v0-shell v0-section v0-menu-section">
@@ -251,12 +268,12 @@ function FeaturedMenu({ restaurantName }) {
         {dishes.map((dish) => (
           <article key={dish.name} className="v0-dish-card">
             <div className="v0-dish-image-wrap">
-              <img src={dish.img} alt={dish.name} />
-              <span className="v0-dish-tag">{dish.tag}</span>
+              <img src={dish.img} alt={language === 'en' ? (dish.nameEn || dish.name) : dish.name} />
+              <span className="v0-dish-tag">{language === 'en' ? (dish.tagEn || dish.tag) : dish.tag}</span>
             </div>
             <div className="v0-dish-body">
-              <h3 className="v0-serif">{dish.name}</h3>
-              <p>{dish.desc}</p>
+              <h3 className="v0-serif">{language === 'en' ? (dish.nameEn || dish.name) : dish.name}</h3>
+              <p>{language === 'en' ? (dish.descEn || dish.desc) : dish.desc}</p>
               <div className="v0-dish-bottom">
                 <span className="v0-serif v0-price">{dish.price}</span>
                 <button type="button" className="v0-button v0-button-primary v0-dish-add v0-pill">

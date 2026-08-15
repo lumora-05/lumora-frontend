@@ -14,6 +14,7 @@ import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi'
 import { imageUrl } from '../../utils/imageUrl';
 import { useCart } from '../../context/CartContext';
 import CustomerServiceRequest from './CustomerServiceRequest';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 function isOrdersPath(pathname) {
   return pathname.includes('/orders') || pathname.includes('/success');
@@ -182,6 +183,7 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
         </nav>
 
         <div className={actionsClassName}>
+          <LanguageSwitcher compact />
           <CustomerServiceRequest qrToken={qrToken} tableId={resolvedTableId} />
           <div className={tableBadgeClassName}>
             {isMenuShowcase ? <span className="customer-table-badge-icon" aria-hidden="true"><QrCode size={16} /></span> : null}

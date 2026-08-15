@@ -19,6 +19,8 @@ import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodName } from '../../utils/localizedContent';
 
 const foodId = (food) => food?.maMonAn ?? food?.id;
 const PAYMENT_PENDING = new Set(['CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN', 'DA_THANH_TOAN']);
@@ -41,6 +43,7 @@ function callCount(order) {
 
 export default function Cart() {
   const toast = useToast();
+  const { language } = useLanguage();
   const { qrToken } = useParams();
   const cart = useCart();
   const navigate = useNavigate();
@@ -157,17 +160,17 @@ export default function Cart() {
                     <article className="customer-cart-item" key={id}>
                       <div className="customer-cart-item-image">
                         {item.hinhAnh
-                          ? <img src={imageUrl(item.hinhAnh)} alt={item.tenMonAn} />
+                          ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} />
                           : <UtensilsCrossed size={27} />}
                       </div>
 
                       <div className="customer-cart-item-main">
                         <div className="customer-cart-item-title">
                           <div>
-                            <strong>{item.tenMonAn}</strong>
+                            <strong>{localizedFoodName(item, language, 'Món ăn')}</strong>
                             <span>{formatMoney(item.gia)} / phần</span>
                           </div>
-                          <button type="button" onClick={() => cart.remove(id)} aria-label={`Xóa ${item.tenMonAn}`}><Trash2 size={17} /></button>
+                          <button type="button" onClick={() => cart.remove(id)} aria-label={`Xóa ${localizedFoodName(item, language, 'món ăn')}`}><Trash2 size={17} /></button>
                         </div>
 
                         <input

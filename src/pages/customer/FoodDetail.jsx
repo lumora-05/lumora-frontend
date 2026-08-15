@@ -18,6 +18,8 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodCategory, localizedFoodDescription, localizedFoodName } from '../../utils/localizedContent';
 
 export default function FoodDetail() {
   const { qrToken, foodId } = useParams();
@@ -30,6 +32,7 @@ export default function FoodDetail() {
   const [recommendations, setRecommendations] = useState([]);
   const cart = useCart();
   const toast = useToast();
+  const { language } = useLanguage();
 
   async function loadFood() {
     try {
@@ -122,7 +125,7 @@ export default function FoodDetail() {
   function addToCart() {
     if (!food || !available) return;
     cart.add({ ...food, ghiChu: note.trim() }, quantity);
-    toast.success(`Đã thêm ${food.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+    toast.success(`Đã thêm ${localizedFoodName(food, language, 'món ăn')} vào giỏ hàng`, {
       id: 'customer-add-to-cart',
       duration: 1000
     });
@@ -132,7 +135,7 @@ export default function FoodDetail() {
 
   function addRecommendationToCart(item) {
     cart.add(item);
-    toast.success(`Đã thêm ${item.tenMonAn || 'món ăn'} vào giỏ hàng`, {
+    toast.success(`Đã thêm ${localizedFoodName(item, language, 'món ăn')} vào giỏ hàng`, {
       id: 'customer-add-to-cart',
       duration: 1000
     });
@@ -161,18 +164,18 @@ export default function FoodDetail() {
           <div className="customer-detail-card">
             <div className="customer-detail-image">
               {food.hinhAnh
-                ? <img src={imageUrl(food.hinhAnh)} alt={food.tenMonAn} />
+                ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                 : <span><UtensilsCrossed size={78} /></span>}
               <em className={available ? 'available' : 'unavailable'}>{available ? 'Đang phục vụ' : 'Tạm hết món'}</em>
             </div>
 
             <article className="customer-detail-content">
-              <span className="customer-detail-category">{food.danhMuc?.tenDanhMuc || 'Món ăn'}</span>
+              <span className="customer-detail-category">{localizedFoodCategory(food, language, 'Món ăn')}</span>
               <div className="customer-detail-title-row">
-                <h1>{food.tenMonAn}</h1>
+                <h1>{localizedFoodName(food, language, 'Món ăn')}</h1>
                 <strong>{formatMoney(food.gia)}</strong>
               </div>
-              <p>{food.moTa || 'Món ăn được chế biến tươi ngon từ nguyên liệu được lựa chọn kỹ lưỡng tại nhà hàng.'}</p>
+              <p>{localizedFoodDescription(food, language, language === 'en' ? 'Freshly prepared with carefully selected ingredients.' : 'Món ăn được chế biến tươi ngon từ nguyên liệu được lựa chọn kỹ lưỡng tại nhà hàng.')}</p>
 
               <div className="customer-detail-control-row">
                 <div>
@@ -216,18 +219,18 @@ export default function FoodDetail() {
                     <article className="customer-detail-recommendation-card" key={itemId ?? index}>
                       <Link className="customer-detail-recommendation-image" to={`/table/${qrToken}/foods/${itemId}`}>
                         {item.hinhAnh
-                          ? <img src={imageUrl(item.hinhAnh)} alt={item.tenMonAn} />
+                          ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} />
                           : <span><UtensilsCrossed size={32} /></span>}
                       </Link>
 
                       <div className="customer-detail-recommendation-body">
-                        <Link to={`/table/${qrToken}/foods/${itemId}`}>{item.tenMonAn}</Link>
-                        <p>{item.moTa || 'Món ăn được chế biến tươi ngon tại nhà hàng.'}</p>
+                        <Link to={`/table/${qrToken}/foods/${itemId}`}>{localizedFoodName(item, language, 'Món ăn')}</Link>
+                        <p>{localizedFoodDescription(item, language, language === 'en' ? 'Freshly prepared at LUMORA.' : 'Món ăn được chế biến tươi ngon tại nhà hàng.')}</p>
                         <div>
                           <strong>{formatMoney(item.gia)}</strong>
                           <button
                             type="button"
-                            aria-label={`Thêm ${item.tenMonAn || 'món ăn'} vào giỏ hàng`}
+                            aria-label={`Thêm ${localizedFoodName(item, language, 'món ăn')} vào giỏ hàng`}
                             onClick={() => addRecommendationToCart(item)}
                           >
                             <Plus size={18} />

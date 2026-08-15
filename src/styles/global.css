@@ -3801,3 +3801,14 @@
 .staff-alert-toggle:disabled{opacity:.6;cursor:wait}
 @media(max-width:900px){.staff-alert-toggle span{display:none}.staff-alert-toggle{width:40px;padding:0}}
 @media(max-width:680px){.staff-alert-toggle{width:38px;height:38px;border-radius:10px}}
+
+/* ===== Public VI / EN language switcher ===== */
+.lumora-language-switcher{min-height:34px;padding:0 9px;border:1px solid #e1e5ea;border-radius:999px;display:inline-flex;align-items:center;gap:5px;color:#68727d;background:#fff;font-size:11px;font-weight:800;white-space:nowrap;box-sizing:border-box}
+.lumora-language-switcher>svg{color:#d97832;flex:none}
+.lumora-language-switcher button{padding:0;border:0;color:#8a929b;background:transparent;font:inherit;font-weight:800;cursor:pointer;line-height:1}
+.lumora-language-switcher button.active{color:#d97832}
+.lumora-language-switcher span{color:#c6cbd1}
+.lumora-language-switcher.compact{min-height:32px;padding:0 8px;font-size:10px}
+.lumora-customer-auth-language{position:absolute;top:22px;right:24px;z-index:4}
+@media(max-width:900px){.lumora-language-switcher{min-height:32px}.lumora-customer-auth-language{top:14px;right:14px}}
+@media(max-width:680px){.delivery-header-actions .lumora-language-switcher{padding:0 7px}.delivery-header-actions .lumora-language-switcher>svg{display:none}.customer-header-actions .lumora-language-switcher{padding:0 7px}.customer-header-actions .lumora-language-switcher>svg{display:none}.v0-book-desktop .lumora-language-switcher{display:none}}

@@ -37,6 +37,8 @@ import {
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
 import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
+import { useLanguage } from '../../context/LanguageContext';
+import { localizedFoodName } from '../../utils/localizedContent';
 
 const ORDER_PLACED_STEP = { code: 'DA_DAT', label: 'Đã đặt hàng', icon: ShoppingBag };
 
@@ -79,6 +81,7 @@ export default function DeliveryTracking() {
   const { trackingCode = '' } = useParams();
   const location = useLocation();
   const toast = useToast();
+  const { language } = useLanguage();
   const initialOrder = location.state?.order || savedOrder(trackingCode);
   const [order, setOrder] = useState(initialOrder);
   const [loading, setLoading] = useState(false);
@@ -276,7 +279,7 @@ export default function DeliveryTracking() {
               <div className="delivery-info-title"><ShoppingBag size={20} /><div><h2>Món đã đặt</h2><p>{order.items?.reduce((sum, item) => sum + Number(item.soLuong || 0), 0) || 0} suất món</p></div></div>
               <div className="delivery-track-items">
                 {(order.items || []).map((item, index) => (
-                  <div key={`${item.maMonAn}-${item.ghiChu || ''}-${index}`}><span>{item.soLuong}×</span><div><strong>{item.tenMonAn}</strong><small>{progressText(item)}</small>{item.ghiChu ? <em>{item.ghiChu}</em> : null}</div><b>{formatMoney(item.thanhTien)}</b></div>
+                  <div key={`${item.maMonAn}-${item.ghiChu || ''}-${index}`}><span>{item.soLuong}×</span><div><strong>{localizedFoodName(item, language, 'Món ăn')}</strong><small>{progressText(item)}</small>{item.ghiChu ? <em>{item.ghiChu}</em> : null}</div><b>{formatMoney(item.thanhTien)}</b></div>
                 ))}
               </div>
             </section>
