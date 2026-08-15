@@ -30,6 +30,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 import { imageUrl } from '../../utils/imageUrl';
 import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAddress';
+import { getCustomerUser, onCustomerSessionChange } from '../../utils/customerSession';
 
 function createRequestId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -277,6 +278,7 @@ export default function DeliveryCheckout() {
   const requestIdRef = useRef(createRequestId());
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [customer, setCustomer] = useState(getCustomerUser());
   const savedAddress = useMemo(initialDeliveryAddress, []);
   const [quote, setQuote] = useState(() => (savedAddress?.addressSelectionToken ? savedAddress?.quote || null : null));
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -311,6 +313,18 @@ export default function DeliveryCheckout() {
     thoiGianNhanMongMuon: '',
     ghiChuDonHang: '',
   });
+
+
+  useEffect(() => onCustomerSessionChange(() => setCustomer(getCustomerUser())), []);
+
+  useEffect(() => {
+    if (!customer) return;
+    setForm((current) => ({
+      ...current,
+      tenNguoiNhan: current.tenNguoiNhan || customer.hoTen || '',
+      soDienThoaiNhan: current.soDienThoaiNhan || customer.soDienThoai || '',
+    }));
+  }, [customer]);
 
   useEffect(() => {
     let active = true;
@@ -734,34 +748,34 @@ export default function DeliveryCheckout() {
             <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin nhận hàng</h2><p>Nhập thông tin người nhận và chọn cách nhận món</p></div></div>
 
             <div className="delivery-checkout-subsection">
-              <h3>Người nhận</h3>
+              <div className="delivery-recipient-heading-row">
+                <div><h3>Người nhận</h3>{customer ? <p>Đã tự điền từ tài khoản <strong>{customer.hoTen}</strong>.</p> : <p>Không cần tài khoản để đặt món. <Link to="/menu/account/login?next=/menu/checkout">Đăng nhập</Link> nếu muốn tự điền thông tin.</p>}</div>
+              </div>
               <div className="delivery-form-grid two">
                 <label><span>Họ tên người nhận *</span><div><UserRound size={18} /><input required value={form.tenNguoiNhan} onChange={updateField('tenNguoiNhan')} maxLength={120} placeholder="Nguyễn Văn A" /></div></label>
                 <label><span>Số điện thoại *</span><div><Phone size={18} /><input required value={form.soDienThoaiNhan} onChange={updateField('soDienThoaiNhan')} maxLength={20} placeholder="0901234567" inputMode="tel" /></div></label>
               </div>
             </div>
 
-            <div className="delivery-checkout-divider" />
 
             <div className="delivery-checkout-subsection">
               <h3>Phương thức nhận hàng</h3>
               <div className="delivery-receive-methods">
                 <label className={form.phuongThucNhanHang === 'GIAO_TAN_NOI' ? 'active' : ''}>
                   <input type="radio" name="receive-method" value="GIAO_TAN_NOI" checked={form.phuongThucNhanHang === 'GIAO_TAN_NOI'} onChange={updateField('phuongThucNhanHang')} />
-                  <span><MapPin size={20} /></span>
-                  <div><strong>Giao tận nơi</strong><small>Nhập địa chỉ để hệ thống tính quãng đường và phí giao hàng</small></div>
-                  <CheckCircle2 size={19} />
+                  <img className="delivery-receive-method-image" src="/delivery-icons/delivery-bike.png" alt="" aria-hidden="true" />
+                  <div><strong>Giao hàng tận nơi</strong><small>Đơn sẽ được giao đến địa chỉ của bạn</small></div>
+                  <span className="delivery-receive-method-check" aria-hidden="true" />
                 </label>
                 <label className={form.phuongThucNhanHang === 'TU_DEN_LAY' ? 'active' : ''}>
                   <input type="radio" name="receive-method" value="TU_DEN_LAY" checked={form.phuongThucNhanHang === 'TU_DEN_LAY'} onChange={(event) => { updateField('phuongThucNhanHang')(event); setQuote(null); setQuoteError(''); setQuoteLoading(false); }} />
-                  <span><ShoppingBag size={20} /></span>
-                  <div><strong>Đến lấy tại nhà hàng</strong><small>Không tính phí giao hàng, nhận món tại Lumora</small></div>
-                  <CheckCircle2 size={19} />
+                  <img className="delivery-receive-method-image" src="/delivery-icons/pickup-bag.png" alt="" aria-hidden="true" />
+                  <div><strong>Nhận tại nhà hàng</strong><small>Đến lấy tại nhà hàng Lumora</small></div>
+                  <span className="delivery-receive-method-check" aria-hidden="true" />
                 </label>
               </div>
             </div>
 
-            <div className="delivery-checkout-divider" />
 
             {isPickup ? (
               <div className="delivery-checkout-subsection">

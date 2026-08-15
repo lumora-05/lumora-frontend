@@ -3661,7 +3661,7 @@
 .loyalty-admin-add{height:44px;border:0;border-radius:10px;background:linear-gradient(135deg,#ff4d00,#ff6600);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 8px 18px rgba(255,77,0,.18)}
 .loyalty-admin-table-card{border:1px solid #e4e9f1;border-radius:13px;background:#fff;box-shadow:0 5px 18px rgba(15,23,42,.04);overflow:hidden}
 .loyalty-admin-table-wrap{overflow:auto}
-.loyalty-admin-table{width:100%;min-width:1120px;border-collapse:collapse}
+.loyalty-admin-table{width:100%;min-width:1420px;border-collapse:collapse}
 .loyalty-admin-table th{background:#f8fafc;color:#677386;padding:13px 15px;border-bottom:1px solid #e8edf4;text-align:left;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
 .loyalty-admin-table td{padding:14px 15px;border-bottom:1px solid #edf1f5;color:#475569;font-size:11px;font-weight:650;vertical-align:middle}
 .loyalty-admin-table tbody tr:hover{background:#fbfcfe}
@@ -3669,11 +3669,18 @@
 .loyalty-points-badge{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border-radius:8px;background:#fff1e8;color:#ff4d00;font-size:10px;font-weight:950;white-space:nowrap}
 .loyalty-status{display:inline-flex;padding:7px 9px;border-radius:8px;font-size:10px;font-weight:900;white-space:nowrap}
 .loyalty-status.active{background:#eaf8ef;color:#168044}
-.loyalty-status.inactive{background:#eef1f5;color:#64748b}
+.loyalty-status.inactive{background:#fff0f0;color:#c43f3f}
+.loyalty-status.guest{background:#f3f5f7;color:#738095}
+.loyalty-customer-type{display:inline-flex;padding:7px 9px;border-radius:8px;font-size:10px;font-weight:900;white-space:nowrap}
+.loyalty-customer-type.member{background:#eef7ff;color:#2469a8}
+.loyalty-customer-type.guest{background:#f5f3ff;color:#6c55a6}
 .loyalty-admin-actions{display:flex;align-items:center;gap:6px}
 .loyalty-admin-actions button{width:34px;height:34px;border:1px solid #dce3ec;border-radius:8px;background:#fff;color:#59677a;display:grid;place-items:center;cursor:pointer}
 .loyalty-admin-actions button:hover{border-color:#ffb892;background:#fff7f2;color:#ff4d00}
 .loyalty-admin-actions button.adjust{border-color:#d8e9dd;color:#1d7c47;background:#f7fcf8}
+.loyalty-admin-actions button.lock-account{border-color:#f2d1d1;color:#c43f3f;background:#fff8f8}
+.loyalty-admin-actions button.unlock-account{border-color:#cfe6d6;color:#168044;background:#f5fbf7}
+.loyalty-admin-actions button:disabled{opacity:.5;cursor:not-allowed}
 .loyalty-admin-empty{text-align:center!important;padding:34px!important;color:#8a96a8!important}
 .loyalty-admin-footer{min-height:60px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;padding:11px 15px;color:#748094;font-size:10px;font-weight:700}
 .loyalty-admin-footer>select{height:35px;border:1px solid #dce3ec;border-radius:8px;background:#fff;color:#526174;padding:0 9px;font-size:10px;font-weight:800}
@@ -3709,6 +3716,8 @@
 .loyalty-history-table td{padding:12px;border-bottom:1px solid #edf1f5;color:#526174;font-size:11px;vertical-align:top}
 .loyalty-history-table .points-plus{color:#168044}
 .loyalty-history-table .points-minus{color:#d33b3b}
+.loyalty-order-history-table{min-width:820px}
+.loyalty-order-status{display:inline-flex;padding:6px 8px;border-radius:7px;background:#f1f5f9;color:#526174;font-size:10px;font-weight:850;white-space:nowrap}
 
 @media(max-width:980px){
   .loyalty-policy-grid{grid-template-columns:1fr}

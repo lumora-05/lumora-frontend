@@ -3,21 +3,25 @@ import {
   ChefHat,
   Clock3,
   LoaderCircle,
+  LogIn,
   MapPin,
   Plus,
   Search,
   ShieldCheck,
   ShoppingBag,
+  UserRound,
   UtensilsCrossed,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
 import { useCart } from '../../context/CartContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { categoryApi, menuApi } from '../../api/menuApi';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
+import { continueAsGuest, getCustomerUser, hasContinuedAsGuest } from '../../utils/customerSession';
 
 
 function unwrapRows(response) {
@@ -44,17 +48,19 @@ function categoryName(category) {
   return category?.tenDanhMuc ?? category?.name ?? 'Danh mục';
 }
 
+const PENDING_ADD_KEY = 'lumora_delivery_pending_add';
 
 export default function DeliveryMenu() {
   const cart = useCart();
   const toast = useToast();
+  const navigate = useNavigate();
   const [foods, setFoods] = useState([]);
   const [categories, setCategories] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const [authChoiceFood, setAuthChoiceFood] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -80,6 +86,20 @@ export default function DeliveryMenu() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!getCustomerUser() && !hasContinuedAsGuest()) return;
+    const raw = sessionStorage.getItem(PENDING_ADD_KEY);
+    if (!raw) return;
+
+    sessionStorage.removeItem(PENDING_ADD_KEY);
+    try {
+      const pendingFood = JSON.parse(raw);
+      if (pendingFood) performAddToCart(pendingFood);
+    } catch {
+      // Bỏ qua dữ liệu tạm không hợp lệ.
+    }
+  }, []);
+
   const filteredFoods = useMemo(() => {
     const query = keyword.trim().toLocaleLowerCase('vi');
     return foods.filter((food) => {
@@ -92,7 +112,7 @@ export default function DeliveryMenu() {
     });
   }, [foods, keyword, selectedCategory]);
 
-  function addToCart(food) {
+  function performAddToCart(food) {
     const id = foodId(food);
     const existing = cart.items.find((item) => String(foodId(item)) === String(id));
     if (!existing && cart.items.length >= 30) {
@@ -112,6 +132,29 @@ export default function DeliveryMenu() {
       id: 'delivery-add-cart',
       duration: 1200,
     });
+  }
+
+  function addToCart(food) {
+    if (!getCustomerUser() && !hasContinuedAsGuest()) {
+      setAuthChoiceFood(food);
+      return;
+    }
+    performAddToCart(food);
+  }
+
+  function continueWithoutLogin() {
+    const food = authChoiceFood;
+    continueAsGuest();
+    setAuthChoiceFood(null);
+    if (food) performAddToCart(food);
+  }
+
+  function loginBeforeAdding() {
+    if (authChoiceFood) {
+      sessionStorage.setItem(PENDING_ADD_KEY, JSON.stringify(authChoiceFood));
+    }
+    setAuthChoiceFood(null);
+    navigate('/menu/account/login?next=/menu');
   }
 
   return (
@@ -220,6 +263,34 @@ export default function DeliveryMenu() {
           <span>{cart.count} suất món</span>
           <strong>{formatMoney(cart.total)}</strong>
         </Link>
+      ) : null}
+
+      {authChoiceFood ? (
+        <div className="delivery-account-choice-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setAuthChoiceFood(null)}>
+          <section className="delivery-account-choice-modal" role="dialog" aria-modal="true" aria-labelledby="delivery-account-choice-title" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="delivery-account-choice-close" type="button" onClick={() => setAuthChoiceFood(null)} aria-label="Đóng">
+              <X size={18} />
+            </button>
+            <span className="delivery-account-choice-icon"><UserRound size={24} /></span>
+            <span className="delivery-account-choice-kicker">Đặt món tại LUMORA</span>
+            <h2 id="delivery-account-choice-title">Bạn muốn tiếp tục như thế nào?</h2>
+            <p>Đăng nhập để lưu lịch sử đơn hàng và tích điểm, hoặc tiếp tục đặt món mà không cần tài khoản.</p>
+            <div className="delivery-account-choice-food">
+              <ShoppingBag size={18} />
+              <span>Món đang chọn</span>
+              <strong>{authChoiceFood?.tenMonAn || 'Món ăn'}</strong>
+            </div>
+            <div className="delivery-account-choice-actions">
+              <button type="button" className="primary" onClick={loginBeforeAdding}>
+                <LogIn size={18} /> Đăng nhập
+              </button>
+              <button type="button" className="secondary" onClick={continueWithoutLogin}>
+                Tiếp tục không đăng nhập
+              </button>
+            </div>
+            <small>Bạn chỉ cần chọn một lần trong phiên đặt món này.</small>
+          </section>
+        </div>
       ) : null}
     </main>
   );

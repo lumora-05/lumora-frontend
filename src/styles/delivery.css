@@ -497,20 +497,156 @@
   flex:none!important;
 }
 
-/* ===== Phương thức nhận hàng: giao tận nơi / đến lấy tại nhà hàng ===== */
+/* ===== Phương thức nhận hàng: giao tận nơi / nhận tại nhà hàng ===== */
 .delivery-receive-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.delivery-receive-methods label{position:relative;min-height:82px;padding:14px;border:1px solid #dfe4e9;border-radius:15px;display:flex;align-items:center;gap:11px;cursor:pointer;background:#fff}
-.delivery-receive-methods label.active{border-color:#f47c38;background:#fff8f3;box-shadow:0 0 0 2px rgba(244,124,56,.08)}
+.delivery-receive-methods label{position:relative;min-height:76px;padding:13px 42px 13px 14px;border:1px solid #e2e5e9;border-radius:10px;display:flex;align-items:center;gap:12px;cursor:pointer;background:#fff;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}
+.delivery-receive-methods label:hover{border-color:#f1b48d}
+.delivery-receive-methods label.active{border-color:#ff7a24;background:#fffaf6;box-shadow:0 0 0 1px rgba(255,122,36,.06)}
 .delivery-receive-methods input{position:absolute;opacity:0;pointer-events:none}
-.delivery-receive-methods label>span{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#eb641c;background:#fff0e6;flex:none}
+.delivery-receive-method-image{width:46px;height:46px;object-fit:contain;flex:none}
 .delivery-receive-methods label>div{flex:1;min-width:0}
-.delivery-receive-methods strong{display:block;color:#303944;font-size:13px}
-.delivery-receive-methods small{display:block;margin-top:4px;color:#89929c;font-size:10px;line-height:1.4}
-.delivery-receive-methods label>svg{color:#d8dde3;flex:none}
-.delivery-receive-methods label.active>svg{color:#f06a20}
+.delivery-receive-methods strong{display:block;color:#303944;font-size:13px;font-weight:850}
+.delivery-receive-methods small{display:block;margin-top:4px;color:#8a939e;font-size:10px;line-height:1.4}
+.delivery-receive-method-check{position:absolute;top:14px;right:14px;width:15px;height:15px;border:1.5px solid #cfd5dc;border-radius:50%;background:#fff;box-sizing:border-box}
+.delivery-receive-methods label.active .delivery-receive-method-check{border-color:#f26b1d;background:#f26b1d}
+.delivery-receive-methods label.active .delivery-receive-method-check:after{content:"";position:absolute;left:4px;top:2px;width:4px;height:7px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg)}
 .delivery-pickup-location{padding:15px;border:1px solid #dce5df;border-radius:14px;display:flex;align-items:flex-start;gap:11px;background:#f7fcf9}
 .delivery-pickup-location>svg{flex:none;margin-top:1px;color:#24885a}
 .delivery-pickup-location strong,.delivery-pickup-location span{display:block}
 .delivery-pickup-location strong{color:#2f3944;font-size:13px}
 .delivery-pickup-location span{margin-top:4px;color:#6f7b86;font-size:11px;line-height:1.5}
 @media(max-width:680px){.delivery-receive-methods{grid-template-columns:1fr}}
+
+/* ===== Tài khoản khách hàng tùy chọn ===== */
+.delivery-customer-account-link{min-height:42px;padding:0 12px;border:1px solid #e3e7ec;border-radius:12px;display:inline-flex;align-items:center;gap:7px;color:#596573;background:#fff;text-decoration:none;font-size:12px;font-weight:850;white-space:nowrap}
+.delivery-customer-account-link:hover{color:#e85b17;border-color:#f2cbb4;background:#fff8f3}
+.delivery-home-account-link{border:0;background:transparent;color:#746b64}.delivery-home-account-link:hover{background:transparent}
+.delivery-recipient-heading-row{margin-bottom:12px}.delivery-recipient-heading-row h3{margin-bottom:4px}.delivery-recipient-heading-row p{margin:0;color:#89929d;font-size:10px;line-height:1.5}.delivery-recipient-heading-row p strong{color:#525d69}.delivery-recipient-heading-row p a{color:#e85b17;font-weight:850;text-decoration:none}
+.delivery-customer-auth-wrap{min-height:calc(100vh - 77px);padding:48px 20px;display:grid;place-items:start center;box-sizing:border-box}
+.delivery-customer-auth-card{width:min(430px,100%);padding:30px;border:1px solid #e7ebef;border-radius:22px;background:#fff;box-shadow:0 18px 50px rgba(15,23,42,.07);text-align:center}
+.delivery-customer-auth-icon{width:52px;height:52px;margin:0 auto 15px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#ff841b,#f4510b)}
+.delivery-customer-auth-card h1{margin:0;color:#28323d;font-size:25px}.delivery-customer-auth-card>p{margin:9px 0 22px;color:#7d8792;font-size:12px;line-height:1.6}
+.delivery-customer-auth-card form{display:grid;gap:13px;text-align:left}.delivery-customer-auth-card form label{display:grid;gap:7px;color:#596573;font-size:11px;font-weight:850}.delivery-customer-auth-card form label>div{min-height:47px;padding:0 12px;border:1px solid #dce2e8;border-radius:12px;display:flex;align-items:center;gap:8px}.delivery-customer-auth-card form input{width:100%;border:0;outline:0;background:transparent;font:inherit}.delivery-customer-auth-card form svg{color:#9aa4af}.delivery-customer-auth-card form>button{min-height:48px;margin-top:3px;border:0;border-radius:12px;color:#fff;background:linear-gradient(90deg,#ff7d15,#f4510b);font-size:13px;font-weight:900;cursor:pointer}.delivery-customer-auth-card form>button:disabled{opacity:.6}
+.delivery-customer-auth-switch,.delivery-customer-auth-guest{width:100%;margin-top:13px;border:0;background:transparent;color:#e85b17;text-align:center;font-size:11px;font-weight:850;cursor:pointer;text-decoration:none;display:block}.delivery-customer-auth-guest{margin-top:15px;padding-top:15px;border-top:1px solid #edf0f3;color:#687381}
+.delivery-account-page{padding:40px 0 70px}.delivery-account-hero{padding:22px;border:1px solid #e6eaee;border-radius:20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;background:#fff}.delivery-account-hero>span{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;color:#e85b17;background:#fff1e7}.delivery-account-hero small{color:#e85b17;font-size:9px;font-weight:950;letter-spacing:.12em}.delivery-account-hero h1{margin:3px 0;font-size:22px}.delivery-account-hero p{margin:0;color:#858f9a;font-size:11px}.delivery-account-hero button{min-height:40px;padding:0 12px;border:1px solid #e1e6eb;border-radius:11px;display:flex;align-items:center;gap:7px;color:#64707c;background:#fff;font-size:11px;font-weight:850;cursor:pointer}
+.delivery-account-stats{margin-top:15px;display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.delivery-account-stats article{padding:18px;border:1px solid #e6eaee;border-radius:16px;background:#fff}.delivery-account-stats svg{color:#e85b17}.delivery-account-stats span{display:block;margin:10px 0 4px;color:#7b8691;font-size:10px}.delivery-account-stats strong{font-size:21px}
+.delivery-account-orders{margin-top:15px;padding:21px;border:1px solid #e6eaee;border-radius:18px;background:#fff}.delivery-account-section-title{display:flex;align-items:center;justify-content:space-between;gap:15px}.delivery-account-section-title>div{display:flex;align-items:center;gap:10px}.delivery-account-section-title svg{color:#e85b17}.delivery-account-section-title span{display:flex;flex-direction:column}.delivery-account-section-title strong{font-size:14px}.delivery-account-section-title small{margin-top:2px;color:#8b949e;font-size:9px}.delivery-account-section-title>a{padding:9px 12px;border-radius:10px;color:#fff;background:#2b3540;text-decoration:none;font-size:10px;font-weight:850}.delivery-account-order-list{margin-top:17px;display:grid;gap:9px}.delivery-account-order-list>a{padding:13px;border:1px solid #edf0f3;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#37414c;text-decoration:none}.delivery-account-order-list>a:hover{border-color:#efcbb7;background:#fffaf7}.delivery-account-order-list>a>div{display:flex;flex-direction:column;gap:4px}.delivery-account-order-list>a>div:last-child{text-align:right}.delivery-account-order-list span{color:#7c8792;font-size:10px}.delivery-account-order-list strong{font-size:12px}.delivery-account-empty{margin:20px 0 2px;color:#87919c;font-size:11px}
+@media(max-width:680px){.delivery-customer-account-link span{display:none}.delivery-account-page{width:100%;padding:22px 12px 50px;box-sizing:border-box}.delivery-account-hero{grid-template-columns:auto 1fr}.delivery-account-hero button{grid-column:1/-1;justify-content:center}.delivery-account-stats{grid-template-columns:1fr 1fr}.delivery-account-order-list>a{align-items:flex-start;flex-direction:column}.delivery-account-order-list>a>div:last-child{text-align:left}.delivery-customer-auth-card{padding:23px}.delivery-customer-auth-wrap{padding:28px 12px}}
+
+/* Hỏi đăng nhập/khách vãng lai ở lần đầu thêm món. */
+.delivery-account-choice-backdrop{
+  position:fixed;
+  z-index:1450;
+  inset:0;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(32,25,20,.54);
+  backdrop-filter:blur(5px);
+}
+.delivery-account-choice-modal{
+  position:relative;
+  width:min(470px,100%);
+  box-sizing:border-box;
+  padding:30px;
+  border:1px solid rgba(255,255,255,.76);
+  border-radius:22px;
+  background:#fffdfa;
+  box-shadow:0 28px 80px rgba(37,27,20,.24);
+  text-align:center;
+}
+.delivery-account-choice-close{
+  position:absolute;
+  top:15px;
+  right:15px;
+  width:36px;
+  height:36px;
+  padding:0;
+  border:1px solid #eadfd6;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  color:#6f655e;
+  background:#fff;
+  cursor:pointer;
+}
+.delivery-account-choice-icon{
+  width:54px;
+  height:54px;
+  margin:0 auto 14px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:linear-gradient(135deg,#fb7a1e,#e65308);
+  box-shadow:0 12px 24px rgba(234,88,12,.22);
+}
+.delivery-account-choice-kicker{
+  display:block;
+  color:#e75c13;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.delivery-account-choice-modal h2{
+  margin:8px 36px 0;
+  color:#2d241f;
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:25px;
+  line-height:1.25;
+}
+.delivery-account-choice-modal>p{
+  margin:10px auto 0;
+  max-width:380px;
+  color:#746a63;
+  font-size:13px;
+  line-height:1.6;
+}
+.delivery-account-choice-food{
+  margin-top:20px;
+  padding:12px 14px;
+  border:1px solid #ebe1d9;
+  border-radius:13px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  column-gap:9px;
+  align-items:center;
+  color:#e65f19;
+  background:#fff;
+  text-align:left;
+}
+.delivery-account-choice-food svg{grid-row:1/3}
+.delivery-account-choice-food span{color:#9a9089;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.delivery-account-choice-food strong{overflow:hidden;color:#3d332d;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.delivery-account-choice-actions{margin-top:18px;display:grid;gap:9px}
+.delivery-account-choice-actions button{
+  min-height:46px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font:inherit;
+  font-size:13px;
+  font-weight:850;
+  cursor:pointer;
+}
+.delivery-account-choice-actions .primary{
+  border:0;
+  color:#fff;
+  background:linear-gradient(135deg,#fb7a1e,#e65308);
+  box-shadow:0 10px 22px rgba(234,88,12,.2);
+}
+.delivery-account-choice-actions .secondary{
+  border:1px solid #e5ddd7;
+  color:#5e554f;
+  background:#fff;
+}
+.delivery-account-choice-modal>small{display:block;margin-top:13px;color:#9a918b;font-size:10px;line-height:1.45}
+@media(max-width:680px){
+  .delivery-account-choice-backdrop{padding:0;align-items:flex-end}
+  .delivery-account-choice-modal{width:100%;padding:26px 20px 24px;border-radius:22px 22px 0 0}
+  .delivery-account-choice-modal h2{margin-inline:30px;font-size:23px}
+}

@@ -1,13 +1,15 @@
-import { ArrowLeft, Bike, Search, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Bike, Search, ShoppingBag, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { imageUrl } from '../../utils/imageUrl';
+import { getCustomerUser, onCustomerSessionChange } from '../../utils/customerSession';
 
 export default function DeliveryPublicHeader({ compact = false, homeStyle = false }) {
   const cart = useCart();
   const [settings, setSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [customer, setCustomer] = useState(getCustomerUser());
 
   useEffect(() => {
     let active = true;
@@ -20,6 +22,8 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
       .catch(() => {});
     return () => { active = false; };
   }, []);
+
+  useEffect(() => onCustomerSessionChange(() => setCustomer(getCustomerUser())), []);
 
   const logo = imageUrl(settings.logoUrl);
 
@@ -44,6 +48,9 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
           </nav>
 
           <div className="delivery-header-actions">
+            <Link className="delivery-customer-account-link delivery-home-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
+              <UserRound size={18} /><span>{customer ? customer.hoTen?.split(' ').slice(-1)[0] || 'Tài khoản' : 'Đăng nhập'}</span>
+            </Link>
             <Link className="delivery-cart-button delivery-home-cart-button" to="/menu/checkout">
               <ShoppingBag size={18} />
               <span>Giỏ hàng</span>
@@ -77,6 +84,9 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
         </nav>
 
         <div className="delivery-header-actions">
+          <Link className="delivery-customer-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
+            <UserRound size={17} /><span>{customer ? 'Tài khoản' : 'Đăng nhập'}</span>
+          </Link>
           <Link className="delivery-back-home" to="/"><ArrowLeft size={17} /> Trang chủ</Link>
           <Link className="delivery-cart-button" to="/menu/checkout">
             <ShoppingBag size={18} />

@@ -1045,3 +1045,46 @@
   line-height: 1.4;
   text-align: center;
 }
+
+/* Tài khoản khách hàng dùng chung ngôn ngữ giao diện với cổng đăng nhập nhân viên. */
+.lumora-customer-login-options{
+  display:grid;
+  gap:9px;
+}
+.lumora-customer-mode-switch,
+.lumora-customer-guest-button{
+  min-height:43px;
+  padding:0 14px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font:inherit;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+  transition:border-color .18s ease,background .18s ease,color .18s ease,transform .18s ease;
+}
+.lumora-customer-mode-switch{
+  border:1px solid #e5ddd7;
+  color:#5f554e;
+  background:#fff;
+}
+.lumora-customer-mode-switch:hover:not(:disabled){
+  border-color:#f0b58d;
+  color:#c94c08;
+  background:#fff8f3;
+}
+.lumora-customer-guest-button{
+  border:1px solid transparent;
+  color:#7b716a;
+  background:#f7f4f2;
+}
+.lumora-customer-guest-button:hover:not(:disabled){
+  color:#3f352f;
+  background:#f0ece9;
+  transform:translateY(-1px);
+}
+.lumora-customer-mode-switch:disabled,
+.lumora-customer-guest-button:disabled{opacity:.6;cursor:not-allowed}
