@@ -434,3 +434,20 @@
 .delivery-address-suggestion-empty.error{color:#a84f3d;background:#fff8f6}
 .delivery-address-selection-help{display:block!important;margin-top:-1px;color:#8b949e!important;font-size:9px!important;font-weight:650!important;line-height:1.45}
 .delivery-address-selection-help.success{color:#27845a!important}
+
+/* Fix checkout address layout: keep address fields in normal content flow. */
+.delivery-address-grid{
+  height:auto!important;
+  min-height:0!important;
+  grid-auto-rows:max-content;
+  align-content:start;
+}
+.delivery-address-grid>*,
+.delivery-address-grid>.delivery-form-wide{
+  min-height:0!important;
+  height:auto!important;
+  align-self:start;
+}
+.delivery-address-grid .delivery-address-autocomplete-field{
+  margin-bottom:0!important;
+}
