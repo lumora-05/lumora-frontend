@@ -19,7 +19,6 @@ import {
   RefreshCcw,
   Search,
   ShieldAlert,
-  Trash2,
   WalletCards,
   X,
 } from 'lucide-react';
@@ -35,7 +34,6 @@ import FoodSafetyWorkspace from '../../components/inventory/FoodSafetyWorkspace'
 const emptyIngredient = {
   tenNguyenLieu: '',
   donViTinh: 'kg',
-  soLuongTon: '0',
   mucTonToiThieu: '0',
   giaNhap: '',
   moTa: '',
@@ -43,7 +41,7 @@ const emptyIngredient = {
 };
 
 const emptyAdjustment = {
-  loaiGiaoDich: 'NHAP',
+  loaiGiaoDich: 'DIEU_CHINH',
   soLuong: '',
   donGiaNhap: '',
   lyDo: '',
@@ -151,7 +149,7 @@ function transactionMeta(type) {
   if (type === 'XUAT') return { label: 'Xuất kho', className: 'export', Icon: ArrowUp };
   if (type === 'DIEU_CHINH') return { label: 'Điều chỉnh', className: 'adjust', Icon: RefreshCcw };
   if (type === 'TIEU_HUY') return { label: 'Tiêu hủy', className: 'waste', Icon: Recycle };
-  return { label: 'Nhập kho', className: 'import', Icon: ArrowDown };
+  return { label: 'Nhập lô', className: 'import', Icon: ArrowDown };
 }
 
 function physicalStock(row) {
@@ -166,16 +164,22 @@ function pendingDisposal(row) {
   return Number(row?.soLuongChoTieuHuy ?? 0);
 }
 
-function StatCard({ icon: Icon, label, value, note, tone }) {
+function StatCard({ icon: Icon, label, value, note, tone, onClick, title }) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div className={`inventory-stat-card ${tone}`}>
+    <Tag
+      type={onClick ? 'button' : undefined}
+      className={`inventory-stat-card ${tone}${onClick ? ' clickable' : ''}`}
+      onClick={onClick}
+      title={title}
+    >
       <span className="inventory-stat-icon"><Icon size={23} /></span>
       <div>
         <span>{label}</span>
         <strong>{value}</strong>
         <small>{note}</small>
       </div>
-    </div>
+    </Tag>
   );
 }
 
@@ -305,6 +309,8 @@ export default function InventoryManage() {
   const [wasteBatchOptions, setWasteBatchOptions] = useState([]);
   const [wasteOptionsLoading, setWasteOptionsLoading] = useState(false);
   const [wasteForm, setWasteForm] = useState(emptyWaste);
+  const [wastePickerModal, setWastePickerModal] = useState(false);
+  const [wastePickerIngredient, setWastePickerIngredient] = useState('');
   const [wasteStatistics, setWasteStatistics] = useState({
     soLanTieuHuy: 0,
     soNguyenLieuAnhHuong: 0,
@@ -312,15 +318,6 @@ export default function InventoryManage() {
     tongGiaTriTieuHuy: 0,
     theoLyDo: [],
   });
-  const [wasteTransactions, setWasteTransactions] = useState([]);
-  const [wastePage, setWastePage] = useState(0);
-  const [wasteSize, setWasteSize] = useState(10);
-  const [wasteTotalElements, setWasteTotalElements] = useState(0);
-  const [wasteTotalPages, setWasteTotalPages] = useState(0);
-  const [wasteNumberOfElements, setWasteNumberOfElements] = useState(0);
-  const [wasteIngredientFilter, setWasteIngredientFilter] = useState('ALL');
-  const [wasteFrom, setWasteFrom] = useState('');
-  const [wasteTo, setWasteTo] = useState('');
 
   async function loadStatistics() {
     try {
@@ -426,7 +423,7 @@ export default function InventoryManage() {
       setTransactionTotalPages(result.totalPages);
       setTransactionNumberOfElements(result.numberOfElements);
     } catch (error) {
-      toast.error(errorMessageOf(error, 'Không thể tải lịch sử nhập xuất kho'));
+      toast.error(errorMessageOf(error, 'Không thể tải lịch sử kho'));
     } finally {
       setLoading(false);
     }
@@ -442,36 +439,15 @@ export default function InventoryManage() {
   }
 
   async function loadWasteData() {
-    setLoading(true);
     try {
-      const [statisticsResponse, transactionsResponse] = await Promise.all([
-        inventoryApi.getWasteStatistics({
-          from: wasteFrom || undefined,
-          to: wasteTo || undefined,
-        }),
-        inventoryApi.getTransactions({
-          page: wastePage,
-          size: wasteSize,
-          ingredientId: wasteIngredientFilter === 'ALL' ? undefined : Number(wasteIngredientFilter),
-          type: 'TIEU_HUY',
-          from: wasteFrom || undefined,
-          to: wasteTo || undefined,
-        }),
-      ]);
+      const statisticsResponse = await inventoryApi.getWasteStatistics({
+        ingredientId: transactionIngredient === 'ALL' ? undefined : Number(transactionIngredient),
+        from: fromDate || undefined,
+        to: toDate || undefined,
+      });
       setWasteStatistics((current) => ({ ...current, ...(unwrapData(statisticsResponse, {}) || {}) }));
-      const result = normalizePage(transactionsResponse, wasteSize);
-      if (result.totalPages > 0 && wastePage >= result.totalPages) {
-        setWastePage(result.totalPages - 1);
-        return;
-      }
-      setWasteTransactions(result.content);
-      setWasteTotalElements(result.totalElements);
-      setWasteTotalPages(result.totalPages);
-      setWasteNumberOfElements(result.numberOfElements);
     } catch (error) {
       toast.error(errorMessageOf(error, 'Không thể tải thống kê tiêu hủy và hao hụt'));
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -497,16 +473,12 @@ export default function InventoryManage() {
   }, [tab, transactionPage, transactionSize, transactionType, transactionIngredient, fromDate, toDate]);
 
   useEffect(() => {
-    if (tab === 'waste') loadWasteData();
-  }, [tab, wastePage, wasteSize, wasteIngredientFilter, wasteFrom, wasteTo]);
+    if (tab === 'history' && transactionType === 'TIEU_HUY') loadWasteData();
+  }, [tab, transactionType, transactionIngredient, fromDate, toDate]);
 
   const totalInventoryValue = useMemo(
     () => formatMoney(statistics.tongGiaTriTonKho || 0),
     [statistics.tongGiaTriTonKho],
-  );
-  const usableInventoryValue = useMemo(
-    () => formatMoney(statistics.tongGiaTriTonKhaDung ?? statistics.tongGiaTriTonKho ?? 0),
-    [statistics.tongGiaTriTonKhaDung, statistics.tongGiaTriTonKho],
   );
   const pendingDisposalValue = useMemo(
     () => formatMoney(statistics.tongGiaTriChoTieuHuy || 0),
@@ -524,7 +496,6 @@ export default function InventoryManage() {
     setForm({
       tenNguyenLieu: row.tenNguyenLieu || '',
       donViTinh: row.donViTinh || 'kg',
-      soLuongTon: String(row.soLuongTon ?? 0),
       mucTonToiThieu: String(row.mucTonToiThieu ?? 0),
       giaNhap: row.giaNhap == null ? '' : String(row.giaNhap),
       moTa: row.moTa || '',
@@ -552,17 +523,16 @@ export default function InventoryManage() {
     }
 
     const minimum = Number(form.mucTonToiThieu || 0);
-    const initialStock = Number(form.soLuongTon || 0);
     const price = form.giaNhap === '' ? null : Number(form.giaNhap);
-    if (minimum < 0 || initialStock < 0 || (price != null && price < 0)) {
-      toast.error('Số lượng và giá nhập không được âm');
+    if (minimum < 0 || (price != null && price < 0)) {
+      toast.error('Tồn tối thiểu và giá tham khảo không được âm');
       return;
     }
 
     const payload = {
       tenNguyenLieu: form.tenNguyenLieu.trim(),
       donViTinh: form.donViTinh.trim(),
-      soLuongTon: editing ? null : initialStock,
+      soLuongTon: editing ? null : 0,
       mucTonToiThieu: minimum,
       giaNhap: price,
       moTa: form.moTa.trim() || null,
@@ -588,13 +558,13 @@ export default function InventoryManage() {
     }
   }
 
-  function openStock(row, type = 'NHAP', batch = null) {
+  function openStock(row, type = 'DIEU_CHINH', batch = null) {
     setSelectedIngredient(row);
     setSelectedBatch(batch);
     setAdjustment({
       ...emptyAdjustment,
       loaiGiaoDich: batch ? 'DIEU_CHINH' : type,
-      donGiaNhap: type === 'NHAP' && row.giaNhap != null ? String(row.giaNhap) : '',
+      donGiaNhap: '',
       soLuong: batch ? String(batch.soLuongConLai ?? 0) : '',
     });
     setStockModal(true);
@@ -614,7 +584,7 @@ export default function InventoryManage() {
     if (!Number.isFinite(amount) || amount < 0 || (adjustment.loaiGiaoDich !== 'DIEU_CHINH' && amount <= 0)) {
       toast.error(adjustment.loaiGiaoDich === 'DIEU_CHINH'
         ? 'Số tồn sau kiểm kho phải từ 0 trở lên'
-        : 'Số lượng nhập hoặc xuất phải lớn hơn 0');
+        : 'Số lượng xuất phải lớn hơn 0');
       return;
     }
 
@@ -626,22 +596,16 @@ export default function InventoryManage() {
       return;
     }
 
-    const unitPrice = adjustment.donGiaNhap === '' ? null : Number(adjustment.donGiaNhap);
-    if (unitPrice != null && (!Number.isFinite(unitPrice) || unitPrice < 0)) {
-      toast.error('Đơn giá nhập không hợp lệ');
-      return;
-    }
-
     setSaving(true);
     try {
       const response = await inventoryApi.adjustStock(selectedIngredient.maNguyenLieu, {
         loaiGiaoDich: adjustment.loaiGiaoDich,
         soLuong: amount,
         maLo: selectedBatch?.maLo || null,
-        donGiaNhap: adjustment.loaiGiaoDich === 'NHAP' ? unitPrice : null,
+        donGiaNhap: null,
         lyDo: adjustment.lyDo.trim() || null,
       });
-      toast.success(messageOf(response, 'Cập nhật tồn kho thành công'));
+      toast.success(messageOf(response, 'Điều chỉnh tồn kho thành công'));
       setStockModal(false);
       setSelectedIngredient(null);
       setSelectedBatch(null);
@@ -651,7 +615,7 @@ export default function InventoryManage() {
       if (tab === 'batches') await Promise.all([loadBatches(), loadBatchStatistics()]);
       if (tab === 'history') await loadTransactions();
     } catch (error) {
-      toast.error(errorMessageOf(error, 'Cập nhật tồn kho thất bại'));
+      toast.error(errorMessageOf(error, 'Điều chỉnh tồn kho thất bại'));
     } finally {
       setSaving(false);
     }
@@ -737,13 +701,52 @@ export default function InventoryManage() {
       await Promise.all([loadStatistics(), loadIngredientOptions()]);
       if (tab === 'ingredients') await loadIngredients();
       if (tab === 'batches') await Promise.all([loadBatches(), loadBatchStatistics()]);
-      if (tab === 'history') await loadTransactions();
-      if (tab === 'waste') await loadWasteData();
+      if (tab === 'history') {
+        await loadTransactions();
+        if (transactionType === 'TIEU_HUY') await loadWasteData();
+      }
     } catch (error) {
       toast.error(errorMessageOf(error, 'Ghi nhận tiêu hủy thất bại'));
     } finally {
       setSaving(false);
     }
+  }
+
+  function showIngredientStock(stockStatusCode = 'ALL') {
+    setTab('ingredients');
+    setStockFilter(stockStatusCode);
+    setActiveFilter('true');
+    setPage(0);
+  }
+
+  function showPendingDisposal() {
+    setTab('batches');
+    setBatchExpiry('HET_HAN');
+    setBatchActive('true');
+    setBatchPage(0);
+  }
+
+  function openWasteFromHistory() {
+    const selected = ingredientOptions.find((item) => String(item.maNguyenLieu) === String(transactionIngredient));
+    if (selected && physicalStock(selected) > 0) {
+      openWaste(selected);
+      return;
+    }
+    setWastePickerIngredient('');
+    setWastePickerModal(true);
+  }
+
+  function continueWasteFromPicker() {
+    const selected = ingredientOptions.find((item) => String(item.maNguyenLieu) === String(wastePickerIngredient));
+    if (!selected) {
+      toast.error('Vui lòng chọn nguyên liệu cần ghi nhận tiêu hủy');
+      return;
+    }
+    setWastePickerModal(false);
+    setTransactionIngredient(String(selected.maNguyenLieu));
+    setTransactionType('TIEU_HUY');
+    setTransactionPage(0);
+    openWaste(selected);
   }
 
   function deactivate(row) {
@@ -944,46 +947,37 @@ export default function InventoryManage() {
     : 'Bạn có chắc chắn muốn ngừng sử dụng nguyên liệu này không?';
   const confirmName = confirmDialog?.type === 'batch' ? confirmDialog?.row?.soLo : confirmDialog?.row?.tenNguyenLieu;
   const confirmWarning = confirmDialog?.type === 'batch'
-    ? 'Lô nguyên liệu sẽ bị ngừng sử dụng trong kho. Lịch sử nhập xuất và thông tin hạn sử dụng vẫn được giữ lại.'
-    : 'Nguyên liệu sẽ bị ngừng sử dụng trong kho. Lịch sử nhập xuất vẫn được giữ lại để đối soát.';
+    ? 'Lô nguyên liệu sẽ bị ngừng sử dụng trong kho. Lịch sử kho và thông tin hạn sử dụng vẫn được giữ lại; dữ liệu không bị xóa.'
+    : 'Nguyên liệu sẽ bị ngừng sử dụng trong kho. Lịch sử kho vẫn được giữ lại để đối soát; dữ liệu không bị xóa.';
   const confirmButtonText = confirmDialog?.type === 'batch' ? 'Ngừng sử dụng lô' : 'Ngừng sử dụng';
 
   return (
     <section className="inventory-page">
       <div className="inventory-stat-grid">
-        <StatCard icon={Boxes} label="Tổng nguyên liệu" value={statistics.tongNguyenLieu || 0} note={`${statistics.dangHoatDong || 0} đang sử dụng`} tone="orange" />
-        <StatCard
-          icon={PackageCheck}
-          label="Còn hàng"
-          value={Math.max(0, Number(statistics.dangHoatDong || 0) - Number(statistics.sapHet || 0) - Number(statistics.hetHang || 0))}
-          note="Tính theo tồn khả dụng"
-          tone="green"
-        />
-        <StatCard icon={AlertTriangle} label="Sắp hết" value={statistics.sapHet || 0} note="Cần lên kế hoạch nhập thêm" tone="yellow" />
-        <StatCard icon={Package} label="Hết hàng" value={statistics.hetHang || 0} note="Tồn khả dụng đã hết" tone="red" />
-        <StatCard icon={WalletCards} label="Tồn vật lý" value={totalInventoryValue} note="Bao gồm hàng chờ tiêu hủy" tone="blue" />
-        <StatCard icon={PackageCheck} label="Tồn khả dụng" value={usableInventoryValue} note="Được phép xuất và chế biến" tone="teal" />
+        <StatCard icon={Boxes} label="Tổng nguyên liệu" value={statistics.tongNguyenLieu || 0} note={`${statistics.dangHoatDong || 0} đang sử dụng`} tone="orange" onClick={() => showIngredientStock('ALL')} title="Xem tất cả nguyên liệu đang sử dụng" />
+        <StatCard icon={AlertTriangle} label="Sắp hết" value={statistics.sapHet || 0} note="Bấm để lọc nguyên liệu cần nhập thêm" tone="yellow" onClick={() => showIngredientStock('SAP_HET')} title="Lọc nguyên liệu sắp hết" />
+        <StatCard icon={Package} label="Hết hàng" value={statistics.hetHang || 0} note="Bấm để lọc nguyên liệu đã hết" tone="red" onClick={() => showIngredientStock('HET_HANG')} title="Lọc nguyên liệu hết hàng" />
+        <StatCard icon={WalletCards} label="Giá trị tồn kho" value={totalInventoryValue} note="Tổng giá trị nguyên liệu đang ghi nhận trong kho" tone="blue" onClick={() => showIngredientStock('ALL')} title="Xem danh sách nguyên liệu" />
         <StatCard
           icon={Recycle}
-          label="Chờ tiêu hủy"
-          value={pendingDisposalValue}
-          note={`${statistics.soLoChoTieuHuy || 0} lô · ${statistics.soNguyenLieuCoHangChoTieuHuy || 0} nguyên liệu`}
+          label="Chờ xử lý"
+          value={statistics.soNguyenLieuCoHangChoTieuHuy || 0}
+          note={`${statistics.soLoChoTieuHuy || 0} lô · ${pendingDisposalValue}`}
           tone="purple"
+          onClick={showPendingDisposal}
+          title="Xem các lô hết hạn/cần xử lý"
         />
       </div>
 
       <div className="inventory-tabs">
         <button type="button" className={tab === 'ingredients' ? 'active' : ''} onClick={() => setTab('ingredients')}>
-          <Boxes size={18} /> Danh sách nguyên liệu
+          <Boxes size={18} /> Nguyên liệu
         </button>
         <button type="button" className={tab === 'batches' ? 'active' : ''} onClick={() => setTab('batches')}>
           <Layers3 size={18} /> Lô & hạn sử dụng
         </button>
-        <button type="button" className={tab === 'waste' ? 'active' : ''} onClick={() => setTab('waste')}>
-          <Recycle size={18} /> Tiêu hủy & hao hụt
-        </button>
         <button type="button" className={tab === 'history' ? 'active' : ''} onClick={() => setTab('history')}>
-          <History size={18} /> Lịch sử nhập xuất
+          <History size={18} /> Lịch sử kho
         </button>
         <button type="button" className={tab === 'traceability' ? 'active' : ''} onClick={() => setTab('traceability')}>
           <ShieldAlert size={18} /> Truy xuất & sự cố
@@ -1015,44 +1009,46 @@ export default function InventoryManage() {
             <div className="inventory-table-scroll">
               <table className="inventory-table inventory-ingredient-table">
                 <thead>
-                  <tr>
-                    <th>Nguyên liệu</th><th>Đơn vị</th><th>Tồn vật lý</th><th>Tồn khả dụng</th><th>Chờ tiêu hủy</th><th>Mức tối thiểu</th><th>Giá nhập</th><th>Giá trị khả dụng</th><th>Trạng thái</th><th>Thao tác</th>
-                  </tr>
+                  <tr><th>Nguyên liệu</th><th>Đơn vị</th><th>Tồn kho</th><th>Tồn tối thiểu</th><th>Giá tham khảo</th><th>Trạng thái</th><th>Thao tác</th></tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan="10" className="inventory-empty">Đang tải dữ liệu...</td></tr>
+                    <tr><td colSpan="7" className="inventory-empty">Đang tải dữ liệu...</td></tr>
                   ) : rows.length ? rows.map((row) => {
                     const status = stockStatus(row);
-                    const inventoryValue = Number(row.giaTriTonKhaDung ?? usableStock(row) * Number(row.giaNhap || 0));
                     return (
                       <tr key={row.maNguyenLieu}>
                         <td><div className="inventory-name-cell"><span><Package size={19} /></span><div><strong>{row.tenNguyenLieu}</strong><small>{row.moTa || 'Chưa có mô tả'}</small></div></div></td>
                         <td><span className="inventory-unit">{row.donViTinh}</span></td>
-                        <td><strong className="inventory-quantity">{quantity(physicalStock(row))}</strong></td>
-                        <td><strong className={`inventory-quantity ${status.className}`}>{quantity(usableStock(row))}</strong></td>
                         <td>
-                          {pendingDisposal(row) > 0
-                            ? <span className="inventory-pending-waste">{quantity(pendingDisposal(row))}</span>
-                            : <span className="inventory-zero-waste">0</span>}
+                          <div className="inventory-stock-cell">
+                            <strong>{quantity(physicalStock(row))} {row.donViTinh}</strong>
+                            <small><span>Có thể sử dụng:</span> {quantity(usableStock(row))} {row.donViTinh}</small>
+                            {pendingDisposal(row) > 0 && <small className="pending"><span>Chờ xử lý:</span> {quantity(pendingDisposal(row))} {row.donViTinh}</small>}
+                          </div>
                         </td>
-                        <td>{quantity(row.mucTonToiThieu)}</td>
+                        <td>{quantity(row.mucTonToiThieu)} {row.donViTinh}</td>
                         <td>{row.giaNhap == null ? '—' : formatMoney(row.giaNhap)}</td>
-                        <td><strong>{formatMoney(inventoryValue)}</strong></td>
                         <td><span className={`inventory-status ${status.className}`}>{status.label}</span></td>
                         <td>
-                          <div className="inventory-actions">
-                            <button type="button" title="Cập nhật tồn kho" onClick={() => openStock(row)} disabled={row.trangThai === false}><RefreshCcw size={17} /></button>
-                            <button type="button" title="Ghi nhận tiêu hủy hoặc hao hụt" className="waste" onClick={() => openWaste(row)} disabled={physicalStock(row) <= 0}><Recycle size={17} /></button>
-                            <button type="button" title="Xem lô và hạn sử dụng" onClick={() => viewIngredientBatches(row)}><Layers3 size={17} /></button>
-                            <button type="button" title="Sửa nguyên liệu" onClick={() => openEdit(row)}><Pencil size={17} /></button>
-                            <button type="button" title="Ngừng sử dụng" className="danger" onClick={() => deactivate(row)} disabled={row.trangThai === false}><Trash2 size={17} /></button>
+                          <div className="inventory-actions inventory-actions-friendly">
+                            <button type="button" className="inventory-primary-row-action" onClick={() => openCreateBatch(row.maNguyenLieu)} disabled={row.trangThai === false}><Plus size={15} /> Nhập lô</button>
+                            <details className="inventory-action-menu">
+                              <summary title="Thêm thao tác">⋮</summary>
+                              <div>
+                                <button type="button" onClick={() => viewIngredientBatches(row)}><Layers3 size={15} /> Xem lô</button>
+                                <button type="button" onClick={() => openStock(row, 'DIEU_CHINH')} disabled={row.trangThai === false}><RefreshCcw size={15} /> Điều chỉnh tồn</button>
+                                <button type="button" onClick={() => openWaste(row)} disabled={physicalStock(row) <= 0}><Recycle size={15} /> Ghi nhận tiêu hủy</button>
+                                <button type="button" onClick={() => openEdit(row)}><Pencil size={15} /> Sửa nguyên liệu</button>
+                                <button type="button" className="danger" onClick={() => deactivate(row)} disabled={row.trangThai === false}><Ban size={15} /> Ngừng sử dụng</button>
+                              </div>
+                            </details>
                           </div>
                         </td>
                       </tr>
                     );
                   }) : (
-                    <tr><td colSpan="10" className="inventory-empty">Không tìm thấy nguyên liệu phù hợp</td></tr>
+                    <tr><td colSpan="7" className="inventory-empty">Không tìm thấy nguyên liệu phù hợp</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1068,7 +1064,7 @@ export default function InventoryManage() {
             <BatchStat icon={Layers3} label="Tổng số lô" value={batchStatistics.tongSoLo || 0} note={`${batchStatistics.loDangSuDung || 0} lô đang sử dụng`} tone="neutral" />
             <BatchStat icon={Clock3} label="Sắp hết hạn" value={batchStatistics.loSapHetHan || 0} note={`Trong ${warningDays} ngày tới`} tone="warning" />
             <BatchStat icon={ShieldAlert} label="Đã hết hạn" value={batchStatistics.loDaHetHan || 0} note="Không được xuất sử dụng" tone="danger" />
-            <BatchStat icon={Recycle} label="Chờ tiêu hủy" value={formatMoney(batchStatistics.giaTriLoDaHetHan || 0)} note="Giá trị các lô đã hết hạn" tone="value" />
+            <BatchStat icon={Recycle} label="Giá trị lô hết hạn" value={formatMoney(batchStatistics.giaTriLoDaHetHan || 0)} note="Các lô đã hết hạn, không được xuất sử dụng" tone="value" />
           </div>
 
           <div className="inventory-batch-toolbar">
@@ -1107,11 +1103,11 @@ export default function InventoryManage() {
             <div className="inventory-table-scroll">
               <table className="inventory-table inventory-batch-table">
                 <thead>
-                  <tr><th>Nguyên liệu</th><th>Số lô</th><th>Ngày nhập</th><th>Hạn sử dụng</th><th>Tồn vật lý</th><th>Khả dụng</th><th>Chờ tiêu hủy</th><th>Giá nhập</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                  <tr><th>Nguyên liệu</th><th>Số lô</th><th>Ngày nhập</th><th>Hạn sử dụng</th><th>Tồn kho</th><th>Giá nhập</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Thao tác</th></tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan="11" className="inventory-empty">Đang tải dữ liệu...</td></tr>
+                    <tr><td colSpan="9" className="inventory-empty">Đang tải dữ liệu...</td></tr>
                   ) : batchRows.length ? batchRows.map((row) => {
                     const status = expiryStatus(row);
                     const ingredient = batchIngredientObject(row);
@@ -1121,34 +1117,34 @@ export default function InventoryManage() {
                         <td><strong className="inventory-lot-code">{row.soLo}</strong></td>
                         <td><div className="inventory-date-cell"><strong>{dateOnly(row.ngayNhap)}</strong>{row.ngaySanXuat && <small>NSX: {dateOnly(row.ngaySanXuat)}</small>}</div></td>
                         <td><div className="inventory-date-cell"><strong>{dateOnly(row.hanSuDung)}</strong>{status.note && <small className={status.className}>{status.note}</small>}</div></td>
-                        <td><strong>{quantity(row.soLuongConLai)} {row.donViTinh}</strong><small className="inventory-mobile-note">Ban đầu: {quantity(row.soLuongBanDau)}</small></td>
-                        <td><strong className="inventory-usable-batch">{quantity(row.soLuongKhaDung ?? row.soLuongConLai)} {row.donViTinh}</strong></td>
                         <td>
-                          {Number(row.soLuongChoTieuHuy || 0) > 0
-                            ? <span className="inventory-pending-waste">{quantity(row.soLuongChoTieuHuy)} {row.donViTinh}</span>
-                            : <span className="inventory-zero-waste">0</span>}
+                          <div className="inventory-stock-cell batch">
+                            <strong>{quantity(row.soLuongConLai)} {row.donViTinh}</strong>
+                            <small><span>Có thể sử dụng:</span> {quantity(row.soLuongKhaDung ?? row.soLuongConLai)} {row.donViTinh}</small>
+                            {Number(row.soLuongChoTieuHuy || 0) > 0 && <small className="pending"><span>Chờ xử lý:</span> {quantity(row.soLuongChoTieuHuy)} {row.donViTinh}</small>}
+                          </div>
                         </td>
                         <td>{row.donGiaNhap == null ? '—' : formatMoney(row.donGiaNhap)}</td>
                         <td className="inventory-supplier">{row.nhaCungCap || '—'}</td>
+                        <td><div className="inventory-batch-status-stack"><span className={`inventory-expiry-status ${status.className}`}>{status.label}</span><span className={`inventory-safety-status ${safetyStatus(row).className}`}>{safetyStatus(row).label}</span></div></td>
                         <td>
-                          <div className="inventory-batch-status-stack">
-                            <span className={`inventory-expiry-status ${status.className}`}>{status.label}</span>
-                            <span className={`inventory-safety-status ${safetyStatus(row).className}`}>{safetyStatus(row).label}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="inventory-actions">
-                            <button type="button" title="Truy xuất và xử lý sự cố lô" className="safety" onClick={() => { setTraceBatchId(row.maLo); setTab('traceability'); }}><ShieldAlert size={17} /></button>
-                            <button type="button" title="Nhập, xuất hoặc kiểm kho lô" onClick={() => openStock(ingredient, 'DIEU_CHINH', row)} disabled={row.trangThai === false}><RefreshCcw size={17} /></button>
-                            <button type="button" title={row.trangThaiHanSuDung === 'HET_HAN' ? 'Tiêu hủy lô hết hạn' : 'Ghi nhận hao hụt của lô'} className="waste" onClick={() => openWaste(ingredient, row)} disabled={Number(row.soLuongConLai || 0) <= 0 || row.choPhepTieuHuy === false}><Recycle size={17} /></button>
-                            <button type="button" title="Sửa thông tin lô" onClick={() => openEditBatch(row)}><Pencil size={17} /></button>
-                            <button type="button" title="Ngừng sử dụng lô" className="danger" onClick={() => deactivateBatch(row)} disabled={row.trangThai === false || Number(row.soLuongConLai || 0) > 0}><Trash2 size={17} /></button>
+                          <div className="inventory-actions inventory-actions-friendly">
+                            <button type="button" className="inventory-primary-row-action" onClick={() => openStock(ingredient, 'DIEU_CHINH', row)} disabled={row.trangThai === false}><RefreshCcw size={15} /> Điều chỉnh</button>
+                            <details className="inventory-action-menu">
+                              <summary title="Thêm thao tác">⋮</summary>
+                              <div>
+                                <button type="button" onClick={() => { setTraceBatchId(row.maLo); setTab('traceability'); }}><ShieldAlert size={15} /> Truy xuất lô</button>
+                                <button type="button" onClick={() => openWaste(ingredient, row)} disabled={Number(row.soLuongConLai || 0) <= 0 || row.choPhepTieuHuy === false}><Recycle size={15} /> Ghi nhận tiêu hủy</button>
+                                <button type="button" onClick={() => openEditBatch(row)}><Pencil size={15} /> Sửa lô</button>
+                                <button type="button" className="danger" onClick={() => deactivateBatch(row)} disabled={row.trangThai === false || Number(row.soLuongConLai || 0) > 0}><Ban size={15} /> Ngừng sử dụng</button>
+                              </div>
+                            </details>
                           </div>
                         </td>
                       </tr>
                     );
                   }) : (
-                    <tr><td colSpan="11" className="inventory-empty">Không tìm thấy lô nguyên liệu phù hợp</td></tr>
+                    <tr><td colSpan="9" className="inventory-empty">Không tìm thấy lô nguyên liệu phù hợp</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1158,75 +1154,7 @@ export default function InventoryManage() {
         </>
       )}
 
-      {tab === 'waste' && (
-        <>
-          <div className="inventory-waste-summary">
-            <BatchStat icon={Recycle} label="Số lần tiêu hủy" value={wasteStatistics.soLanTieuHuy || 0} note="Trong khoảng thời gian đã chọn" tone="danger" />
-            <BatchStat icon={Package} label="Nguyên liệu ảnh hưởng" value={wasteStatistics.soNguyenLieuAnhHuong || 0} note="Số nguyên liệu có phát sinh hao hụt" tone="warning" />
-            <BatchStat icon={Layers3} label="Số lô ảnh hưởng" value={wasteStatistics.soLoAnhHuong || 0} note="Không tính phần tồn chưa theo lô" tone="neutral" />
-            <BatchStat icon={WalletCards} label="Giá trị hao hụt" value={formatMoney(wasteStatistics.tongGiaTriTieuHuy || 0)} note="Theo đơn giá tại thời điểm ghi nhận" tone="value" />
-          </div>
 
-          <div className="inventory-waste-guide">
-            <span><ClipboardX size={21} /></span>
-            <div>
-              <strong>Ghi nhận đúng nghiệp vụ tiêu hủy</strong>
-              <p>Chọn biểu tượng <Recycle size={14} /> tại danh sách nguyên liệu hoặc từng lô. Hàng hết hạn sẽ bị loại khỏi tồn khả dụng nhưng chỉ giảm khỏi tồn vật lý sau khi xác nhận tiêu hủy.</p>
-            </div>
-          </div>
-
-          <div className="inventory-history-toolbar inventory-waste-toolbar">
-            <select value={wasteIngredientFilter} onChange={(event) => { setWasteIngredientFilter(event.target.value); setWastePage(0); }}>
-              <option value="ALL">Tất cả nguyên liệu</option>
-              {ingredientOptions.map((item) => <option key={item.maNguyenLieu} value={item.maNguyenLieu}>{item.tenNguyenLieu}</option>)}
-            </select>
-            <label><span>Từ ngày</span><input type="date" value={wasteFrom} onChange={(event) => { setWasteFrom(event.target.value); setWastePage(0); }} /></label>
-            <label><span>Đến ngày</span><input type="date" value={wasteTo} onChange={(event) => { setWasteTo(event.target.value); setWastePage(0); }} /></label>
-            <button type="button" className="inventory-clear-filter" onClick={() => { setWasteIngredientFilter('ALL'); setWasteFrom(''); setWasteTo(''); setWastePage(0); }}><X size={17} /> Xóa lọc</button>
-          </div>
-
-          {Array.isArray(wasteStatistics.theoLyDo) && wasteStatistics.theoLyDo.length > 0 && (
-            <div className="inventory-waste-reasons">
-              {wasteStatistics.theoLyDo.map((item) => (
-                <div key={item.maLyDo}>
-                  <span>{item.tenLyDo}</span>
-                  <strong>{item.soLan || 0} lần</strong>
-                  <small>{formatMoney(item.giaTriTieuHuy || 0)}</small>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="inventory-table-card">
-            <div className="inventory-table-scroll">
-              <table className="inventory-table inventory-waste-table">
-                <thead>
-                  <tr><th>Thời gian</th><th>Nguyên liệu</th><th>Lô / Hạn sử dụng</th><th>Số lượng</th><th>Lý do</th><th>Giá trị hao hụt</th><th>Người thực hiện</th><th>Ghi chú</th></tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan="8" className="inventory-empty">Đang tải dữ liệu...</td></tr>
-                  ) : wasteTransactions.length ? wasteTransactions.map((row) => (
-                    <tr key={row.maGiaoDich}>
-                      <td className="inventory-time">{formatDate(row.thoiGian)}</td>
-                      <td><strong>{row.tenNguyenLieu}</strong><small className="inventory-mobile-note">{row.donViTinh}</small></td>
-                      <td>{row.soLo ? <div className="inventory-date-cell"><strong className="inventory-lot-code">{row.soLo}</strong><small>HSD: {dateOnly(row.hanSuDung)}</small></div> : <span className="inventory-untracked-lot">Không theo lô</span>}</td>
-                      <td><strong>{quantity(row.soLuong)} {row.donViTinh}</strong></td>
-                      <td><span className="inventory-waste-reason-badge">{row.lyDo?.split(':')[0] || row.maLyDo || 'Khác'}</span></td>
-                      <td><strong className="inventory-waste-value">{formatMoney(row.giaTriGiaoDich || 0)}</strong></td>
-                      <td>{row.nguoiThucHien || 'Hệ thống'}</td>
-                      <td className="inventory-reason">{row.ghiChu || '—'}</td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan="8" className="inventory-empty">Chưa có giao dịch tiêu hủy phù hợp</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <Pagination page={wastePage} totalPages={wasteTotalPages} size={wasteSize} numberOfElements={wasteNumberOfElements} totalElements={wasteTotalElements} onPage={setWastePage} onSize={(nextSize) => { setWasteSize(nextSize); setWastePage(0); }} noun="giao dịch tiêu hủy" />
-          </div>
-        </>
-      )}
 
       {tab === 'history' && (
         <>
@@ -1236,12 +1164,35 @@ export default function InventoryManage() {
               {ingredientOptions.map((item) => <option key={item.maNguyenLieu} value={item.maNguyenLieu}>{item.tenNguyenLieu}</option>)}
             </select>
             <select value={transactionType} onChange={(event) => { setTransactionType(event.target.value); setTransactionPage(0); }}>
-              <option value="ALL">Tất cả giao dịch</option><option value="NHAP">Nhập kho</option><option value="XUAT">Xuất kho</option><option value="DIEU_CHINH">Điều chỉnh</option><option value="TIEU_HUY">Tiêu hủy / hao hụt</option>
+              <option value="ALL">Tất cả giao dịch</option><option value="NHAP">Nhập lô</option><option value="XUAT">Xuất kho</option><option value="DIEU_CHINH">Điều chỉnh</option><option value="TIEU_HUY">Tiêu hủy / hao hụt</option>
             </select>
             <label><span>Từ ngày</span><input type="date" value={fromDate} onChange={(event) => { setFromDate(event.target.value); setTransactionPage(0); }} /></label>
             <label><span>Đến ngày</span><input type="date" value={toDate} onChange={(event) => { setToDate(event.target.value); setTransactionPage(0); }} /></label>
             <button type="button" className="inventory-clear-filter" onClick={() => { setTransactionIngredient('ALL'); setTransactionType('ALL'); setFromDate(''); setToDate(''); setTransactionPage(0); }}><X size={17} /> Xóa lọc</button>
+            <button type="button" className="inventory-add-btn inventory-waste-action" onClick={openWasteFromHistory}><Recycle size={18} /> Ghi nhận tiêu hủy</button>
           </div>
+
+          {transactionType === 'TIEU_HUY' && (
+            <>
+              <div className="inventory-waste-summary">
+                <BatchStat icon={Recycle} label="Số lần tiêu hủy" value={wasteStatistics.soLanTieuHuy || 0} note="Theo bộ lọc hiện tại" tone="danger" />
+                <BatchStat icon={Package} label="Nguyên liệu ảnh hưởng" value={wasteStatistics.soNguyenLieuAnhHuong || 0} note="Số nguyên liệu phát sinh hao hụt" tone="warning" />
+                <BatchStat icon={Layers3} label="Số lô ảnh hưởng" value={wasteStatistics.soLoAnhHuong || 0} note="Không tính phần tồn chưa theo lô" tone="neutral" />
+                <BatchStat icon={WalletCards} label="Giá trị hao hụt" value={formatMoney(wasteStatistics.tongGiaTriTieuHuy || 0)} note="Theo đơn giá tại thời điểm ghi nhận" tone="value" />
+              </div>
+              {Array.isArray(wasteStatistics.theoLyDo) && wasteStatistics.theoLyDo.length > 0 && (
+                <div className="inventory-waste-reasons">
+                  {wasteStatistics.theoLyDo.map((item) => (
+                    <div key={item.maLyDo}>
+                      <span>{item.tenLyDo}</span>
+                      <strong>{item.soLan || 0} lần</strong>
+                      <small>{formatMoney(item.giaTriTieuHuy || 0)}</small>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
           <div className="inventory-table-card">
             <div className="inventory-table-scroll">
@@ -1299,13 +1250,12 @@ export default function InventoryManage() {
             <div className="inventory-form-grid">
               <label className="full"><span>Tên nguyên liệu *</span><input value={form.tenNguyenLieu} maxLength="150" onChange={(event) => setForm((value) => ({ ...value, tenNguyenLieu: event.target.value }))} placeholder="Ví dụ: Thịt bò" /></label>
               <label><span>Đơn vị tính *</span><input value={form.donViTinh} maxLength="30" onChange={(event) => setForm((value) => ({ ...value, donViTinh: event.target.value }))} placeholder="kg, g, lít..." /></label>
-              <label><span>Mức tồn tối thiểu *</span><input type="number" min="0" step="0.001" value={form.mucTonToiThieu} onChange={(event) => setForm((value) => ({ ...value, mucTonToiThieu: event.target.value }))} /></label>
-              <label><span>{editing ? 'Tồn kho hiện tại' : 'Tồn kho ban đầu'}</span><input type="number" min="0" step="0.001" value={form.soLuongTon} disabled={Boolean(editing)} onChange={(event) => setForm((value) => ({ ...value, soLuongTon: event.target.value }))} /></label>
-              <label><span>Giá nhập</span><input type="number" min="0" step="1000" value={form.giaNhap} onChange={(event) => setForm((value) => ({ ...value, giaNhap: event.target.value }))} placeholder="0" /></label>
+              <label><span>Tồn tối thiểu *</span><input type="number" min="0" step="0.001" value={form.mucTonToiThieu} onChange={(event) => setForm((value) => ({ ...value, mucTonToiThieu: event.target.value }))} /></label>
+              <label><span>Giá tham khảo</span><input type="number" min="0" step="1000" value={form.giaNhap} onChange={(event) => setForm((value) => ({ ...value, giaNhap: event.target.value }))} placeholder="0" /></label>
               <label className="full"><span>Mô tả</span><textarea rows="3" maxLength="500" value={form.moTa} onChange={(event) => setForm((value) => ({ ...value, moTa: event.target.value }))} placeholder="Thông tin bảo quản hoặc ghi chú..." /></label>
               <label className="inventory-toggle full"><input type="checkbox" checked={form.trangThai} onChange={(event) => setForm((value) => ({ ...value, trangThai: event.target.checked }))} /><span><b>Đang sử dụng</b><small>Nguyên liệu được hiển thị và cho phép nhập xuất kho</small></span></label>
             </div>
-            {editing && <p className="inventory-form-note">Số lượng tồn được thay đổi tại chức năng <b>Cập nhật tồn kho</b> để lưu đúng lịch sử nhập, xuất và kiểm kho.</p>}
+            {editing ? <p className="inventory-form-note">Số lượng tồn được thay đổi tại chức năng <b>Điều chỉnh tồn</b> để lưu đúng lịch sử kho.</p> : <p className="inventory-form-note">Nguyên liệu mới bắt đầu với tồn kho bằng <b>0</b>. Khi hàng về, hãy dùng <b>Nhập lô mới</b> tại tab Lô & hạn sử dụng.</p>}
             <div className="inventory-modal-actions"><button type="button" className="secondary" onClick={closeIngredientModal}>Hủy</button><button type="submit" className="primary" disabled={saving}>{saving ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Thêm nguyên liệu'}</button></div>
           </form>
         </div>
@@ -1336,6 +1286,21 @@ export default function InventoryManage() {
         </div>
       )}
 
+      {wastePickerModal && (
+        <div className="inventory-modal-backdrop" onMouseDown={() => setWastePickerModal(false)}>
+          <div className="inventory-modal inventory-picker-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="inventory-modal-head">
+              <div><span>GHI NHẬN TIÊU HỦY</span><h3>Chọn nguyên liệu</h3><p>Chọn nguyên liệu cần xử lý. Sau đó hệ thống sẽ cho phép chọn đúng lô và số lượng.</p></div>
+              <button type="button" onClick={() => setWastePickerModal(false)}><X size={21} /></button>
+            </div>
+            <div className="inventory-form-grid">
+              <label className="full"><span>Nguyên liệu *</span><select value={wastePickerIngredient} onChange={(event) => setWastePickerIngredient(event.target.value)}><option value="">Chọn nguyên liệu</option>{ingredientOptions.filter((item) => item.trangThai !== false && physicalStock(item) > 0).map((item) => <option key={item.maNguyenLieu} value={item.maNguyenLieu}>{item.tenNguyenLieu} · tồn {quantity(physicalStock(item))} {item.donViTinh}</option>)}</select></label>
+            </div>
+            <div className="inventory-modal-actions"><button type="button" className="secondary" onClick={() => setWastePickerModal(false)}>Hủy</button><button type="button" className="primary waste" onClick={continueWasteFromPicker}>Tiếp tục</button></div>
+          </div>
+        </div>
+      )}
+
       {wasteModal && wasteIngredient && (
         <div className="inventory-modal-backdrop" onMouseDown={closeWasteModal}>
           <form className="inventory-modal inventory-waste-modal" onSubmit={saveWaste} onMouseDown={(event) => event.stopPropagation()}>
@@ -1343,15 +1308,15 @@ export default function InventoryManage() {
               <div>
                 <span>TIÊU HỦY / GHI NHẬN HAO HỤT</span>
                 <h3>{wasteIngredient.tenNguyenLieu}</h3>
-                <p>Giao dịch được lưu riêng, giảm tồn vật lý và giữ đầy đủ lịch sử đối soát.</p>
+                <p>Giao dịch sẽ giảm tổng tồn, ghi nhận giá trị hao hụt và được lưu đầy đủ trong Lịch sử kho.</p>
               </div>
               <button type="button" onClick={closeWasteModal}><X size={21} /></button>
             </div>
 
             <div className="inventory-waste-stock-summary">
-              <div><span>Tồn vật lý</span><strong>{quantity(physicalStock(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
-              <div><span>Tồn khả dụng</span><strong>{quantity(usableStock(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
-              <div className="pending"><span>Chờ tiêu hủy</span><strong>{quantity(pendingDisposal(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
+              <div><span>Tổng tồn</span><strong>{quantity(physicalStock(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
+              <div><span>Có thể sử dụng</span><strong>{quantity(usableStock(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
+              <div className="pending"><span>Chờ xử lý</span><strong>{quantity(pendingDisposal(wasteIngredient))} {wasteIngredient.donViTinh}</strong></div>
             </div>
 
             <div className="inventory-form-grid">
@@ -1415,9 +1380,9 @@ export default function InventoryManage() {
               </label>
             </div>
 
-            {wasteBatchIsExpired && <p className="inventory-form-note inventory-danger-note"><Ban size={15} /> Lô này đã hết hạn, không còn được tính vào tồn khả dụng và không thể xuất chế biến.</p>}
+            {wasteBatchIsExpired && <p className="inventory-form-note inventory-danger-note"><Ban size={15} /> Lô này đã hết hạn, không còn được tính vào lượng có thể sử dụng và không thể xuất chế biến.</p>}
             <div className="inventory-waste-preview">
-              <div><span>Tồn vật lý sau tiêu hủy</span><strong>{quantity(Math.max(0, physicalStock(wasteIngredient) - Number(wasteForm.soLuong || 0)))} {wasteIngredient.donViTinh}</strong></div>
+              <div><span>Tổng tồn sau tiêu hủy</span><strong>{quantity(Math.max(0, physicalStock(wasteIngredient) - Number(wasteForm.soLuong || 0)))} {wasteIngredient.donViTinh}</strong></div>
               <div><span>Giá trị hao hụt dự kiến</span><strong>{formatMoney(wastePreviewValue)}</strong></div>
             </div>
             <div className="inventory-modal-actions"><button type="button" className="secondary" onClick={closeWasteModal}>Hủy</button><button type="submit" className="primary waste" disabled={saving || wasteOptionsLoading || wasteMaximumQuantity <= 0}>{saving ? 'Đang ghi nhận...' : 'Xác nhận tiêu hủy'}</button></div>
@@ -1429,22 +1394,20 @@ export default function InventoryManage() {
         <div className="inventory-modal-backdrop" onMouseDown={closeStockModal}>
           <form className="inventory-modal inventory-stock-modal" onSubmit={saveAdjustment} onMouseDown={(event) => event.stopPropagation()}>
             <div className="inventory-modal-head">
-              <div><span>{selectedBatch ? 'CẬP NHẬT TỒN KHO THEO LÔ' : 'CẬP NHẬT TỒN KHO'}</span><h3>{selectedIngredient.tenNguyenLieu}</h3><p>{selectedBatch ? <>Lô <b>{selectedBatch.soLo}</b> · Còn <b>{quantity(selectedBatch.soLuongConLai)} {selectedIngredient.donViTinh}</b></> : <>Đang tồn: <b>{quantity(selectedIngredient.soLuongTon)} {selectedIngredient.donViTinh}</b></>}</p></div>
+              <div><span>{selectedBatch ? 'ĐIỀU CHỈNH TỒN THEO LÔ' : 'ĐIỀU CHỈNH TỒN KHO'}</span><h3>{selectedIngredient.tenNguyenLieu}</h3><p>{selectedBatch ? <>Lô <b>{selectedBatch.soLo}</b> · Còn <b>{quantity(selectedBatch.soLuongConLai)} {selectedIngredient.donViTinh}</b></> : <>Đang tồn: <b>{quantity(selectedIngredient.soLuongTon)} {selectedIngredient.donViTinh}</b></>}</p></div>
               <button type="button" onClick={closeStockModal}><X size={21} /></button>
             </div>
             <div className="inventory-operation-tabs">
-              <button type="button" className={adjustment.loaiGiaoDich === 'NHAP' ? 'active import' : ''} onClick={() => setAdjustment((value) => ({ ...value, loaiGiaoDich: 'NHAP', soLuong: '', donGiaNhap: selectedBatch?.donGiaNhap == null ? (selectedIngredient.giaNhap == null ? '' : String(selectedIngredient.giaNhap)) : String(selectedBatch.donGiaNhap) }))}><ArrowDown size={18} /> Nhập kho</button>
               <button type="button" className={adjustment.loaiGiaoDich === 'XUAT' ? 'active export' : ''} onClick={() => setAdjustment((value) => ({ ...value, loaiGiaoDich: 'XUAT', soLuong: '', donGiaNhap: '' }))}><ArrowUp size={18} /> Xuất kho</button>
-              <button type="button" className={adjustment.loaiGiaoDich === 'DIEU_CHINH' ? 'active adjust' : ''} onClick={() => setAdjustment((value) => ({ ...value, loaiGiaoDich: 'DIEU_CHINH', soLuong: String(selectedStockAmount), donGiaNhap: '' }))}><RefreshCcw size={18} /> Kiểm kho</button>
+              <button type="button" className={adjustment.loaiGiaoDich === 'DIEU_CHINH' ? 'active adjust' : ''} onClick={() => setAdjustment((value) => ({ ...value, loaiGiaoDich: 'DIEU_CHINH', soLuong: String(selectedStockAmount), donGiaNhap: '' }))}><RefreshCcw size={18} /> Điều chỉnh sau kiểm kê</button>
             </div>
             <div className="inventory-form-grid">
-              <label className={adjustment.loaiGiaoDich === 'NHAP' ? '' : 'full'}><span>{adjustment.loaiGiaoDich === 'DIEU_CHINH' ? 'Số tồn thực tế sau kiểm kho *' : `Số lượng ${adjustment.loaiGiaoDich === 'XUAT' ? 'xuất' : 'nhập'} *`}</span><div className="inventory-number-input"><input type="number" min="0" step="0.001" autoFocus value={adjustment.soLuong} onChange={(event) => setAdjustment((value) => ({ ...value, soLuong: event.target.value }))} /><b>{selectedIngredient.donViTinh}</b></div></label>
-              {adjustment.loaiGiaoDich === 'NHAP' && <label><span>Đơn giá nhập</span><input type="number" min="0" step="1000" value={adjustment.donGiaNhap} onChange={(event) => setAdjustment((value) => ({ ...value, donGiaNhap: event.target.value }))} placeholder="0" /></label>}
-              <label className="full"><span>Lý do / ghi chú</span><textarea rows="3" maxLength="500" value={adjustment.lyDo} onChange={(event) => setAdjustment((value) => ({ ...value, lyDo: event.target.value }))} placeholder={adjustment.loaiGiaoDich === 'NHAP' ? 'Ví dụ: Bổ sung cùng lô...' : adjustment.loaiGiaoDich === 'XUAT' ? 'Ví dụ: Xuất dùng cho bếp...' : 'Ví dụ: Kiểm kê và điều chỉnh theo số lượng thực tế...'} /></label>
+              <label className="full"><span>{adjustment.loaiGiaoDich === 'DIEU_CHINH' ? 'Số tồn thực tế sau kiểm kê *' : 'Số lượng xuất *'}</span><div className="inventory-number-input"><input type="number" min="0" step="0.001" autoFocus value={adjustment.soLuong} onChange={(event) => setAdjustment((value) => ({ ...value, soLuong: event.target.value }))} /><b>{selectedIngredient.donViTinh}</b></div></label>
+              <label className="full"><span>Lý do / ghi chú</span><textarea rows="3" maxLength="500" value={adjustment.lyDo} onChange={(event) => setAdjustment((value) => ({ ...value, lyDo: event.target.value }))} placeholder={adjustment.loaiGiaoDich === 'XUAT' ? 'Ví dụ: Xuất thủ công cho bếp...' : 'Ví dụ: Kiểm kê thực tế và điều chỉnh sai lệch...'} /></label>
             </div>
             {selectedBatch?.trangThaiHanSuDung === 'HET_HAN' && adjustment.loaiGiaoDich === 'XUAT' && <p className="inventory-form-note inventory-danger-note"><Ban size={15} /> Lô này đã hết hạn và không thể xuất sử dụng. Hãy đóng cửa sổ này và dùng nút Tiêu hủy để ghi nhận đúng lịch sử hao hụt.</p>}
             <div className="inventory-preview-balance"><span>{selectedBatch ? 'Số lượng lô sau thao tác' : 'Tồn kho sau thao tác'}</span><strong>{quantity(previewStock)} {selectedIngredient.donViTinh}</strong></div>
-            <div className="inventory-modal-actions"><button type="button" className="secondary" onClick={closeStockModal}>Hủy</button><button type="submit" className="primary" disabled={saving}>{saving ? 'Đang cập nhật...' : 'Xác nhận cập nhật'}</button></div>
+            <div className="inventory-modal-actions"><button type="button" className="secondary" onClick={closeStockModal}>Hủy</button><button type="submit" className="primary" disabled={saving}>{saving ? 'Đang cập nhật...' : 'Xác nhận điều chỉnh'}</button></div>
           </form>
         </div>
       )}
