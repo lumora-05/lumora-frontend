@@ -741,27 +741,25 @@ export default function DeliveryCheckout() {
               </div>
             </div>
 
-            <div className="delivery-checkout-divider" />
 
             <div className="delivery-checkout-subsection">
               <h3>Phương thức nhận hàng</h3>
               <div className="delivery-receive-methods">
                 <label className={form.phuongThucNhanHang === 'GIAO_TAN_NOI' ? 'active' : ''}>
                   <input type="radio" name="receive-method" value="GIAO_TAN_NOI" checked={form.phuongThucNhanHang === 'GIAO_TAN_NOI'} onChange={updateField('phuongThucNhanHang')} />
-                  <span><MapPin size={20} /></span>
-                  <div><strong>Giao tận nơi</strong><small>Nhập địa chỉ để hệ thống tính quãng đường và phí giao hàng</small></div>
-                  <CheckCircle2 size={19} />
+                  <img className="delivery-receive-method-image" src="/delivery-icons/delivery-bike.png" alt="" aria-hidden="true" />
+                  <div><strong>Giao hàng tận nơi</strong><small>Nhân viên sẽ giao đến địa chỉ của bạn</small></div>
+                  <span className="delivery-receive-method-check" aria-hidden="true" />
                 </label>
                 <label className={form.phuongThucNhanHang === 'TU_DEN_LAY' ? 'active' : ''}>
                   <input type="radio" name="receive-method" value="TU_DEN_LAY" checked={form.phuongThucNhanHang === 'TU_DEN_LAY'} onChange={(event) => { updateField('phuongThucNhanHang')(event); setQuote(null); setQuoteError(''); setQuoteLoading(false); }} />
-                  <span><ShoppingBag size={20} /></span>
-                  <div><strong>Đến lấy tại nhà hàng</strong><small>Không tính phí giao hàng, nhận món tại Lumora</small></div>
-                  <CheckCircle2 size={19} />
+                  <img className="delivery-receive-method-image" src="/delivery-icons/pickup-bag.png" alt="" aria-hidden="true" />
+                  <div><strong>Nhận tại nhà hàng</strong><small>Đến lấy tại nhà hàng Lumora</small></div>
+                  <span className="delivery-receive-method-check" aria-hidden="true" />
                 </label>
               </div>
             </div>
 
-            <div className="delivery-checkout-divider" />
 
             {isPickup ? (
               <div className="delivery-checkout-subsection">
