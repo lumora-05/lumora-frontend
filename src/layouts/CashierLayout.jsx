@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, History, ReceiptText, UserRound, X } from 'lucide-react';
+import { Bell, Bike, History, ReceiptText, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
@@ -8,11 +8,13 @@ import { imageUrl } from '../utils/imageUrl';
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
+  { to: '/cashier/delivery-orders', label: 'Đơn đặt online', icon: 'delivery', mobileIcon: Bike },
   { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },  { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
   { to: '/cashier/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
 ];
 
 const pageMeta = {
+  '/cashier/delivery-orders': ['Đơn đặt online', 'Tiếp nhận và xử lý các đơn đặt online của khách hàng'],
   '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
   '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi các yêu cầu thanh toán tại bàn đang cần xử lý'],
   '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
