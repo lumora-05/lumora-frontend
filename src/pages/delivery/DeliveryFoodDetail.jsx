@@ -135,7 +135,7 @@ export default function DeliveryFoodDetail() {
       __deliveryQuantity: quantity,
     }));
     setAuthChoiceOpen(false);
-    navigate(`/menu/account/login?next=${encodeURIComponent(`/menu/foods/${foodId}`)}`);
+    navigate(`/login?next=${encodeURIComponent(`/menu/foods/${foodId}`)}`);
   }
 
   return (

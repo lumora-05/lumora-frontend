@@ -53,7 +53,8 @@ export default function CustomerAccountAuth() {
   const toast = useToast();
   const rawNext = new URLSearchParams(location.search).get('next') || '/menu';
   const next = rawNext.startsWith('/menu') ? rawNext : '/menu';
-  const [mode, setMode] = useState('login');
+  const requestedMode = new URLSearchParams(location.search).get('mode');
+  const [mode, setMode] = useState(requestedMode === 'register' ? 'register' : 'login');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -63,6 +64,11 @@ export default function CustomerAccountAuth() {
   useEffect(() => {
     if (getCustomerUser()) navigate(next, { replace: true });
   }, [navigate, next]);
+
+  useEffect(() => {
+    if (mode !== 'login') return;
+    navigate(`/login?next=${encodeURIComponent(next)}`, { replace: true });
+  }, [mode, navigate, next]);
 
   useEffect(() => {
     let active = true;
@@ -82,7 +88,11 @@ export default function CustomerAccountAuth() {
   };
 
   function switchMode() {
-    setMode((current) => current === 'login' ? 'register' : 'login');
+    if (mode === 'register') {
+      navigate(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    setMode('register');
     setError('');
     setShowPassword(false);
   }
@@ -110,17 +120,15 @@ export default function CustomerAccountAuth() {
     setError('');
     setLoading(true);
     try {
-      const response = mode === 'register'
-        ? await customerAccountApi.register({ hoTen: name, soDienThoai: phone, matKhau: password })
-        : await customerAccountApi.login({ soDienThoai: phone, matKhau: password });
+      const response = await customerAccountApi.register({ hoTen: name, soDienThoai: phone, matKhau: password });
       const auth = unwrapDeliveryResponse(response);
       saveCustomerSession(auth);
-      toast.success(mode === 'register' ? 'Đăng ký thành công.' : 'Đăng nhập thành công.');
+      toast.success('Đăng ký thành công.');
       navigate(next, { replace: true });
     } catch (requestError) {
       const message = errorMessageOf(
         requestError,
-        mode === 'register' ? 'Không thể đăng ký tài khoản.' : 'Số điện thoại hoặc mật khẩu không chính xác.'
+        'Không thể đăng ký tài khoản.'
       );
       setError(message);
       toast.error(message);
@@ -177,12 +185,8 @@ export default function CustomerAccountAuth() {
           <div className="lumora-login-form-wrap">
             <div className="lumora-login-heading">
               <span>Tài khoản khách hàng</span>
-              <h2>{mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</h2>
-              <p>
-                {mode === 'login'
-                  ? 'Đăng nhập để tự điền thông tin, xem lịch sử đơn và tích điểm.'
-                  : 'Tạo tài khoản bằng số điện thoại để sử dụng các tiện ích dành cho thành viên.'}
-              </p>
+              <h2>Đăng ký</h2>
+              <p>Tạo tài khoản bằng số điện thoại để sử dụng các tiện ích dành cho thành viên.</p>
             </div>
 
             <form className="lumora-login-form" onSubmit={submit} noValidate>
@@ -193,7 +197,7 @@ export default function CustomerAccountAuth() {
                 </div>
               )}
 
-              {mode === 'register' ? (
+              {
                 <label className="lumora-login-field">
                   <span>Họ tên</span>
                   <div className="lumora-login-input-wrap">
@@ -209,7 +213,7 @@ export default function CustomerAccountAuth() {
                     />
                   </div>
                 </label>
-              ) : null}
+              }
 
               <label className="lumora-login-field">
                 <span>Số điện thoại</span>
@@ -238,8 +242,8 @@ export default function CustomerAccountAuth() {
                     type={showPassword ? 'text' : 'password'}
                     value={form.matKhau}
                     onChange={change('matKhau')}
-                    placeholder={mode === 'register' ? 'Tối thiểu 6 ký tự' : 'Nhập mật khẩu'}
-                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                    placeholder="Tối thiểu 6 ký tự"
+                    autoComplete="new-password"
                     minLength={6}
                     maxLength={100}
                     disabled={loading}
@@ -265,7 +269,7 @@ export default function CustomerAccountAuth() {
                   </>
                 ) : (
                   <>
-                    {mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+                    Đăng ký
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -276,7 +280,7 @@ export default function CustomerAccountAuth() {
 
             <div className="lumora-customer-login-options">
               <button type="button" className="lumora-customer-mode-switch" onClick={switchMode} disabled={loading}>
-                {mode === 'login' ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập'}
+                Đã có tài khoản? Đăng nhập
               </button>
               <button type="button" className="lumora-customer-guest-button" onClick={handleContinueAsGuest} disabled={loading}>
                 Tiếp tục không đăng nhập <ArrowRight size={16} />

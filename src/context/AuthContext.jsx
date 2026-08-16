@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import { authApi } from '../api/authApi';
+import { clearCustomerSession, saveCustomerSession } from '../utils/customerSession';
 
 const AuthContext = createContext(null);
 
@@ -15,6 +16,12 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data));
+
+    const role = String(data.role || data.tenVaiTro || data.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    if (role === 'CUSTOMER') {
+      saveCustomerSession(data);
+    }
+
     setUser(data);
     return data;
   };
@@ -38,6 +45,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    const role = String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    if (role === 'CUSTOMER') clearCustomerSession();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);

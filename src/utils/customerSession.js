@@ -44,6 +44,18 @@ export function clearCustomerSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   sessionStorage.removeItem(GUEST_CONTINUE_KEY);
+
+  try {
+    const sharedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    const role = String(sharedUser?.role || sharedUser?.tenVaiTro || sharedUser?.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    if (role === 'CUSTOMER') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+  } catch {
+    // Không ảnh hưởng phiên khách hàng nếu dữ liệu phiên dùng chung không hợp lệ.
+  }
+
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 

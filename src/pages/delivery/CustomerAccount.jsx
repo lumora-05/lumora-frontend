@@ -16,7 +16,7 @@ export default function CustomerAccount() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!getCustomerToken()) { navigate('/menu/account/login', { replace: true }); return; }
+    if (!getCustomerToken()) { navigate('/login?next=/menu/account', { replace: true }); return; }
     Promise.all([customerAccountApi.me(), customerAccountApi.orders()])
       .then(([meResponse, ordersResponse]) => {
         const me = unwrapDeliveryResponse(meResponse);
@@ -29,7 +29,7 @@ export default function CustomerAccount() {
       .catch((error) => {
         clearCustomerSession();
         toast.error(errorMessageOf(error, 'Phiên đăng nhập đã hết hạn.'));
-        navigate('/menu/account/login', { replace: true });
+        navigate('/login?next=/menu/account', { replace: true });
       })
       .finally(() => setLoading(false));
   }, [navigate, toast]);

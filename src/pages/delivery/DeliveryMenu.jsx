@@ -153,7 +153,7 @@ export default function DeliveryMenu() {
       sessionStorage.setItem(PENDING_ADD_KEY, JSON.stringify(authChoiceFood));
     }
     setAuthChoiceFood(null);
-    navigate('/menu/account/login?next=/menu');
+    navigate('/login?next=/menu');
   }
 
   return (

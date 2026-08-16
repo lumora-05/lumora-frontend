@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   ChefHat,
@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   LockKeyhole,
   ReceiptText,
+  ShoppingBag,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -28,11 +29,13 @@ const getHomePath = (role = '') => {
   if (normalizedRole === 'WAITER') return '/waiter';
   if (normalizedRole === 'KITCHEN') return '/kitchen';
   if (normalizedRole === 'CASHIER') return '/cashier';
+  if (normalizedRole === 'CUSTOMER') return '/menu/account';
 
-  return '/admin';
+  return '/';
 };
 
 const roleItems = [
+  { icon: ShoppingBag, label: 'Khách hàng' },
   { icon: LayoutDashboard, label: 'Quản trị' },
   { icon: UtensilsCrossed, label: 'Phục vụ' },
   { icon: ChefHat, label: 'Bếp' },
@@ -55,6 +58,7 @@ function LoginBrandLogo({ restaurantName, logoUrl }) {
 export default function Login() {
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, loginWithGoogle, user } = useAuth();
   const [form, setForm] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -79,9 +83,14 @@ export default function Login() {
     return () => { active = false; };
   }, []);
 
+  const requestedNext = new URLSearchParams(location.search).get('next') || '';
+  const customerNext = requestedNext.startsWith('/menu') ? requestedNext : '/menu/account';
+
   useEffect(() => {
-    if (user?.role) navigate(getHomePath(user.role), { replace: true });
-  }, [navigate, user]);
+    if (!user?.role) return;
+    const normalizedRole = String(user.role).replace('ROLE_', '');
+    navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(user.role), { replace: true });
+  }, [customerNext, navigate, user]);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -93,7 +102,7 @@ export default function Login() {
 
     const username = form.username.trim();
     if (!username || !form.password) {
-      setError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
+      setError('Vui lòng nhập tên đăng nhập hoặc số điện thoại và mật khẩu.');
       return;
     }
 
@@ -103,9 +112,10 @@ export default function Login() {
     try {
       const loggedInUser = await login(username, form.password);
 
-      navigate(getHomePath(loggedInUser.role), { replace: true });
+      const normalizedRole = String(loggedInUser.role || '').replace('ROLE_', '');
+      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(loggedInUser.role), { replace: true });
     } catch (requestError) {
-      const message = errorMessageOf(requestError, 'Tên đăng nhập hoặc mật khẩu không chính xác.');
+      const message = errorMessageOf(requestError, 'Tên đăng nhập, số điện thoại hoặc mật khẩu không chính xác.');
       setError(message);
       toast.error(message);
     } finally {
@@ -135,7 +145,7 @@ export default function Login() {
 
   return (
     <main className="lumora-login-page">
-      <section className="lumora-login-shell" aria-label="Đăng nhập hệ thống quản lý nhà hàng LUMORA">
+      <section className="lumora-login-shell" aria-label="Đăng nhập LUMORA">
         <aside className="lumora-login-showcase">
           <div className="lumora-login-orb lumora-login-orb-one" />
           <div className="lumora-login-orb lumora-login-orb-two" />
@@ -153,11 +163,11 @@ export default function Login() {
           <div className="lumora-login-copy">
             <span className="lumora-login-eyebrow">
               <Sparkles size={13} />
-              Hệ thống quản lý nhà hàng
+              Tài khoản LUMORA
             </span>
             <h1>Chào mừng bạn đến với LUMORA</h1>
             <p>
-              Đơn giản hóa vận hành, nâng cao trải nghiệm phục vụ mỗi ngày.
+              Một cổng đăng nhập chung dành cho khách hàng và đội ngũ vận hành nhà hàng.
             </p>
           </div>
 
@@ -181,9 +191,9 @@ export default function Login() {
 
           <div className="lumora-login-form-wrap">
             <div className="lumora-login-heading">
-              <span>Cổng nhân viên</span>
+              <span>Tài khoản hệ thống</span>
               <h2>Đăng nhập</h2>
-              <p>Sử dụng tài khoản do quản trị viên cấp để vào khu vực làm việc.</p>
+              <p>Khách hàng dùng số điện thoại; nhân viên dùng tên đăng nhập được cấp.</p>
             </div>
 
             <form className="lumora-login-form" onSubmit={submit} noValidate>
@@ -195,14 +205,14 @@ export default function Login() {
               )}
 
               <label className="lumora-login-field">
-                <span>Tên đăng nhập</span>
+                <span>Tên đăng nhập / Số điện thoại</span>
                 <div className="lumora-login-input-wrap">
                   <UserRound size={17} aria-hidden="true" />
                   <input
                     name="username"
                     value={form.username}
                     onChange={updateField('username')}
-                    placeholder="Nhập tên đăng nhập"
+                    placeholder="Tên đăng nhập hoặc số điện thoại"
                     autoComplete="username"
                     autoFocus
                     disabled={isSubmitting}
@@ -238,6 +248,7 @@ export default function Login() {
 
               <div className="lumora-login-form-tools">
                 <Link to="/forgot-password">Quên mật khẩu?</Link>
+                <Link to={`/menu/account/login?mode=register&next=${encodeURIComponent(customerNext)}`}>Đăng ký khách hàng</Link>
               </div>
 
               <button className="lumora-login-submit" type="submit" disabled={isSubmitting}>
@@ -274,11 +285,11 @@ export default function Login() {
 
             <div className="lumora-login-security">
               <ShieldCheck size={15} />
-              <span>Quyền truy cập được thiết lập theo vai trò nhân viên.</span>
+              <span>Hệ thống tự xác định vai trò và chuyển đến đúng khu vực sau khi đăng nhập.</span>
             </div>
           </div>
 
-          <p className="lumora-login-copyright">© 2026 LUMORA · Hệ thống quản lý nhà hàng</p>
+          <p className="lumora-login-copyright">© 2026 LUMORA · Nhà hàng & đặt món trực tuyến</p>
         </div>
       </section>
     </main>

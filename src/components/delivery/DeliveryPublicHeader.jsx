@@ -50,7 +50,7 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
 
           <div className="delivery-header-actions">
             <LanguageSwitcher compact />
-            <Link className="delivery-customer-account-link delivery-home-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
+            <Link className="delivery-customer-account-link delivery-home-account-link" to={customer ? '/menu/account' : '/login?next=/menu/account'}>
               <UserRound size={18} /><span>{customer ? customer.hoTen?.split(' ').slice(-1)[0] || 'Tài khoản' : 'Đăng nhập'}</span>
             </Link>
             <Link className="delivery-cart-button delivery-home-cart-button" to="/menu/checkout">
@@ -87,7 +87,7 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
 
         <div className="delivery-header-actions">
           <LanguageSwitcher compact />
-          <Link className="delivery-customer-account-link" to={customer ? '/menu/account' : '/menu/account/login'}>
+          <Link className="delivery-customer-account-link" to={customer ? '/menu/account' : '/login?next=/menu/account'}>
             <UserRound size={17} /><span>{customer ? 'Tài khoản' : 'Đăng nhập'}</span>
           </Link>
           <Link className="delivery-back-home" to="/"><ArrowLeft size={17} /> Trang chủ</Link>
