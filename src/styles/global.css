@@ -1083,6 +1083,16 @@
   .promotion-modal label.full{grid-column:auto;}
 }
 
+/* Admin order type tabs */
+.admin-orders-workspace{min-height:calc(100vh - 88px);background:#f8fafc;}
+.admin-orders-tabs{display:flex;gap:8px;padding:20px 32px 0;}
+.admin-orders-tabs button{min-height:42px;padding:0 18px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#64748b;font-size:14px;font-weight:800;cursor:pointer;transition:.18s ease;}
+.admin-orders-tabs button:hover{border-color:#fdba74;color:#ea580c;}
+.admin-orders-tabs button.active{border-color:#f97316;background:#fff7ed;color:#ea580c;box-shadow:0 6px 18px rgba(234,88,12,.08);}
+.admin-orders-tab-panel>.order-admin-page{padding-top:18px;}
+.admin-orders-tab-panel>.delivery-manage-page{padding-top:18px;}
+@media(max-width:760px){.admin-orders-tabs{padding:16px 20px 0;overflow-x:auto;}.admin-orders-tabs button{white-space:nowrap;}}
+
 /* Modern admin order page */
 .order-admin-page{
   padding:28px 32px 36px;

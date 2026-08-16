@@ -123,7 +123,7 @@ export default function DeliveryOrderManage() {
       const response = await deliveryApi.list(status);
       setOrders(unwrapDeliveryList(response));
     } catch (requestError) {
-      const message = errorMessageOf(requestError, 'Không thể tải danh sách đơn giao hàng.');
+      const message = errorMessageOf(requestError, 'Không thể tải danh sách đơn đặt online.');
       setError(message);
       if (silent) toast.error(message);
     } finally {
@@ -138,7 +138,7 @@ export default function DeliveryOrderManage() {
       setSelected(unwrapDeliveryResponse(response));
       if (!silent) setForm(initialActionForm());
     } catch (requestError) {
-      toast.error(errorMessageOf(requestError, 'Không thể tải chi tiết đơn giao hàng.'));
+      toast.error(errorMessageOf(requestError, 'Không thể tải chi tiết đơn đặt online.'));
     } finally {
       if (!silent) setDetailLoading(false);
     }
@@ -192,7 +192,7 @@ export default function DeliveryOrderManage() {
       toast.success(messageOf(response, successMessage));
       await loadOrders({ silent: true });
     } catch (requestError) {
-      toast.error(errorMessageOf(requestError, 'Thao tác đơn giao hàng thất bại.'));
+      toast.error(errorMessageOf(requestError, 'Thao tác đơn đặt online thất bại.'));
     } finally {
       setActionLoading('');
     }
@@ -208,7 +208,7 @@ export default function DeliveryOrderManage() {
     setCancelLoading(true);
     try {
       const response = await orderApi.cancelItem(itemId, payload);
-      toast.success(messageOf(response, 'Đã hủy món và tính lại đơn giao hàng.'));
+      toast.success(messageOf(response, 'Đã hủy món và tính lại đơn đặt online.'));
       setCancelTarget(null);
       await openDetail(deliveryOrderId(selected), { silent: true });
       await loadOrders({ silent: true });
@@ -244,14 +244,14 @@ export default function DeliveryOrderManage() {
       </div>
 
       <div className="delivery-manage-table-card">
-        {loading ? <div className="delivery-manage-state"><LoaderCircle className="spin" size={31} /><strong>Đang tải đơn giao hàng...</strong></div> : null}
+        {loading ? <div className="delivery-manage-state"><LoaderCircle className="spin" size={31} /><strong>Đang tải đơn đặt online...</strong></div> : null}
         {!loading && error ? <div className="delivery-manage-state error"><AlertTriangle size={31} /><strong>{error}</strong><button type="button" onClick={() => loadOrders()}>Thử lại</button></div> : null}
         {!loading && !error ? (
           <div className="delivery-manage-table-wrap">
             <table className="delivery-manage-table">
               <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Địa chỉ</th><th>Thanh toán</th><th>Tổng tiền</th><th>Trạng thái</th><th>Mã vận đơn</th><th></th></tr></thead>
               <tbody>
-                {!filteredOrders.length ? <tr><td colSpan="8"><div className="delivery-table-empty">Không có đơn giao hàng phù hợp.</div></td></tr> : null}
+                {!filteredOrders.length ? <tr><td colSpan="8"><div className="delivery-table-empty">Không có đơn đặt online phù hợp.</div></td></tr> : null}
                 {filteredOrders.map((order) => {
                   const delivery = deliveryData(order);
                   const deliveryStatus = delivery.trangThaiGiaoHang;
@@ -281,7 +281,7 @@ export default function DeliveryOrderManage() {
             {selected ? (
               <>
                 <div className="delivery-detail-head">
-                  <div><span>ĐƠN GIAO HÀNG</span><h2>{displayOrderCode(selected)}</h2><p>Đặt lúc {formatDate(selected.thoiGianDat)}</p></div>
+                  <div><span>ĐƠN ĐẶT ONLINE</span><h2>{displayOrderCode(selected)}</h2><p>Đặt lúc {formatDate(selected.thoiGianDat)}</p></div>
                   <div className={`delivery-order-badge ${deliveryStatusClass(currentStatus)}`}>{deliveryStatusLabel(currentStatus)}</div>
                   <button type="button" onClick={() => setSelected(null)} aria-label="Đóng"><X size={21} /></button>
                 </div>
@@ -358,9 +358,9 @@ export default function DeliveryOrderManage() {
                           <div className="delivery-action-block">
                             <strong>Đơn đang chờ nhà hàng xác nhận</strong>
                             <small>Kiểm tra thông tin người nhận, địa chỉ, món và thanh toán trước khi chuyển đơn sang bếp.</small>
-                            <button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('confirm-order', () => deliveryApi.confirm(deliveryOrderId(selected)), 'Đã xác nhận đơn giao hàng')}><CheckCircle2 size={17} />{actionLoading === 'confirm-order' ? 'Đang xác nhận...' : 'Xác nhận đơn'}</button>
+                            <button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('confirm-order', () => deliveryApi.confirm(deliveryOrderId(selected)), 'Đã xác nhận đơn đặt online')}><CheckCircle2 size={17} />{actionLoading === 'confirm-order' ? 'Đang xác nhận...' : 'Xác nhận đơn'}</button>
                             <label>Lý do từ chối<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Ví dụ: Món tạm hết hoặc nhà hàng không thể phục vụ đơn này..." /></label>
-                            <button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('reject-order', () => deliveryApi.reject(deliveryOrderId(selected), { lyDo: form.reason.trim() }), 'Đã từ chối đơn giao hàng')}><XCircle size={17} />{actionLoading === 'reject-order' ? 'Đang từ chối...' : 'Từ chối đơn'}</button>
+                            <button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('reject-order', () => deliveryApi.reject(deliveryOrderId(selected), { lyDo: form.reason.trim() }), 'Đã từ chối đơn đặt online')}><XCircle size={17} />{actionLoading === 'reject-order' ? 'Đang từ chối...' : 'Từ chối đơn'}</button>
                           </div>
                         ) : null}
 

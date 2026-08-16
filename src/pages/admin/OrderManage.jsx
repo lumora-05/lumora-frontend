@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Ban,
   CalendarDays,
@@ -13,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { orderApi } from '../../api/orderApi';
+import DeliveryOrderManage from './DeliveryOrderManage';
 import { formatMoney } from '../../utils/formatMoney';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useToast, messageOf, errorMessageOf } from '../../context/ToastContext';
@@ -237,7 +239,7 @@ function printOrder(order) {
   popup.document.close();
 }
 
-export default function OrderManage() {
+function TableOrderManage() {
   const toast = useToast();
   const socketEvent = useWebSocket(['/topic/orders', '/topic/payments', '/topic/admin/cancellations']);
   const [rows, setRows] = useState([]);
@@ -266,6 +268,7 @@ export default function OrderManage() {
   async function load(preferredId) {
     try {
       const commonParams = {
+        orderType: 'TAI_BAN',
         keyword: debouncedKeyword.trim() || undefined,
         ...dateRangeParams(dateFilter),
       };
@@ -721,6 +724,47 @@ export default function OrderManage() {
         onApprove={(request, note) => processCancellation(request, 'approve', note)}
         onReject={(request, note) => processCancellation(request, 'reject', note)}
       />
+    </section>
+  );
+}
+
+export default function OrderManage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'online' ? 'online' : 'table';
+
+  function switchTab(tab) {
+    const next = new URLSearchParams(searchParams);
+    if (tab === 'online') next.set('tab', 'online');
+    else next.delete('tab');
+    setSearchParams(next, { replace: true });
+  }
+
+  return (
+    <section className="admin-orders-workspace">
+      <div className="admin-orders-tabs" role="tablist" aria-label="Loại đơn hàng">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'table'}
+          className={activeTab === 'table' ? 'active' : ''}
+          onClick={() => switchTab('table')}
+        >
+          Đơn tại bàn
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'online'}
+          className={activeTab === 'online' ? 'active' : ''}
+          onClick={() => switchTab('online')}
+        >
+          Đơn đặt online
+        </button>
+      </div>
+
+      <div className="admin-orders-tab-panel" role="tabpanel">
+        {activeTab === 'online' ? <DeliveryOrderManage /> : <TableOrderManage />}
+      </div>
     </section>
   );
 }
