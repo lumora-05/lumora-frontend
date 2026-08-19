@@ -13,6 +13,7 @@ function isPublicPath(pathname) {
   return pathname === '/'
     || pathname.startsWith('/reservations')
     || pathname.startsWith('/menu')
+    || pathname.startsWith('/delivery')
     || pathname.startsWith('/table/');
 }
 
