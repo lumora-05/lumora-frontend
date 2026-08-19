@@ -80,7 +80,7 @@ export default function AppRoutes(){return <Routes>
   <Route path="/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminLayout/></ProtectedRoute>}>
     <Route index element={<AdminDashboard/>}/><Route path="employees" element={<EmployeeManage/>}/><Route path="tables" element={<TableManage/>}/><Route path="categories" element={<CategoryManage/>}/><Route path="menu" element={<MenuManage/>}/><Route path="inventory" element={<InventoryManage/>}/><Route path="promotions" element={<PromotionManage/>}/><Route path="orders" element={<AdminOrderManage/>}/><Route path="delivery-orders" element={<Navigate to="/admin/orders?tab=online" replace/>}/><Route path="customers" element={<CustomerLoyaltyManage/>}/><Route path="reviews" element={<ReviewManage/>}/><Route path="reports" element={<Report/>}/><Route path="service-requests" element={<Navigate to="/admin" replace/>}/><Route path="cashier-shifts" element={<Navigate to="/admin" replace/>}/><Route path="reservations" element={<Navigate to="/admin/tables?tab=reservations" replace/>}/><Route path="account" element={<AdminAccount/>}/><Route path="settings" element={<SystemSettings/>}/>
   </Route>
-  <Route path="/waiter" element={<ProtectedRoute roles={['WAITER','ADMIN']}><WaiterLayout/></ProtectedRoute>}>
+  <Route path="/waiter" element={<ProtectedRoute roles={['WAITER']}><WaiterLayout/></ProtectedRoute>}>
     <Route index element={<Navigate to="orders" replace/>}/>
     <Route path="orders" element={<TableStatus/>}/>
     <Route path="orders/:orderId" element={<OrderDetail/>}/>
@@ -103,7 +103,7 @@ export default function AppRoutes(){return <Routes>
     <Route path="notifications" element={<KitchenNotifications/>}/>
     <Route path="account" element={<KitchenAccount/>}/>
   </Route>
-  <Route path="/cashier" element={<ProtectedRoute roles={['CASHIER','ADMIN']}><CashierLayout/></ProtectedRoute>}>
+  <Route path="/cashier" element={<ProtectedRoute roles={['CASHIER']}><CashierLayout/></ProtectedRoute>}>
     <Route index element={<CashierHome mode="queue"/>}/>
     <Route path="history" element={<CashierHome mode="history"/>}/>
     <Route path="delivery-orders" element={<DeliveryOrderManage/>}/>

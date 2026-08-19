@@ -38,13 +38,25 @@ const FILTER_OPTIONS = [
 ];
 
 const STATUS_ITEMS = [
-  { code: 'CHO_XAC_NHAN', label: 'Đang chuyển xuống bếp', color: '#ff8a3d' },
+  { code: 'CHO_XAC_NHAN', label: 'Chờ xác nhận', color: '#ff8a3d' },
+  { code: 'CHO_DEN_GIO', label: 'Online · chờ đến giờ', color: '#fb923c' },
   { code: 'DA_XAC_NHAN', label: 'Đã chuyển xuống bếp', color: '#f5b82e' },
-  { code: 'DANG_CHE_BIEN', label: 'Đang chuẩn bị', color: '#2f80ed' },
+  { code: 'DANG_CHUAN_BI', label: 'Online · đang chuẩn bị', color: '#38bdf8' },
+  { code: 'DANG_CHE_BIEN', label: 'Đang chế biến', color: '#2f80ed' },
+  { code: 'SAN_SANG', label: 'Sẵn sàng', color: '#60a5fa' },
+  { code: 'SAN_SANG_PHUC_VU', label: 'Sẵn sàng phục vụ', color: '#22c55e' },
+  { code: 'DA_HOAN_THANH', label: 'Đã hoàn thành món', color: '#4ade80' },
   { code: 'DA_PHUC_VU', label: 'Đang phục vụ', color: '#31b957' },
-  { code: 'SAN_SANG_THANH_TOAN', label: 'Chờ thanh toán', color: '#f5b82e' },
-  { code: 'CHO_THANH_TOAN', label: 'Chờ thu ngân xử lý', color: '#8b5cf6' },
-  { code: 'DA_THANH_TOAN', label: 'Hoàn thành', color: '#14b8a6' },
+  { code: 'SAN_SANG_THANH_TOAN', label: 'Sẵn sàng thanh toán', color: '#eab308' },
+  { code: 'CHO_THANH_TOAN', label: 'Chờ thanh toán', color: '#8b5cf6' },
+  { code: 'CHO_KHACH_NHAN', label: 'Online · chờ khách nhận', color: '#a855f7' },
+  { code: 'CHO_TAI_XE_NHAN', label: 'Online · chờ tài xế', color: '#7c3aed' },
+  { code: 'CHO_BAN_GIAO', label: 'Online · chờ bàn giao', color: '#6d28d9' },
+  { code: 'DANG_GIAO', label: 'Online · đang giao', color: '#0ea5e9' },
+  { code: 'CHO_DOI_SOAT', label: 'Online · chờ đối soát', color: '#06b6d4' },
+  { code: 'DA_THANH_TOAN', label: 'Hoàn thành tại bàn', color: '#14b8a6' },
+  { code: 'HOAN_THANH', label: 'Online · hoàn thành', color: '#10b981' },
+  { code: 'GIAO_THAT_BAI', label: 'Online · giao thất bại', color: '#f97316' },
   { code: 'DA_HUY', label: 'Đã hủy', color: '#ef4444' },
 ];
 
@@ -237,11 +249,11 @@ export default function Report() {
     }
   }, [socketEvent]);
 
-  const paidOrders = numberOf(statusCounts.DA_THANH_TOAN);
+  const completedOrders = numberOf(statusCounts.DA_THANH_TOAN) + numberOf(statusCounts.HOAN_THANH);
   const cancelledOrders = numberOf(statusCounts.DA_HUY);
   const totalRevenue = revenueRows.reduce((sum, item) => sum + item.revenue, 0);
-  const averageOrder = paidOrders > 0 ? totalRevenue / paidOrders : 0;
-  const completionRate = totalOrders > 0 ? (paidOrders / totalOrders) * 100 : 0;
+  const averageOrder = completedOrders > 0 ? totalRevenue / completedOrders : 0;
+  const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
   const cancellationRate = totalOrders > 0 ? (cancelledOrders / totalOrders) * 100 : 0;
 
   const statusRows = STATUS_ITEMS
@@ -257,7 +269,7 @@ export default function Report() {
       ['Đến ngày', fullDateLabel(selectedRange.to)],
       ['Tổng doanh thu', totalRevenue],
       ['Tổng đơn hàng', totalOrders],
-      ['Đơn hoàn thành', paidOrders],
+      ['Đơn hoàn thành', completedOrders],
       ['Đơn đã hủy', cancelledOrders],
       ['Giá trị đơn trung bình', Math.round(averageOrder)],
       ['Tỷ lệ hoàn thành', percent(completionRate)],
@@ -381,7 +393,7 @@ export default function Report() {
         </article>
         <article>
           <span className="admin-report-kpi-icon blue"><ReceiptText size={25} /></span>
-          <div><small>Tổng đơn hàng</small><strong>{totalOrders.toLocaleString('vi-VN')}</strong><p>{paidOrders.toLocaleString('vi-VN')} đơn hoàn thành</p></div>
+          <div><small>Tổng đơn hàng</small><strong>{totalOrders.toLocaleString('vi-VN')}</strong><p>{completedOrders.toLocaleString('vi-VN')} đơn hoàn thành</p></div>
         </article>
         <article>
           <span className="admin-report-kpi-icon green"><CheckCircle2 size={25} /></span>

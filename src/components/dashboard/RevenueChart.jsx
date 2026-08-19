@@ -2,22 +2,12 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { formatMoney } from '../../utils/formatMoney';
 
 export default function RevenueChart({ data = [], period = '7days', onPeriodChange }) {
-  const fallback = [
-    { name: '29/04', doanhThu: 240000 },
-    { name: '30/04', doanhThu: 395000 },
-    { name: '01/05', doanhThu: 300000 },
-    { name: '02/05', doanhThu: 450000 },
-    { name: '03/05', doanhThu: 512000 },
-    { name: '04/05', doanhThu: 345000 },
-    { name: '05/05', doanhThu: 398000 },
-  ];
-
-  const rows = Array.isArray(data) && data.length
+  const rows = Array.isArray(data)
     ? data.map((item) => ({
       name: item?.ngay || item?.name,
       doanhThu: Number(item?.doanhThu || 0),
     }))
-    : fallback;
+    : [];
 
   return (
     <article className="dashboard-card dashboard-revenue-card">
@@ -34,8 +24,11 @@ export default function RevenueChart({ data = [], period = '7days', onPeriodChan
       </div>
 
       <div className="dashboard-revenue-chart">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={rows} margin={{ top: 12, right: 10, left: -12, bottom: 0 }}>
+        {rows.length === 0 ? (
+          <div className="dashboard-empty-state">Chưa có dữ liệu doanh thu</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={rows} margin={{ top: 12, right: 10, left: -12, bottom: 0 }}>
             <defs>
               <linearGradient id="dashboardRevenueFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#ff4d00" stopOpacity={0.28} />
@@ -64,8 +57,9 @@ export default function RevenueChart({ data = [], period = '7days', onPeriodChan
               dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: '#ff4d00' }}
               activeDot={{ r: 6 }}
             />
-          </AreaChart>
-        </ResponsiveContainer>
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </article>
   );

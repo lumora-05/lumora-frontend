@@ -47,13 +47,6 @@ const ACTIVITY_VIEW = {
   EMPLOYEE_DISABLED: { tone: 'red', icon: ClipboardCheck },
 };
 
-const SUMMARY_FALLBACK = {
-  doanhThuHomNay: 414750,
-  donHomNay: 68,
-  tongBan: 20,
-  banTrong: 8,
-};
-
 function toApiDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -139,8 +132,8 @@ export default function Dashboard() {
 
     setSummary(
       summaryResult.status === 'fulfilled'
-        ? unwrapData(summaryResult.value, SUMMARY_FALLBACK)
-        : SUMMARY_FALLBACK,
+        ? unwrapData(summaryResult.value, null)
+        : null,
     );
     setRevenue(
       revenueResult.status === 'fulfilled'
@@ -200,15 +193,13 @@ export default function Dashboard() {
 
   const pendingOrders = useMemo(() => {
     const item = normalizedStatus.find((row) => row.name === 'Đã chuyển xuống bếp');
-    return item?.value ?? summary?.donChoXacNhan ?? 12;
+    return item?.value ?? summary?.donChoXacNhan ?? 0;
   }, [normalizedStatus, summary]);
 
   const visibleActivities = activityExpanded ? activities : activities.slice(0, 5);
 
-  const totalTables = Number(summary?.tongBan || 20);
-  const emptyTables = Number(summary?.banTrong ?? 8);
-  const servingTables = Math.max(totalTables - emptyTables, 0);
-  const occupancy = totalTables > 0 ? Math.round((servingTables / totalTables) * 100) : 0;
+  const totalTables = Math.max(Number(summary?.tongBan ?? 0), 0);
+  const servingTables = Math.max(Number(summary?.banDangSuDung ?? 0), 0);
 
   return (
     <section className="dashboard-page">
@@ -217,17 +208,15 @@ export default function Dashboard() {
           icon={ShoppingBag}
           tone="orange"
           label="Tổng doanh thu"
-          value={formatMoney(summary?.doanhThuHomNay ?? 414750)}
+          value={formatMoney(summary?.doanhThuHomNay ?? 0)}
           note="Hôm nay"
-          trend="12.5% so với hôm qua"
         />
         <StatisticCard
           icon={ShoppingCart}
           tone="blue"
           label="Đơn hàng"
-          value={summary?.donHomNay ?? 68}
+          value={summary?.donHomNay ?? 0}
           note="Hôm nay"
-          trend="8.3% so với hôm qua"
         />
         <StatisticCard
           icon={Clock3}
