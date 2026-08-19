@@ -3998,3 +3998,11 @@
   .inventory-actions-friendly{min-width:130px;}
   .inventory-action-menu>div{right:auto;left:0;}
 }
+
+/* Keep staff sidebar menu items compact instead of stretching to fill the viewport. */
+.waiter-shell .admin-sidebar nav,
+.kitchen-shell .admin-sidebar nav,
+.cashier-shell .admin-sidebar nav{
+  align-content:start;
+  grid-auto-rows:max-content;
+}
