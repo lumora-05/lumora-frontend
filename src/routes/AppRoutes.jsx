@@ -92,7 +92,7 @@ export default function AppRoutes(){return <Routes>
     <Route path="order-entry" element={<WaiterOrderEntry/>}/>
     <Route path="account" element={<WaiterAccount/>}/>
   </Route>
-  <Route path="/kitchen" element={<ProtectedRoute roles={['KITCHEN','ADMIN']}><KitchenLayout/></ProtectedRoute>}>
+  <Route path="/kitchen" element={<ProtectedRoute roles={['KITCHEN']}><KitchenLayout/></ProtectedRoute>}>
     <Route index element={<KitchenBoard/>}/>
     <Route path="orders" element={<Navigate to="/kitchen" replace/>}/>
     <Route path="orders/:orderId" element={<KitchenOrderDetail/>}/>
