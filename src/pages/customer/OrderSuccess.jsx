@@ -114,10 +114,10 @@ export default function OrderSuccess() {
   const socketEvent = useWebSocket([orderTopic]);
 
   const load = useCallback(async () => {
-    if (!orderId) return;
+    if (!qrToken || !orderId) return;
     try {
       setError('');
-      const response = await orderApi.customerTracking(orderId);
+      const response = await orderApi.customerTracking(qrToken, orderId);
       const data = response?.data || response;
       setOrder(data);
       setPromotionCode(data?.maCodeKhuyenMai || data?.khuyenMai?.maCode || '');
@@ -126,7 +126,7 @@ export default function OrderSuccess() {
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, qrToken]);
 
   useEffect(() => {
     setLoading(true);
@@ -167,7 +167,7 @@ export default function OrderSuccess() {
 
     try {
       setUpdatingPromotion(true);
-      const response = await promotionApi.customerApply(order?.maDonHang || orderId, code);
+      const response = await promotionApi.customerApply(qrToken, order?.maDonHang || orderId, code);
       const updated = response?.data || response;
       if (updated?.maDonHang) setOrder(updated);
       else await load();
@@ -184,7 +184,7 @@ export default function OrderSuccess() {
     if (!appliedPromotionCode || !canEditPromotion || updatingPromotion) return;
     try {
       setUpdatingPromotion(true);
-      const response = await promotionApi.customerRemove(order?.maDonHang || orderId);
+      const response = await promotionApi.customerRemove(qrToken, order?.maDonHang || orderId);
       const updated = response?.data || response;
       if (updated?.maDonHang) setOrder(updated);
       else await load();
@@ -223,7 +223,7 @@ export default function OrderSuccess() {
 
     try {
       setRequestingPayment(true);
-      await orderApi.customerRequestPayment(order?.maDonHang || orderId);
+      await orderApi.customerRequestPayment(qrToken, order?.maDonHang || orderId);
       setPaymentConfirmOpen(false);
       toast.success('Đã gửi yêu cầu thanh toán đến nhân viên.');
       await load();

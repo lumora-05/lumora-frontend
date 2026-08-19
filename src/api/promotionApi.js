@@ -1,5 +1,7 @@
 import axiosClient from './axiosClient';
 
+const encodeToken = (token) => encodeURIComponent(String(token ?? '').trim());
+
 export const promotionApi = {
   getAll: () => axiosClient.get('/promotions'),
   getPage: (params = {}) => axiosClient.get('/promotions/page', { params }),
@@ -13,6 +15,6 @@ export const promotionApi = {
   removeFromOrder: (orderId) => axiosClient.delete(`/promotions/orders/${orderId}`),
 
   // Luồng công khai dành cho khách tại bàn.
-  customerApply: (orderId, maCode) => axiosClient.post(`/customer/orders/${orderId}/promotion`, { maCode }),
-  customerRemove: (orderId) => axiosClient.delete(`/customer/orders/${orderId}/promotion`),
+  customerApply: (qrToken, orderId, maCode) => axiosClient.post(`/customer/qr/${encodeToken(qrToken)}/orders/${orderId}/promotion`, { maCode }),
+  customerRemove: (qrToken, orderId) => axiosClient.delete(`/customer/qr/${encodeToken(qrToken)}/orders/${orderId}/promotion`),
 };
