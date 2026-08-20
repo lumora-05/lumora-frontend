@@ -503,9 +503,9 @@ export default function PublicReservation() {
         <div className="reservation-public-hero-shade" aria-hidden="true" />
         <div className="reservation-public-hero-inner">
           <div className="reservation-public-hero-copy">
-            <span><Sparkles size={15} /> Đặt bàn trực tuyến</span>
-            <h1>Giữ chỗ cho một bữa ăn <em>trọn vẹn.</em></h1>
-            <p>Gửi yêu cầu đặt bàn và chọn món trước ngay trong cùng một quy trình. Nhà hàng sẽ xác nhận và chuẩn bị vị trí phù hợp trước khi bạn đến.</p>
+            <span>Trải nghiệm ẩm thực tinh tế</span>
+            <h1>Đặt bàn dễ dàng<br />Trải nghiệm trọn vẹn</h1>
+            <p>Đặt bàn ngay hôm nay để tận hưởng không gian ấm cúng và những món ăn tuyệt hảo tại Lumora.</p>
             <div><b><ShieldCheck size={18} /> Thông tin được bảo mật</b><b><CalendarCheck2 size={18} /> Tra cứu dễ dàng</b></div>
           </div>
         </div>
