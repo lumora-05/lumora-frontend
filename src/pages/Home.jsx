@@ -202,7 +202,7 @@ function Hero({ settings }) {
       <div className="v0-shell v0-hero-content">
         <span className="v0-hero-badge">
           <Star size={14} fill="currentColor" />
-          Ẩm thực tinh tế từ 2015
+          Hương vị tinh tế – Trải nghiệm hiện đại
         </span>
 
         <h1 className="v0-serif">Hương vị đánh thức mọi giác quan tại {settings.restaurantName}</h1>
@@ -299,21 +299,20 @@ function About({ restaurantName }) {
       <div className="v0-shell v0-section v0-about-grid">
         <div>
           <span className="v0-eyebrow">Về {restaurantName}</span>
-          <h2 className="v0-serif v0-about-title">Câu chuyện về hương vị và sự tận tâm</h2>
+          <h2 className="v0-serif v0-about-title">Trải nghiệm ẩm thực hiện đại và tiện lợi</h2>
           <p className="v0-about-copy">
-            Ra đời năm 2015, {restaurantName} bắt đầu từ mong muốn mang đến những bữa ăn không chỉ ngon miệng mà còn chạm đến
-            cảm xúc. Chúng tôi tin rằng mỗi món ăn là một câu chuyện, được kể qua nguyên liệu tinh tế và sự chăm chút
-            trong từng chi tiết.
+            {restaurantName} hướng đến việc mang đến cho thực khách trải nghiệm ẩm thực chất lượng trong không gian hiện đại
+            và thân thiện. Thực đơn được xây dựng đa dạng, phù hợp với nhiều nhu cầu và sở thích của khách hàng.
           </p>
           <p className="v0-about-copy v0-about-copy-second">
-            Đến nay, {restaurantName} tự hào phục vụ hơn 50.000 lượt khách mỗi năm, trở thành điểm hẹn quen thuộc cho những bữa
-            tối đáng nhớ.
+            Bên cạnh chất lượng món ăn, {restaurantName} chú trọng ứng dụng công nghệ vào quá trình phục vụ. Khách hàng có thể
+            xem thực đơn, đặt bàn, đặt món trực tuyến hoặc quét mã QR tại bàn để gọi món nhanh chóng và thuận tiện.
           </p>
 
           <div className="v0-stats">
-            <div><strong className="v0-serif">9+</strong><span>Năm phục vụ</span></div>
-            <div><strong className="v0-serif">120+</strong><span>Món trong thực đơn</span></div>
-            <div><strong className="v0-serif">4.9★</strong><span>Đánh giá trung bình</span></div>
+            <div><strong className="v0-serif">Phục vụ</strong><span>chuyên nghiệp</span></div>
+            <div><strong className="v0-serif">Thực đơn</strong><span>đa dạng</span></div>
+            <div><strong className="v0-serif">Trải nghiệm</strong><span>tiện lợi</span></div>
           </div>
         </div>
 
