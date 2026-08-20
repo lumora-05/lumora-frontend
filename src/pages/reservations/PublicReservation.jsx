@@ -494,17 +494,20 @@ export default function PublicReservation() {
     <main className="reservation-public-page v0-home">
       <ReservationNavbar settings={headerSettings} />
 
-      <section className="reservation-public-hero">
-        <div className="reservation-public-hero-copy">
-          <span><Sparkles size={15} /> Đặt bàn trực tuyến</span>
-          <h1>Giữ chỗ cho một bữa ăn <em>trọn vẹn.</em></h1>
-          <p>Gửi yêu cầu đặt bàn và chọn món trước ngay trong cùng một quy trình. Nhà hàng sẽ xác nhận và chuẩn bị vị trí phù hợp trước khi bạn đến.</p>
-          <div><b><ShieldCheck size={18} /> Thông tin được bảo mật</b><b><CalendarCheck2 size={18} /> Tra cứu dễ dàng</b></div>
-        </div>
-        <div className="reservation-public-hero-card">
-          <CalendarCheck2 size={30} />
-          <strong>Quy trình nhanh gọn</strong>
-          <p>Gửi yêu cầu → Chọn món trước → Nhà hàng xác nhận → Check-in</p>
+      <section className="reservation-public-hero" aria-label="Đặt bàn tại Lumora">
+        <img
+          className="reservation-public-hero-image"
+          src="/reservation-hero.png"
+          alt="Không gian nhà hàng Lumora ấm cúng với món ăn được bày trí trên bàn"
+        />
+        <div className="reservation-public-hero-shade" aria-hidden="true" />
+        <div className="reservation-public-hero-inner">
+          <div className="reservation-public-hero-copy">
+            <span><Sparkles size={15} /> Đặt bàn trực tuyến</span>
+            <h1>Giữ chỗ cho một bữa ăn <em>trọn vẹn.</em></h1>
+            <p>Gửi yêu cầu đặt bàn và chọn món trước ngay trong cùng một quy trình. Nhà hàng sẽ xác nhận và chuẩn bị vị trí phù hợp trước khi bạn đến.</p>
+            <div><b><ShieldCheck size={18} /> Thông tin được bảo mật</b><b><CalendarCheck2 size={18} /> Tra cứu dễ dàng</b></div>
+          </div>
         </div>
       </section>
 
