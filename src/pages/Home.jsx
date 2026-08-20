@@ -405,7 +405,7 @@ function Footer({ settings }) {
           </div>
         </div>
 
-        <div className="v0-footer-bottom">© 2026 {settings.restaurantName}. Đồ án tốt nghiệp — Ứng dụng quản lý đơn hàng nhà hàng.</div>
+        <div className="v0-footer-bottom">© 2026 {settings.restaurantName}. Tất cả quyền được bảo lưu.</div>
       </div>
     </footer>
   );

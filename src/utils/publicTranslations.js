@@ -535,8 +535,8 @@ Object.assign(EN_TEXT, {
   'Đặt bàn trước để giữ chỗ cho những dịp đặc biệt, hoặc gọi món trực tuyến để nhận ngay tại nhà.': 'Reserve ahead for special occasions, or order online and enjoy LUMORA at home.',
   'Gọi món giao tận nơi': 'Order delivery',
   'Ẩm thực tinh tế, phục vụ tận tâm. Nơi mỗi bữa ăn trở thành kỷ niệm đáng nhớ.': 'Refined cuisine, thoughtful service. Where every meal becomes a memorable moment.',
-  '. Đồ án tốt nghiệp — Ứng dụng quản lý đơn hàng nhà hàng.': '. Graduation project — Restaurant order management application.',
-  'Đồ án tốt nghiệp — Ứng dụng quản lý đơn hàng nhà hàng.': 'Graduation project — Restaurant order management application.',
+  '. Tất cả quyền được bảo lưu.': '. All rights reserved.',
+  'Tất cả quyền được bảo lưu.': 'All rights reserved.',
 
   // Khách hàng tại bàn - thực đơn, chi tiết món, giỏ hàng
   'Hệ thống đang kiểm tra thông tin bàn và danh sách món.': 'The system is checking your table information and menu.',
