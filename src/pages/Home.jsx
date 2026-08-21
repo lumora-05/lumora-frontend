@@ -365,9 +365,81 @@ function OrderCta({ settings }) {
   );
 }
 
+function ContactSection({ settings }) {
+  const mapUrl = settings.address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
+    : 'https://www.google.com/maps';
+
+  return (
+    <section id="lien-he" className="v0-contact-section">
+      <div className="v0-shell v0-contact-inner">
+        <div className="v0-section-head v0-contact-head">
+          <span className="v0-eyebrow">Liên hệ với chúng tôi</span>
+          <h2 className="v0-serif">Thông tin liên hệ</h2>
+          <p>Liên hệ với {settings.restaurantName} khi bạn cần hỗ trợ hoặc muốn biết thêm thông tin trước khi ghé nhà hàng.</p>
+        </div>
+
+        <div className="v0-contact-grid">
+          <div className="v0-contact-cards">
+            {settings.address && (
+              <div className="v0-contact-card v0-contact-card-wide">
+                <span className="v0-contact-icon"><MapPin size={22} /></span>
+                <div>
+                  <h3>Địa chỉ</h3>
+                  <p>{settings.address}</p>
+                </div>
+              </div>
+            )}
+
+            {settings.phone && (
+              <a className="v0-contact-card" href={`tel:${String(settings.phone).replace(/\s+/g, '')}`}>
+                <span className="v0-contact-icon"><Phone size={22} /></span>
+                <div>
+                  <h3>Số điện thoại</h3>
+                  <p>{settings.phone}</p>
+                </div>
+              </a>
+            )}
+
+            {settings.email && (
+              <a className="v0-contact-card" href={`mailto:${settings.email}`}>
+                <span className="v0-contact-icon"><Mail size={22} /></span>
+                <div>
+                  <h3>Email</h3>
+                  <p>{settings.email}</p>
+                </div>
+              </a>
+            )}
+
+            {settings.openingHours && (
+              <div className="v0-contact-card">
+                <span className="v0-contact-icon"><Clock size={22} /></span>
+                <div>
+                  <h3>Giờ mở cửa</h3>
+                  <p>{settings.openingHours}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="v0-contact-location">
+            <span className="v0-contact-location-icon"><MapPin size={30} /></span>
+            <span className="v0-eyebrow">Vị trí nhà hàng</span>
+            <h3 className="v0-serif">Ghé thăm {settings.restaurantName}</h3>
+            <p>{settings.address || 'Thông tin địa chỉ đang được cập nhật.'}</p>
+            <a className="v0-button v0-button-primary v0-pill" href={mapUrl} target="_blank" rel="noreferrer">
+              Xem trên bản đồ
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Footer({ settings }) {
   return (
-    <footer id="lien-he" className="v0-footer">
+    <footer className="v0-footer">
       <div className="v0-shell v0-footer-inner">
         <div className="v0-footer-grid">
           <div>
@@ -431,6 +503,7 @@ export default function Home() {
       <FeaturedMenu restaurantName={settings.restaurantName} />
       <About restaurantName={settings.restaurantName} />
       <OrderCta settings={settings} />
+      <ContactSection settings={settings} />
       <Footer settings={settings} />
     </main>
   );
