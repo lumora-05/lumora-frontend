@@ -53,6 +53,7 @@ const DEFAULT_HEADER_SETTINGS = {
   reservationUrl: '/reservations',
   menuUrl: '/menu',
   logoUrl: '',
+  bannerUrl: '',
 };
 
 const RESERVATION_NAV_LINKS = [
@@ -498,7 +499,7 @@ export default function PublicReservation() {
       <section className="reservation-public-hero" aria-label="Đặt bàn tại Lumora">
         <img
           className="reservation-public-hero-image"
-          src="/reservation-hero.png"
+          src={imageUrl(headerSettings.bannerUrl) || "/reservation-hero.png"}
           alt="Không gian nhà hàng Lumora ấm cúng với món ăn được bày trí trên bàn"
         />
         <div className="reservation-public-hero-shade" aria-hidden="true" />

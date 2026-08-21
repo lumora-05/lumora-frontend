@@ -395,7 +395,7 @@ export default function SystemSettings() {
 
         {activeTab === 'branding' && (
           <div className="system-settings-card system-settings-branding">
-            {cardHead(ImagePlus, 'Thương hiệu & giao diện', 'Thay logo nhà hàng và banner hiển thị trên trang chủ.')}
+            {cardHead(ImagePlus, 'Thương hiệu & giao diện', 'Thay logo nhà hàng và banner dùng chung cho trang chủ, thực đơn và đặt bàn.')}
             <div className="system-brand-grid">
               <div className="system-brand-block">
                 <div className="system-brand-title">
@@ -416,13 +416,13 @@ export default function SystemSettings() {
 
               <div className="system-brand-block banner">
                 <div className="system-brand-title">
-                  <div><strong>Banner trang chủ</strong><small>Khuyên dùng ảnh ngang tỷ lệ khoảng 16:7, tối đa 5 MB.</small></div>
+                  <div><strong>Banner dùng chung</strong><small>Dùng cho Trang chủ, Thực đơn và Đặt bàn. Khuyên dùng ảnh ngang tỷ lệ khoảng 16:7, tối đa 5 MB.</small></div>
                   {settings.bannerUrl && (
                     <button type="button" className="system-brand-remove" onClick={() => removeBrandImage('banner')} disabled={bannerBusy} title="Xóa banner tùy chỉnh"><Trash2 size={16} /></button>
                   )}
                 </div>
                 <div className="system-banner-preview">
-                  {banner ? <img src={banner} alt="Banner trang chủ" /> : <div className="system-brand-placeholder"><ImagePlus size={30} /><span>Chưa có banner tùy chỉnh</span></div>}
+                  {banner ? <img src={banner} alt="Banner dùng chung" /> : <div className="system-brand-placeholder"><ImagePlus size={30} /><span>Chưa có banner tùy chỉnh</span></div>}
                 </div>
                 <input ref={bannerInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; uploadBrandImage('banner', file); }} />
                 <button type="button" className="system-brand-upload" onClick={() => bannerInputRef.current?.click()} disabled={bannerBusy}>
@@ -431,7 +431,7 @@ export default function SystemSettings() {
                 </button>
               </div>
             </div>
-            <p className="system-settings-note">Logo và banner được upload qua backend. Sau khi cập nhật thành công, trang chủ sẽ tự sử dụng ảnh mới.</p>
+            <p className="system-settings-note">Logo và banner được upload qua backend. Sau khi cập nhật thành công, cùng một banner sẽ được sử dụng trên Trang chủ, Thực đơn và Đặt bàn.</p>
           </div>
         )}
 

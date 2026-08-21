@@ -18,6 +18,7 @@ import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader
 import { useCart } from '../../context/CartContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { categoryApi, menuApi } from '../../api/menuApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { continueAsGuest, getCustomerUser, hasContinuedAsGuest } from '../../utils/customerSession';
@@ -59,6 +60,7 @@ export default function DeliveryMenu() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [authChoiceFood, setAuthChoiceFood] = useState(null);
+  const [sharedBannerUrl, setSharedBannerUrl] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -82,6 +84,15 @@ export default function DeliveryMenu() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    systemSettingApi.getPublic()
+      .then((response) => {
+        const settings = systemSettingData(response);
+        setSharedBannerUrl(settings?.bannerUrl || '');
+      })
+      .catch(() => setSharedBannerUrl(''));
   }, []);
 
   useEffect(() => {
@@ -161,7 +172,7 @@ export default function DeliveryMenu() {
 
       <section className="delivery-hero delivery-home-hero">
         <div className="delivery-home-hero-bg" aria-hidden="true">
-          <img src="/menu-hero.png" alt="" />
+          <img src={imageUrl(sharedBannerUrl) || "/menu-hero.png"} alt="" />
           <div className="delivery-home-hero-overlay" />
         </div>
         <div className="delivery-public-container delivery-hero-grid">
