@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 /* ===== ĐẶT MÓN GIAO TẬN NƠI - KHÁCH HÀNG ===== */
 .delivery-public-page{min-height:100vh;color:#26313d;background:#f7f8fa;font-family:Inter,"Segoe UI",sans-serif}
 .delivery-public-container{width:min(1180px,calc(100% - 40px));margin-left:auto;margin-right:auto}
@@ -142,35 +143,38 @@
 }
 .delivery-home-menu .delivery-home-hero:before{display:none}
 .delivery-home-hero-bg{position:absolute;inset:0}
-.delivery-home-hero-bg img{width:100%;height:100%;object-fit:cover}
+.delivery-home-hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center}
 .delivery-home-hero-overlay{
   position:absolute;
   inset:0;
-  background:linear-gradient(90deg,rgba(48,42,37,.92) 0%,rgba(48,42,37,.72) 50%,rgba(48,42,37,.42) 100%);
+  background:linear-gradient(90deg,rgba(37,28,21,.88) 0%,rgba(37,28,21,.70) 34%,rgba(37,28,21,.28) 62%,rgba(37,28,21,.10) 100%);
 }
 .delivery-home-menu .delivery-hero-grid{position:relative;grid-template-columns:minmax(0,1fr) 300px;gap:72px}
 .delivery-home-menu .delivery-eyebrow{
-  padding:6px 15px;
-  border:1px solid rgba(217,120,50,.55);
-  color:#eda46e;
-  background:rgba(255,255,255,.08);
-  font-size:12px;
-  font-weight:500;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  backdrop-filter:blur(4px);
+  display:block;
+  padding:0;
+  border:0;
+  color:#ee9c49;
+  background:transparent;
+  font-family:'Great Vibes',cursive;
+  font-size:clamp(30px,2.5vw,42px);
+  font-weight:400;
+  line-height:1.1;
+  letter-spacing:0;
+  text-transform:none;
+  backdrop-filter:none;
 }
 .delivery-home-menu .delivery-hero h1{
   max-width:690px;
-  margin:18px 0 18px;
+  margin:12px 0 16px;
   color:#fffaf5;
-  font-size:clamp(42px,5vw,60px);
+  font-size:clamp(46px,5vw,72px);
   font-weight:600;
-  line-height:1.18;
-  letter-spacing:-.025em;
+  line-height:1.04;
+  letter-spacing:-.03em;
 }
 .delivery-home-menu .delivery-hero h1 em{color:#eda46e}
-.delivery-home-menu .delivery-hero p{max-width:620px;color:rgba(255,250,245,.82);font-size:16px;line-height:1.7}
+.delivery-home-menu .delivery-hero p{max-width:640px;color:rgba(255,250,245,.90);font-size:17px;line-height:1.72}
 .delivery-home-menu .delivery-hero-benefits{margin-top:30px;gap:12px 26px}
 .delivery-home-menu .delivery-hero-benefits span{color:rgba(255,250,245,.84);font-size:13px;font-weight:500}
 .delivery-home-menu .delivery-hero-benefits svg{color:#eda46e}
@@ -302,7 +306,7 @@
   .delivery-home-brand{height:66px}
   .delivery-home-brand-logo{width:100px;height:66px}
   .delivery-home-menu .delivery-public-container{width:min(100% - 24px,1152px)}
-  .delivery-home-menu .delivery-home-hero{padding:72px 0}
+  .delivery-home-menu .delivery-home-hero{padding:72px 0}.delivery-home-menu .delivery-home-hero-bg img{object-position:68% center}.delivery-home-menu .delivery-eyebrow{font-size:30px}.delivery-home-menu .delivery-hero h1{font-size:42px}.delivery-home-menu .delivery-hero p{font-size:15px}
   .delivery-home-menu .delivery-hero h1{font-size:38px}
   .delivery-home-menu .delivery-hero-card{max-width:none;width:100%;box-sizing:border-box}
   .delivery-home-menu .delivery-menu-section{padding:72px 0 90px}

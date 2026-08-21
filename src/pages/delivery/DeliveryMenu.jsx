@@ -1,5 +1,4 @@
 import {
-  Bike,
   ChefHat,
   Clock3,
   LoaderCircle,
@@ -162,16 +161,15 @@ export default function DeliveryMenu() {
 
       <section className="delivery-hero delivery-home-hero">
         <div className="delivery-home-hero-bg" aria-hidden="true">
-          <img src="/lunora-hero.png" alt="" />
+          <img src="/menu-hero.png" alt="" />
           <div className="delivery-home-hero-overlay" />
         </div>
         <div className="delivery-public-container delivery-hero-grid">
           <div>
-            <span className="delivery-eyebrow"><Bike size={16} /> Thực đơn trực tuyến · Giao tận nơi</span>
-            <h1 className="delivery-home-serif">Hương vị LUMORA<br /><em>giao đến tận cửa.</em></h1>
+            <span className="delivery-eyebrow">Tinh hoa ẩm thực</span>
+            <h1 className="delivery-home-serif">Khám phá<br />thực đơn Lumora</h1>
             <p>
-              Xem thực đơn và chọn món trước; địa chỉ, phạm vi giao, phí giao và thời gian nhận dự kiến
-              sẽ được hệ thống kiểm tra ở bước thanh toán.
+              Tuyển chọn những nguyên liệu tươi ngon nhất, chế biến tinh tế bởi đội ngũ đầu bếp tài hoa.
             </p>
             <div className="delivery-hero-benefits">
               <span><Clock3 size={17} /> Thời gian nhận dự kiến rõ ràng</span>
