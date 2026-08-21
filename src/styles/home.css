@@ -225,12 +225,12 @@
 }
 
 .v0-contact-panel {
-  overflow: hidden;
-  padding: 30px;
-  border: 1px solid color-mix(in oklch, var(--v0-border) 88%, var(--v0-primary));
-  border-radius: 18px;
-  background: color-mix(in oklch, var(--v0-card) 97%, var(--v0-secondary));
-  box-shadow: 0 10px 34px rgb(0 0 0 / .045);
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .v0-contact-head {
@@ -337,7 +337,7 @@
 
 @media (max-width: 767px) {
   .v0-contact-section { padding-bottom: 80px; }
-  .v0-contact-panel { padding: 20px; }
+  .v0-contact-panel { padding: 0; }
   .v0-contact-head h2 { font-size: 28px; }
   .v0-contact-grid { grid-template-columns: 1fr; gap: 18px; }
   .v0-contact-cards { grid-template-columns: 1fr; }
