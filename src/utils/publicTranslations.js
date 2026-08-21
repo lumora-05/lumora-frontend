@@ -67,7 +67,7 @@ export const EN_TEXT = {
   'Đăng nhập để tự điền thông tin, xem lịch sử đơn và tích điểm.': 'Sign in to autofill your details, view order history, and earn points.',
   'Tạo tài khoản bằng số điện thoại để sử dụng các tiện ích dành cho thành viên.': 'Create an account with your phone number to access member benefits.',
   'Ẩm thực tinh tế từ 2015': 'Refined cuisine since 2015',
-  'Hương vị tinh tế – Trải nghiệm hiện đại': 'Refined flavors – Modern experience',
+  'Trải nghiệm ẩm thực tinh tế': 'Refined culinary experience',
   'Đặt món ngay': 'Order now',
   'Xem thực đơn': 'View menu',
   'Mở cửa': 'Open',
@@ -512,7 +512,7 @@ Object.assign(EN_TEXT, {
   // Trang chủ
   '10:00 - 22:00 hằng ngày': '10:00 - 22:00 daily',
   'Hương vị đánh thức mọi giác quan tại': 'Flavors that awaken every sense at',
-  'Nơi những nguyên liệu tươi ngon nhất được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc gọi món trực tuyến chỉ trong vài chạm.': 'Where the freshest ingredients are crafted by our dedicated chefs. Reserve a table or order online in just a few taps.',
+  'Nơi những nguyên liệu tươi ngon được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc khám phá thực đơn chỉ trong vài chạm.': 'Fresh ingredients are prepared by our dedicated chefs. Reserve a table or explore the menu in just a few taps.',
   'Những món được thực khách lựa chọn nhiều nhất tại': 'The dishes most loved by our guests at',
   'Về': 'About',
   'Câu chuyện về hương vị và sự tận tâm': 'A story of flavor and dedication',

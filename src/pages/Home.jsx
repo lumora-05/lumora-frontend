@@ -11,7 +11,6 @@ import {
   MousePointerClick,
   Phone,
   Plus,
-  Star,
   UtensilsCrossed,
   X,
 } from 'lucide-react';
@@ -200,20 +199,17 @@ function Hero({ settings }) {
       </div>
 
       <div className="v0-shell v0-hero-content">
-        <span className="v0-hero-badge">
-          <Star size={14} fill="currentColor" />
-          Hương vị tinh tế – Trải nghiệm hiện đại
-        </span>
+        <span className="v0-hero-badge">Trải nghiệm ẩm thực tinh tế</span>
 
         <h1 className="v0-serif">Hương vị đánh thức mọi giác quan tại {settings.restaurantName}</h1>
 
         <p>
-          Nơi những nguyên liệu tươi ngon nhất được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc gọi món trực
-          tuyến chỉ trong vài chạm.
+          Nơi những nguyên liệu tươi ngon được chế biến bởi đội ngũ đầu bếp tận tâm. Đặt bàn hoặc khám phá thực đơn
+          chỉ trong vài chạm.
         </p>
 
         <div className="v0-hero-actions">
-          <a href={menuUrl} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt món ngay</a>
+          <a href={settings.reservationUrl || '/reservations'} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</a>
           <a href="/menu" className="v0-button v0-button-hero-outline v0-button-lg v0-pill">Xem thực đơn</a>
         </div>
 
