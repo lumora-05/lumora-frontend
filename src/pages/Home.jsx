@@ -154,7 +154,6 @@ function Navbar({ settings }) {
         <div className="v0-book-desktop">
           <LanguageSwitcher compact />
           <a href="/login" className="v0-button v0-button-outline v0-pill">Đăng nhập</a>
-          <a href={reservationUrl} className="v0-button v0-button-primary v0-pill">Đặt bàn ngay</a>
         </div>
 
         <button
