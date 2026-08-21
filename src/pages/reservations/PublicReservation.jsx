@@ -59,6 +59,7 @@ const RESERVATION_NAV_LINKS = [
   { label: 'Trang chủ', href: '/#trang-chu' },
   { label: 'Thực đơn', href: '/menu' },
   { label: 'Về chúng tôi', href: '/#gioi-thieu' },
+  { label: 'Đặt bàn', href: '/reservations' },
   { label: 'Liên hệ', href: '/#lien-he' },
 ];
 
