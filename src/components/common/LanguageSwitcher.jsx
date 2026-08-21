@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Globe2 } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -49,7 +49,7 @@ export default function LanguageSwitcher({ compact = false, className = '' }) {
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <Globe2 className="lumora-language-globe" size={compact ? 15 : 16} aria-hidden="true" />
+        <span className="lumora-language-globe" aria-hidden="true">🌐</span>
         <span className="lumora-language-current">{current.shortLabel}</span>
         <ChevronDown className="lumora-language-chevron" size={compact ? 14 : 15} aria-hidden="true" />
       </button>

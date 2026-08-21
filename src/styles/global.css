@@ -3816,7 +3816,7 @@
 .lumora-language-switcher{position:relative;display:inline-flex;align-items:center;white-space:nowrap;box-sizing:border-box;z-index:95}
 .lumora-language-trigger{min-height:36px;padding:0 10px;border:1px solid #e1e5ea;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#475569;background:#fff;font-family:inherit;font-size:11px;font-weight:850;line-height:1;cursor:pointer;box-shadow:0 3px 10px rgba(15,23,42,.06);transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
 .lumora-language-trigger:hover,.lumora-language-switcher.open .lumora-language-trigger{border-color:#d5dbe2;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.1)}
-.lumora-language-globe{color:#d97832;flex:none}
+.lumora-language-globe{flex:none;font-size:16px;line-height:1}
 .lumora-language-current{min-width:17px;color:#d95f20;text-align:center;letter-spacing:.02em}
 .lumora-language-chevron{flex:none;color:#667085;transition:transform .16s ease}
 .lumora-language-switcher.open .lumora-language-chevron{transform:rotate(180deg)}
@@ -3827,6 +3827,7 @@
 .lumora-language-flag{font-size:18px;line-height:1}
 .lumora-language-check{justify-self:end;color:#d97832}
 .lumora-language-switcher.compact .lumora-language-trigger{min-height:32px;padding:0 8px;font-size:10px;gap:5px}
+.lumora-language-switcher.compact .lumora-language-globe{font-size:15px}
 .lumora-customer-auth-language{position:absolute;top:22px;right:24px;z-index:4}
 @keyframes lumora-language-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.lumora-customer-auth-language{top:14px;right:14px}}
