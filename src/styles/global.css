@@ -2860,6 +2860,10 @@
 .waiter-notification-btn{text-decoration:none}
 .waiter-action-note{margin:14px 18px 0;padding:11px 13px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px}
 .waiter-order-feed-card.priority-card{background:#fbfffc;border-color:#bbf7d0;border-left-color:#16a34a;box-shadow:0 10px 22px rgba(22,163,74,.08)}
+.waiter-order-feed-card.wait-warning{background:#fffaf2;border-color:#fed7aa;border-left-color:#f59e0b;box-shadow:0 10px 22px rgba(245,158,11,.10)}
+.waiter-order-feed-card.wait-urgent{background:#fff7f7;border-color:#fecaca;border-left-color:#ef4444;box-shadow:0 10px 22px rgba(239,68,68,.10)}
+.waiter-order-table-icon.wait-warning{background:#fff4eb;border-color:#ffd8b5;}
+.waiter-order-table-icon.wait-urgent{background:#fff1f2;border-color:#fecdd3;}
 .waiter-feed-title>div>em{font-style:normal;padding:4px 8px;border-radius:999px;background:#fff1e8;color:#ea580c;font-size:11px;font-weight:850;white-space:nowrap}
 .waiter-ready-count{padding:4px 8px;border-radius:999px;background:#dcfce7;color:#15803d!important;font-weight:900!important}
 .waiter-elapsed{display:flex;align-items:center;justify-content:flex-end;gap:7px;color:#64748b;font-size:12px;text-align:right}

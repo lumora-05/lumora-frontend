@@ -178,14 +178,19 @@ export default function TableStatus() {
             const call = latestCall(order);
             const createdAt = orderCreatedAt(order);
             const elapsedTone = waitTone(createdAt, group);
+            const tableIcon = elapsedTone === 'urgent'
+              ? '/waiter-icons/table-chair-action.png'
+              : elapsedTone === 'warning'
+                ? '/waiter-icons/table-chair-preparing.png'
+                : TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png';
             const buttonLabel = group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
             return (
-              <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''}`} key={id}>
+              <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''} wait-${elapsedTone}`} key={id}>
                 <div className="waiter-feed-main">
                   <div className="waiter-feed-main-row">
 
-                    <div className={`waiter-order-table-icon ${group.toLowerCase()}`}>
-                      <img src={TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png'} alt="" aria-hidden="true" />
+                    <div className={`waiter-order-table-icon ${group.toLowerCase()} wait-${elapsedTone}`}>
+                      <img src={tableIcon} alt="" aria-hidden="true" />
                     </div>
                     <div className="waiter-feed-main-content">
                       <div className="waiter-feed-title">
