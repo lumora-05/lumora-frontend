@@ -47,23 +47,6 @@ function roleOf(user) {
 }
 
 
-function ServiceOrderIcon() {
-  return (
-    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-      <g fill="none" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 18v12" />
-        <path d="M34 18v12" />
-        <path d="M16 20h16" />
-        <path d="M13 30h22" />
-        <path d="M21 20l-3-6" />
-        <path d="M27 20l3-6" />
-        <path d="M10 16.5h7v4h-7z" />
-        <path d="M31 16.5h7v4h-7z" />
-      </g>
-    </svg>
-  );
-}
-
 
 export default function TableStatus() {
   const toast = useToast();
@@ -194,8 +177,10 @@ export default function TableStatus() {
               <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''}`} key={id}>
                 <div className="waiter-feed-main">
                   <div className="waiter-feed-main-row">
-                    <div className={`waiter-order-table-icon ${meta.tone}`}>
-                      <ServiceOrderIcon />
+
+                    <div className={`waiter-order-table-icon ${group.toLowerCase()}`}>
+                      <img src="/waiter-icons/table-chair.png" alt="" aria-hidden="true" />
+
                     </div>
                     <div className="waiter-feed-main-content">
                       <div className="waiter-feed-title">
