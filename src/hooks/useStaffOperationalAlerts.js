@@ -10,6 +10,8 @@ import {
   unwrapList as unwrapKitchenList,
 } from '../utils/kitchenData';
 import {
+  isActiveOrder,
+  orderGroup,
   pendingReadyCount,
   tableNameOfOrder,
   unwrapList as unwrapWaiterList,
@@ -164,6 +166,7 @@ export function useStaffOperationalAlerts(role, event) {
         const requests = unwrapServiceRequestList(serviceResponse);
         const newRequests = requests.filter((item) => serviceRequestStatus(item) === 'MOI');
         const readyOrders = orders
+          .filter((order) => isActiveOrder(order) && ['READY', 'PREPARING'].includes(orderGroup(order)))
           .map((order) => ({ order, readyCount: pendingReadyCount(order) }))
           .filter((item) => item.readyCount > 0);
 
@@ -185,9 +188,12 @@ export function useStaffOperationalAlerts(role, event) {
           lastReminderAt.current = Date.now();
           const first = readyOrders[0];
           const totalReady = readyOrders.reduce((sum, item) => sum + item.readyCount, 0);
+          const body = readyOrders.length === 1
+            ? `${first.readyCount} phần đã sẵn sàng · ${tableNameOfOrder(first.order)}.`
+            : `${totalReady} phần đã sẵn sàng tại ${readyOrders.length} bàn.`;
           triggerStaffAlert({
             title: 'Còn món đang chờ phục vụ',
-            body: `${totalReady} phần đã sẵn sàng${first?.order ? ` · ${tableNameOfOrder(first.order)}` : ''}.`,
+            body,
             tag: 'waiter-ready-reminder',
             url: '/waiter/orders',
             urgent: true,
