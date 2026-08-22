@@ -351,6 +351,43 @@ function getHomeReviewInitials(name) {
   return words.slice(-2).map((word) => word[0]).join('').toUpperCase();
 }
 
+function getHomeReviewIdentity(review) {
+  const stableId = review?.customerId
+    ?? review?.userId
+    ?? review?.maKhachHang
+    ?? review?.accountId
+    ?? review?.reviewerId;
+
+  if (stableId !== null && stableId !== undefined && String(stableId).trim()) {
+    return `id:${String(stableId).trim()}`;
+  }
+
+  return `name:${getHomeReviewName(review).toLocaleLowerCase('vi-VN')}`;
+}
+
+function pickHomeReviews(reviews, limit = 3) {
+  const withComments = (Array.isArray(reviews) ? reviews : [])
+    .map((review) => ({ ...review, comment: String(review?.comment ?? '').trim() }))
+    .filter((review) => review.comment.length > 0);
+
+  // Ưu tiên nhận xét có nội dung đủ rõ để phần đánh giá trên trang chủ hữu ích hơn.
+  const substantive = withComments.filter((review) => review.comment.length >= 30);
+  const short = withComments.filter((review) => review.comment.length < 30);
+  const ordered = [...substantive, ...short];
+  const seen = new Set();
+  const selected = [];
+
+  for (const review of ordered) {
+    const identity = getHomeReviewIdentity(review);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    selected.push(review);
+    if (selected.length >= limit) break;
+  }
+
+  return selected;
+}
+
 function HomeReviewStars({ value }) {
   const rounded = Math.round(Number(value || 0));
   return (
@@ -376,16 +413,18 @@ function OrderCta({ settings }) {
 
     Promise.allSettled([
       reviewApi.publicStatistics(),
-      reviewApi.publicPage({ page: 0, size: 3 }),
+      // Lấy thêm ứng viên để có thể bỏ nhận xét rỗng và tránh lặp cùng khách hàng.
+      reviewApi.publicPage({ page: 0, size: 20 }),
     ]).then(([statisticsResult, reviewsResult]) => {
       if (!active) return;
 
       const statistics = statisticsResult.status === 'fulfilled'
         ? (statisticsResult.value?.data ?? statisticsResult.value ?? {})
         : {};
-      const reviews = reviewsResult.status === 'fulfilled'
-        ? normalizePage(reviewsResult.value, 3).content.slice(0, 3)
+      const reviewCandidates = reviewsResult.status === 'fulfilled'
+        ? normalizePage(reviewsResult.value, 20).content
         : [];
+      const reviews = pickHomeReviews(reviewCandidates, 3);
       const visibleReviews = statistics?.visibleReviews;
       const totalReviews = visibleReviews !== null && visibleReviews !== undefined
         ? Number(visibleReviews || 0)
@@ -411,7 +450,6 @@ function OrderCta({ settings }) {
         loading: 'Loading customer reviews...',
         empty: 'No public reviews yet.',
         anonymous: 'Anonymous guest',
-        noComment: 'This guest left a rating for their experience at LUMORA.',
       }
     : {
         title: 'Khách hàng nói gì về',
@@ -421,7 +459,6 @@ function OrderCta({ settings }) {
         loading: 'Đang tải đánh giá từ khách hàng...',
         empty: 'Chưa có đánh giá công khai.',
         anonymous: 'Khách hàng ẩn danh',
-        noComment: 'Khách hàng đã để lại đánh giá cho trải nghiệm tại LUMORA.',
       };
 
   const average = reviewState.averageRating;
@@ -479,7 +516,7 @@ function OrderCta({ settings }) {
                     <HomeReviewStars value={Number(review.rating || 0)} />
                     <Quote size={28} />
                   </div>
-                  <p>{String(review.comment || '').trim() || copy.noComment}</p>
+                  <p title={review.comment}>{review.comment}</p>
                   <div className="v0-review-author">
                     <span className="v0-review-avatar">
                       {initials || <UserRound size={20} />}
