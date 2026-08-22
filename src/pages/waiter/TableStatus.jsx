@@ -46,6 +46,25 @@ function roleOf(user) {
   return String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '').replace('ROLE_', '').toUpperCase();
 }
 
+
+function ServiceOrderIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 18v12" />
+        <path d="M34 18v12" />
+        <path d="M16 20h16" />
+        <path d="M13 30h22" />
+        <path d="M21 20l-3-6" />
+        <path d="M27 20l3-6" />
+        <path d="M10 16.5h7v4h-7z" />
+        <path d="M31 16.5h7v4h-7z" />
+      </g>
+    </svg>
+  );
+}
+
+
 export default function TableStatus() {
   const toast = useToast();
   const [orders, setOrders] = useState([]);
@@ -174,18 +193,25 @@ export default function TableStatus() {
             return (
               <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''}`} key={id}>
                 <div className="waiter-feed-main">
-                  <div className="waiter-feed-title">
-                    <div>
-                      <strong>{tableNameOfOrder(order)}</strong>
-                      <span>#{id}</span>
-                      {call > 1 ? <em>Lượt gọi #{call}</em> : null}
+                  <div className="waiter-feed-main-row">
+                    <div className={`waiter-order-table-icon ${group.toLowerCase()}`}>
+                      <ServiceOrderIcon />
                     </div>
-                    <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
-                  </div>
-                  <div className="waiter-feed-summary">
-                    <span><UtensilsCrossed size={16} />{itemCount(order)} món</span>
-                    {readyCount > 0 ? <span className="waiter-ready-count">{readyCount} món cần mang ra</span> : null}
-                    <p>{items.length ? items.slice(0, 4).map(itemName).join(', ') : 'Chưa có chi tiết món'}</p>
+                    <div className="waiter-feed-main-content">
+                      <div className="waiter-feed-title">
+                        <div>
+                          <strong>{tableNameOfOrder(order)}</strong>
+                          <span>#{id}</span>
+                          {call > 1 ? <em>Lượt gọi #{call}</em> : null}
+                        </div>
+                        <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
+                      </div>
+                      <div className="waiter-feed-summary">
+                        <span><UtensilsCrossed size={16} />{itemCount(order)} món</span>
+                        {readyCount > 0 ? <span className="waiter-ready-count">{readyCount} món cần mang ra</span> : null}
+                        <p>{items.length ? items.slice(0, 4).map(itemName).join(', ') : 'Chưa có chi tiết món'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="waiter-feed-side">
