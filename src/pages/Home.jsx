@@ -11,15 +11,20 @@ import {
   MousePointerClick,
   Phone,
   Plus,
+  Quote,
+  Star,
+  UserRound,
   UtensilsCrossed,
   X,
 } from 'lucide-react';
 import { menuApi } from '../api/menuApi';
+import { reviewApi } from '../api/reviewApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { imageUrl } from '../utils/imageUrl';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedFoodDescription, localizedFoodName } from '../utils/localizedContent';
+import { normalizePage } from '../utils/pagination';
 import '../styles/home.css';
 
 const DEFAULT_SETTINGS = {
@@ -330,7 +335,98 @@ function About({ restaurantName }) {
   );
 }
 
+function getHomeReviewName(review) {
+  const value = review?.displayName
+    ?? review?.customerName
+    ?? review?.reviewerName
+    ?? review?.name
+    ?? review?.tenHienThi
+    ?? review?.tenKhachHang;
+  return String(value ?? '').trim() || 'Khách hàng ẩn danh';
+}
+
+function getHomeReviewInitials(name) {
+  if (!name || name === 'Khách hàng ẩn danh') return null;
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words.slice(-2).map((word) => word[0]).join('').toUpperCase();
+}
+
+function HomeReviewStars({ value }) {
+  const rounded = Math.round(Number(value || 0));
+  return (
+    <span className="v0-review-stars" aria-label={`${Number(value || 0)} trên 5 sao`}>
+      {Array.from({ length: 5 }, (_, index) => (
+        <Star key={index} size={18} className={index < rounded ? 'filled' : ''} />
+      ))}
+    </span>
+  );
+}
+
 function OrderCta({ settings }) {
+  const { language } = useLanguage();
+  const [reviewState, setReviewState] = useState({
+    loading: true,
+    averageRating: 0,
+    totalReviews: 0,
+    reviews: [],
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    Promise.allSettled([
+      reviewApi.publicStatistics(),
+      reviewApi.publicPage({ page: 0, size: 3 }),
+    ]).then(([statisticsResult, reviewsResult]) => {
+      if (!active) return;
+
+      const statistics = statisticsResult.status === 'fulfilled'
+        ? (statisticsResult.value?.data ?? statisticsResult.value ?? {})
+        : {};
+      const reviews = reviewsResult.status === 'fulfilled'
+        ? normalizePage(reviewsResult.value, 3).content.slice(0, 3)
+        : [];
+      const visibleReviews = statistics?.visibleReviews;
+      const totalReviews = visibleReviews !== null && visibleReviews !== undefined
+        ? Number(visibleReviews || 0)
+        : Number(statistics?.totalReviews || reviews.length || 0);
+
+      setReviewState({
+        loading: false,
+        averageRating: Number(statistics?.averageRating || 0),
+        totalReviews,
+        reviews,
+      });
+    });
+
+    return () => { active = false; };
+  }, []);
+
+  const copy = language === 'en'
+    ? {
+        title: 'What guests say about',
+        subtitle: 'Genuine feedback from guests who have experienced dining at our restaurant.',
+        from: 'from',
+        reviews: 'reviews',
+        loading: 'Loading customer reviews...',
+        empty: 'No public reviews yet.',
+        anonymous: 'Anonymous guest',
+        noComment: 'This guest left a rating for their experience at LUMORA.',
+      }
+    : {
+        title: 'Khách hàng nói gì về',
+        subtitle: 'Những cảm nhận chân thực từ thực khách đã trải nghiệm ẩm thực tại nhà hàng.',
+        from: 'từ',
+        reviews: 'đánh giá',
+        loading: 'Đang tải đánh giá từ khách hàng...',
+        empty: 'Chưa có đánh giá công khai.',
+        anonymous: 'Khách hàng ẩn danh',
+        noComment: 'Khách hàng đã để lại đánh giá cho trải nghiệm tại LUMORA.',
+      };
+
+  const average = reviewState.averageRating;
+  const total = reviewState.totalReviews;
+
   return (
     <section id="dat-mon" className="v0-shell v0-section v0-order-section">
       <div className="v0-section-head">
@@ -352,13 +448,49 @@ function OrderCta({ settings }) {
         })}
       </div>
 
-      <div className="v0-dark-cta">
-        <h3 className="v0-serif">Sẵn sàng thưởng thức cùng {settings.restaurantName}?</h3>
-        <p>Đặt bàn trước để giữ chỗ cho những dịp đặc biệt, hoặc gọi món trực tuyến để nhận ngay tại nhà.</p>
-        <div className="v0-dark-actions">
-          <a href={settings.reservationUrl || '/reservations'} className="v0-button v0-button-primary v0-button-lg v0-pill">Đặt bàn ngay</a>
-          <a href="/menu" className="v0-button v0-button-dark-outline v0-button-lg v0-pill">Gọi món giao tận nơi</a>
+      <div className="v0-dark-cta v0-reviews-panel">
+        <div className="v0-review-heading">
+          <h3 className="v0-serif">{copy.title} <span>{settings.restaurantName}</span>?</h3>
+          <p>{copy.subtitle}</p>
+
+          {!reviewState.loading && total > 0 ? (
+            <div className="v0-review-summary">
+              <HomeReviewStars value={average} />
+              <strong>{average.toFixed(1)}/5</strong>
+              <span>{copy.from} {total} {copy.reviews}</span>
+            </div>
+          ) : null}
         </div>
+
+        {reviewState.loading ? (
+          <div className="v0-review-status">{copy.loading}</div>
+        ) : reviewState.reviews.length === 0 ? (
+          <div className="v0-review-status">{copy.empty}</div>
+        ) : (
+          <div className="v0-review-grid">
+            {reviewState.reviews.map((review, index) => {
+              const rawName = getHomeReviewName(review);
+              const displayName = rawName === 'Khách hàng ẩn danh' ? copy.anonymous : rawName;
+              const initials = getHomeReviewInitials(rawName);
+
+              return (
+                <article key={review.id ?? `${rawName}-${index}`} className="v0-review-card">
+                  <div className="v0-review-card-top">
+                    <HomeReviewStars value={Number(review.rating || 0)} />
+                    <Quote size={28} />
+                  </div>
+                  <p>{String(review.comment || '').trim() || copy.noComment}</p>
+                  <div className="v0-review-author">
+                    <span className="v0-review-avatar">
+                      {initials || <UserRound size={20} />}
+                    </span>
+                    <strong>{displayName}</strong>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
