@@ -83,6 +83,8 @@
 .v0-button-primary:hover { background: color-mix(in oklch, var(--v0-primary) 90%, transparent); }
 .v0-button-outline { border-color: var(--v0-border); background: transparent; color: var(--v0-foreground); }
 .v0-button-outline:hover { background: color-mix(in oklch, var(--v0-secondary) 80%, transparent); }
+.v0-login-button { border-color: var(--v0-primary); background: #fff; color: var(--v0-primary); }
+.v0-login-button:hover { border-color: var(--v0-primary); background: var(--v0-primary); color: var(--v0-primary-fg); }
 
 .v0-hero { position: relative; overflow: hidden; }
 .v0-hero-bg { position: absolute; inset: 0; }

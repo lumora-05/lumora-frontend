@@ -153,7 +153,7 @@ function Navbar({ settings }) {
 
         <div className="v0-book-desktop">
           <LanguageSwitcher compact />
-          <a href="/login" className="v0-button v0-button-outline v0-pill">Đăng nhập</a>
+          <a href="/login" className="v0-button v0-button-outline v0-pill v0-login-button">Đăng nhập</a>
         </div>
 
         <button
@@ -174,7 +174,7 @@ function Navbar({ settings }) {
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
             <LanguageSwitcher />
-            <a href="/login" className="v0-button v0-button-outline v0-pill v0-mobile-login" onClick={() => setOpen(false)}>Đăng nhập</a>
+            <a href="/login" className="v0-button v0-button-outline v0-pill v0-mobile-login v0-login-button" onClick={() => setOpen(false)}>Đăng nhập</a>
             <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book" onClick={() => setOpen(false)}>Đặt bàn ngay</a>
           </nav>
         </div>
