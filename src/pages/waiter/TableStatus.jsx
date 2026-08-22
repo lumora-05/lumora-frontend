@@ -194,7 +194,7 @@ export default function TableStatus() {
               <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''}`} key={id}>
                 <div className="waiter-feed-main">
                   <div className="waiter-feed-main-row">
-                    <div className={`waiter-order-table-icon ${group.toLowerCase()}`}>
+                    <div className={`waiter-order-table-icon ${meta.tone}`}>
                       <ServiceOrderIcon />
                     </div>
                     <div className="waiter-feed-main-content">
