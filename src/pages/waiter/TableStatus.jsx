@@ -32,6 +32,12 @@ const TAB_GROUPS = [
   ['PAYMENT', 'Chờ thanh toán'],
 ];
 
+const TABLE_ICON_BY_GROUP = {
+  READY: '/waiter-icons/table-chair-ready.png',
+  PREPARING: '/waiter-icons/table-chair-preparing.png',
+  PAYMENT: '/waiter-icons/table-chair-payment.png',
+};
+
 function matchesTab(order, tab) {
   const group = orderGroup(order);
   if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(group);
@@ -179,8 +185,7 @@ export default function TableStatus() {
                   <div className="waiter-feed-main-row">
 
                     <div className={`waiter-order-table-icon ${group.toLowerCase()}`}>
-                      <img src="/waiter-icons/table-chair.png" alt="" aria-hidden="true" />
-
+                      <img src={TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png'} alt="" aria-hidden="true" />
                     </div>
                     <div className="waiter-feed-main-content">
                       <div className="waiter-feed-title">
