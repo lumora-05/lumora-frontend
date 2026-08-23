@@ -67,6 +67,22 @@ export function useStaffOperationalAlerts(role, event) {
       return;
     }
 
+    if (roleKey === 'CASHIER' && ['RESERVATION_CREATED', 'RESERVATION_UPDATED'].includes(type)
+        && String(data?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN') {
+      const code = data?.maTraCuu ? ` ${data.maTraCuu}` : '';
+      lastReminderAt.current = Date.now();
+      triggerStaffAlert({
+        title: type === 'RESERVATION_UPDATED' ? 'Đặt bàn vừa được cập nhật' : 'Có yêu cầu đặt bàn mới',
+        body: type === 'RESERVATION_UPDATED'
+          ? `Khách vừa cập nhật lịch đặt bàn${code}. Thu ngân cần kiểm tra và xác nhận lại.`
+          : `Có yêu cầu đặt bàn${code} đang chờ thu ngân kiểm tra và xác nhận.`,
+        tag: `cashier-reservation-${data?.maDatBan || data?.maTraCuu || 'latest'}-${type}`,
+        url: '/cashier/reservations',
+        urgent: true,
+      });
+      return;
+    }
+
     if (roleKey === 'CASHIER' && [
       'DELIVERY_ORDER_WAITING_PAYMENT',
       'DELIVERY_ORDER_PENDING_CONFIRMATION',

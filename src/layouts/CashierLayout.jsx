@@ -1,27 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Bike, History, ReceiptText, UserRound, X } from 'lucide-react';
+import { Bell, Bike, CalendarCheck2, History, ReceiptText, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
 import { deliveryApi } from '../api/deliveryApi';
 import { orderApi } from '../api/orderApi';
+import { reservationApi } from '../api/reservationApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../utils/cashier';
 import { isCashierDeliveryAttention, unwrapDeliveryList } from '../utils/delivery';
 import { imageUrl } from '../utils/imageUrl';
+import { normalizePage } from '../utils/pagination';
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
   { to: '/cashier/delivery-orders', label: 'Đơn đặt online', icon: 'delivery', mobileIcon: Bike },
+  { to: '/cashier/reservations', label: 'Đặt bàn', icon: 'reservation', mobileIcon: CalendarCheck2 },
   { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },  { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
   { to: '/cashier/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
 ];
 
 const pageMeta = {
   '/cashier/delivery-orders': ['Đơn đặt online', 'Tiếp nhận và xử lý các đơn đặt online của khách hàng'],
+  '/cashier/reservations': ['Đặt bàn', 'Tiếp nhận, xác nhận và quản lý yêu cầu đặt bàn trực tuyến'],
   '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
-  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi công việc cần xử lý tại bàn và đơn đặt online'],
+  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi thanh toán, đơn online và đặt bàn cần xử lý'],
   '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/cashier': ['Thanh toán', 'Ưu tiên các bàn đã yêu cầu thanh toán lâu nhất'],
 };
@@ -37,7 +41,8 @@ export default function CashierLayout() {
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
   const [paymentAttentionCount, setPaymentAttentionCount] = useState(0);
   const [deliveryAttentionCount, setDeliveryAttentionCount] = useState(0);
-  const cashierEvent = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
+  const [reservationAttentionCount, setReservationAttentionCount] = useState(0);
+  const cashierEvent = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -76,20 +81,33 @@ export default function CashierLayout() {
     }
   }, []);
 
+
+  const loadReservationAttentionCount = useCallback(async () => {
+    try {
+      const response = await reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 });
+      setReservationAttentionCount(normalizePage(response, 1).totalElements);
+    } catch {
+      // Badge là thông tin hỗ trợ; trang đặt bàn vẫn tự hiển thị lỗi nếu tải dữ liệu thất bại.
+    }
+  }, []);
+
   useEffect(() => { loadPaymentAttentionCount(); }, [loadPaymentAttentionCount]);
   useEffect(() => { loadDeliveryAttentionCount(); }, [loadDeliveryAttentionCount]);
+  useEffect(() => { loadReservationAttentionCount(); }, [loadReservationAttentionCount]);
   useEffect(() => {
     if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(cashierEvent?.topic)) {
       loadPaymentAttentionCount();
     }
     if (isDeliveryRealtimeEvent(cashierEvent)) loadDeliveryAttentionCount();
-  }, [cashierEvent, loadDeliveryAttentionCount, loadPaymentAttentionCount]);
+    if (cashierEvent?.topic === '/topic/cashier/reservations') loadReservationAttentionCount();
+  }, [cashierEvent, loadDeliveryAttentionCount, loadPaymentAttentionCount, loadReservationAttentionCount]);
 
   const navigationItems = useMemo(() => items.map((item) => {
     if (item.to === '/cashier') return { ...item, badge: paymentAttentionCount };
     if (item.to === '/cashier/delivery-orders') return { ...item, badge: deliveryAttentionCount };
+    if (item.to === '/cashier/reservations') return { ...item, badge: reservationAttentionCount };
     return item;
-  }), [deliveryAttentionCount, paymentAttentionCount]);
+  }), [deliveryAttentionCount, paymentAttentionCount, reservationAttentionCount]);
 
   const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
   let title;

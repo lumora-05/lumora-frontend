@@ -36,6 +36,7 @@ import PrintInvoice from '../pages/cashier/PrintInvoice';
 import CashierReport from '../pages/cashier/CashierReport';
 import CashierNotifications from '../pages/cashier/CashierNotifications';
 import CashierAccount from '../pages/cashier/CashierAccount';
+import CashierReservations from '../pages/cashier/CashierReservations';
 import CustomerMenu from '../pages/customer/CustomerMenu';
 import FoodDetail from '../pages/customer/FoodDetail';
 import Cart from '../pages/customer/Cart';
@@ -107,6 +108,7 @@ export default function AppRoutes(){return <Routes>
     <Route index element={<CashierHome mode="queue"/>}/>
     <Route path="history" element={<CashierHome mode="history"/>}/>
     <Route path="delivery-orders" element={<DeliveryOrderManage/>}/>
+    <Route path="reservations" element={<CashierReservations/>}/>
     <Route path="invoices/:orderId" element={<Invoice/>}/>
     <Route path="payments" element={<Navigate to="/cashier" replace/>}/>
     <Route path="payment/:orderId" element={<Payment/>}/>

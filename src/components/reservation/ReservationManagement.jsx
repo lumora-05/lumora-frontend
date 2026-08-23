@@ -143,7 +143,13 @@ function SimpleConfirmModal({ action, item, busy, onSubmit, onClose }) {
 
 export default function ReservationManagement({ role = 'admin' }) {
   const toast = useToast();
-  const topics = role === 'admin' ? ['/topic/admin/reservations', '/topic/reservations'] : ['/topic/reservations'];
+  const topics = role === 'admin'
+    ? ['/topic/admin/reservations', '/topic/reservations']
+    : role === 'cashier'
+      ? ['/topic/cashier/reservations', '/topic/reservations']
+      : ['/topic/reservations'];
+  const canManageReservation = role === 'admin' || role === 'cashier';
+  const canHandleArrival = role === 'admin' || role === 'waiter';
   const socketEvent = useWebSocket(topics);
   const [rows, setRows] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -207,7 +213,7 @@ export default function ReservationManagement({ role = 'admin' }) {
         from: from || undefined,
         to: to || undefined,
         keyword: keyword || undefined,
-        area: role === 'admin' ? area || undefined : undefined,
+        area: canManageReservation ? area || undefined : undefined,
         page,
         size,
       });
@@ -225,7 +231,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     } finally {
       setLoading(false);
     }
-  }, [area, from, keyword, page, role, size, status, to, toast]);
+  }, [area, canManageReservation, from, keyword, page, size, status, to, toast]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (socketEvent?.topic?.includes('reservations')) load(); }, [load, socketEvent]);
@@ -330,7 +336,7 @@ export default function ReservationManagement({ role = 'admin' }) {
           <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>{STATUS_OPTIONS.map(([value, label]) => <option key={value || 'all'} value={value}>{label}</option>)}</select>
           <label><CalendarDays size={16} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
           <label><CalendarDays size={16} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-          {role === 'admin' ? <label><MapPin size={16} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></label> : null}
+          {canManageReservation ? <label><MapPin size={16} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></label> : null}
           <form onSubmit={(event) => { event.preventDefault(); setKeyword(keywordInput.trim()); setPage(0); }}><Search size={17} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, số điện thoại..." /><button type="submit">Tìm</button></form>
           <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
           <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
@@ -354,17 +360,17 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
                         {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone="preorder" onClick={() => openAction('preorder', item)}><ChefHat size={15} /> Món đặt trước</ActionButton> : null}
-                        {statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
+                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
                         {statusValue === 'DA_XAC_NHAN' ? <>
-                          {canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, clockTick)
+                          {canHandleArrival && canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, clockTick)
                             ? <ActionButton tone="primary" onClick={() => openAction('check-in', item)}><UserCheck size={15} /> Check-in</ActionButton>
                             : null}
-                          {canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, clockTick)
+                          {canManageReservation && canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, clockTick)
                             ? <ActionButton tone="warning" onClick={() => openAction('no-show', item)}><CalendarClock size={15} /> Không đến</ActionButton>
                             : null}
                         </> : null}
-                        {statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> Xếp bàn</ActionButton> : null}
-                        {['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'KHACH_DA_DEN'].includes(statusValue) ? <ActionButton tone="muted-danger" onClick={() => openAction('cancel', item)}>Hủy</ActionButton> : null}
+                        {canHandleArrival && statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> Xếp bàn</ActionButton> : null}
+                        {canManageReservation && ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'KHACH_DA_DEN'].includes(statusValue) ? <ActionButton tone="muted-danger" onClick={() => openAction('cancel', item)}>Hủy</ActionButton> : null}
                       </div></td>
                     </tr>
                   );
@@ -386,7 +392,7 @@ export default function ReservationManagement({ role = 'admin' }) {
           {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
-          {modal?.action === 'preorder' ? <StaffReservationPreorderModal item={modal.item} onClose={() => setModal(null)} onUpdated={load} /> : null}
+          {modal?.action === 'preorder' ? <StaffReservationPreorderModal item={modal.item} role={role} onClose={() => setModal(null)} onUpdated={load} /> : null}
         </div>,
         document.body,
       ) : null}

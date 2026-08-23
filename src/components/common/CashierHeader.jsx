@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deliveryApi } from '../../api/deliveryApi';
 import { orderApi } from '../../api/orderApi';
+import { reservationApi } from '../../api/reservationApi';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
@@ -10,6 +11,7 @@ import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
 import { displayOrderCode, isCashierDeliveryAttention, unwrapDeliveryList } from '../../utils/delivery';
+import { normalizePage } from '../../utils/pagination';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 
 function cashierOnlineAlert(event) {
@@ -32,13 +34,19 @@ function cashierOnlineAlert(event) {
   if (type === 'PICKUP_READY') {
     return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã hoàn thành chế biến · sẵn sàng để khách đến lấy.` };
   }
+  if (type === 'RESERVATION_CREATED') {
+    return { key: `${type}-${data?.maDatBan || data?.maTraCuu || 'latest'}`, message: `Có yêu cầu đặt bàn mới${data?.maTraCuu ? ` ${data.maTraCuu}` : ''} · cần thu ngân kiểm tra và xác nhận.` };
+  }
+  if (type === 'RESERVATION_UPDATED' && String(data?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN') {
+    return { key: `${type}-${data?.maDatBan || data?.maTraCuu || 'latest'}`, message: `Khách vừa cập nhật đặt bàn${data?.maTraCuu ? ` ${data.maTraCuu}` : ''} · cần thu ngân xác nhận lại.` };
+  }
   return null;
 }
 
 export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
   const toast = useToast();
-  const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
+  const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations']);
   const [queueCount, setQueueCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const lastToastKey = useRef('');
@@ -49,6 +57,7 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   async function loadCount() {
     let paymentCount = 0;
     let deliveryCount = 0;
+    let reservationCount = 0;
 
     try {
       const paymentResponse = await orderApi.getAll();
@@ -65,12 +74,20 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
       // Giữ phần đếm công việc thanh toán nếu danh sách đơn online tạm thời không tải được.
     }
 
-    setQueueCount(paymentCount + deliveryCount);
+
+    try {
+      const reservationResponse = await reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 });
+      reservationCount = normalizePage(reservationResponse, 1).totalElements;
+    } catch {
+      // Giữ các phần đếm khác nếu danh sách đặt bàn tạm thời không tải được.
+    }
+
+    setQueueCount(paymentCount + deliveryCount + reservationCount);
   }
 
   useEffect(() => { loadCount(); }, []);
   useEffect(() => {
-    if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(event?.topic)) loadCount();
+    if (['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations'].includes(event?.topic)) loadCount();
   }, [event]);
 
   useEffect(() => {

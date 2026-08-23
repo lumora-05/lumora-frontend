@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BellRing, Bike, Clock3, PackageCheck, RefreshCw, WalletCards } from 'lucide-react';
+import { BellRing, Bike, CalendarCheck2, Clock3, PackageCheck, RefreshCw, WalletCards } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { deliveryApi } from '../../api/deliveryApi';
 import { orderApi } from '../../api/orderApi';
+import { reservationApi } from '../../api/reservationApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
+import { normalizePage } from '../../utils/pagination';
+import { reservationDateTime } from '../../utils/reservations';
 import {
   PAYMENT_REQUEST_STATUSES,
   documentCode,
@@ -55,21 +58,24 @@ function onlinePriority(order) {
 export default function CashierNotifications() {
   const [orders, setOrders] = useState([]);
   const [deliveryOrders, setDeliveryOrders] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [now, setNow] = useState(Date.now());
-  const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
+  const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations']);
 
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const [orderResponse, deliveryResponse] = await Promise.all([
+      const [orderResponse, deliveryResponse, reservationResponse] = await Promise.all([
         orderApi.getAll(),
         deliveryApi.list('ALL'),
+        reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 20 }),
       ]);
       setOrders(unwrap(orderResponse));
       setDeliveryOrders(unwrapDeliveryList(deliveryResponse));
+      setReservations(normalizePage(reservationResponse, 20).content);
     } catch {
       setError('Không tải được thông báo công việc của thu ngân.');
     } finally {
@@ -79,7 +85,7 @@ export default function CashierNotifications() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(event?.topic)) load();
+    if (['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations'].includes(event?.topic)) load();
   }, [event]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
@@ -98,7 +104,7 @@ export default function CashierNotifications() {
       return new Date(onlineAttentionTime(b) || 0) - new Date(onlineAttentionTime(a) || 0);
     }), [deliveryOrders]);
 
-  const hasWork = waiting.length > 0 || onlineWaiting.length > 0;
+  const hasWork = waiting.length > 0 || onlineWaiting.length > 0 || reservations.length > 0;
 
   return (
     <section className="page cashier-page cashier-workspace">
@@ -112,8 +118,23 @@ export default function CashierNotifications() {
         {loading ? <div className="cashier-table-empty cashier-loading-card">Đang tải thông báo...</div> : null}
 
         {!loading && !hasWork ? (
-          <div className="cashier-notification-empty"><BellRing size={34} /><strong>Không có công việc mới</strong><span>Hiện chưa có yêu cầu thanh toán hoặc đơn đặt online cần xử lý.</span></div>
+          <div className="cashier-notification-empty"><BellRing size={34} /><strong>Không có công việc mới</strong><span>Hiện chưa có yêu cầu thanh toán, đơn online hoặc đặt bàn cần xử lý.</span></div>
         ) : null}
+
+        {!loading ? reservations.map((reservation) => {
+          const elapsed = elapsedInfo(reservation?.thoiGianTao, now);
+          return (
+            <article key={`reservation-${reservation?.maDatBan || reservation?.maTraCuu}`} className={`cashier-notification-card ${elapsed.tone}`}>
+              <div className="cashier-notification-icon"><CalendarCheck2 size={22} /></div>
+              <div className="cashier-notification-content">
+                <div><strong>Đặt bàn {reservation?.maTraCuu || ''} đang chờ xác nhận</strong><span>{reservationDateTime(reservation?.ngayGioDen)}</span></div>
+                <p>{reservation?.hoTenKhach || 'Khách hàng'} · {reservation?.soLuongKhach || 0} khách{reservation?.khuVucMongMuon ? ` · ${reservation.khuVucMongMuon}` : ''}</p>
+                <small><Clock3 size={14} />{elapsed.label}</small>
+              </div>
+              <Link to="/cashier/reservations">Xử lý đặt bàn</Link>
+            </article>
+          );
+        }) : null}
 
         {!loading ? onlineWaiting.map((order) => {
           const status = onlineStatus(order);
