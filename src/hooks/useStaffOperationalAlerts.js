@@ -67,17 +67,37 @@ export function useStaffOperationalAlerts(role, event) {
       return;
     }
 
-    if (roleKey === 'CASHIER' && ['DELIVERY_ORDER_WAITING_PAYMENT', 'DELIVERY_ORDER_PENDING_CONFIRMATION', 'DELIVERY_PAYMENT_CONFIRMED'].includes(type)) {
+    if (roleKey === 'CASHIER' && [
+      'DELIVERY_ORDER_WAITING_PAYMENT',
+      'DELIVERY_ORDER_PENDING_CONFIRMATION',
+      'DELIVERY_PAYMENT_CONFIRMED',
+      'DELIVERY_READY_FOR_HANDOVER',
+      'PICKUP_READY',
+    ].includes(type)) {
       const id = data?.maDonHang ?? data?.id;
+      const orderCode = id ? `#DH${id}` : 'mới';
       const waitingPayment = type === 'DELIVERY_ORDER_WAITING_PAYMENT';
+      const readyForDelivery = type === 'DELIVERY_READY_FOR_HANDOVER';
+      const pickupReady = type === 'PICKUP_READY';
       lastReminderAt.current = Date.now();
       triggerStaffAlert({
-        title: waitingPayment ? 'Có đơn online chờ thanh toán' : 'Có đơn online chờ xác nhận',
-        body: waitingPayment
-          ? `Đơn ${id ? `#DH${id}` : 'mới'} đang chờ khách hoàn tất VietQR.`
-          : `Đơn ${id ? `#DH${id}` : 'mới'} đang chờ nhà hàng kiểm tra và xác nhận trước khi xuống bếp.`,
+        title: readyForDelivery
+          ? 'Đơn online đã sẵn sàng giao'
+          : pickupReady
+            ? 'Đơn tự đến lấy đã sẵn sàng'
+            : waitingPayment
+              ? 'Có đơn online chờ thanh toán'
+              : 'Có đơn online chờ xác nhận',
+        body: readyForDelivery
+          ? `Đơn ${orderCode} đã hoàn thành chế biến và sẵn sàng bàn giao cho tài xế.`
+          : pickupReady
+            ? `Đơn ${orderCode} đã hoàn thành chế biến và sẵn sàng để khách đến lấy.`
+            : waitingPayment
+              ? `Đơn ${orderCode} đang chờ khách hoàn tất VietQR.`
+              : `Đơn ${orderCode} đang chờ nhà hàng kiểm tra và xác nhận trước khi xuống bếp.`,
         tag: `cashier-delivery-${id || 'latest'}-${type}`,
         url: '/cashier/delivery-orders',
+        urgent: readyForDelivery || pickupReady,
       });
       return;
     }

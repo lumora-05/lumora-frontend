@@ -60,6 +60,7 @@ export default function Sidebar({ title, items, logoUrl = '', restaurantName = '
             <NavLink key={i.to} to={i.to} end={i.to.split('/').length <= 2} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={20} />
               {i.label}
+              {Number(i.badge || 0) > 0 ? <span className="sidebar-item-badge">{Number(i.badge) > 99 ? '99+' : i.badge}</span> : null}
             </NavLink>
           );
         })}

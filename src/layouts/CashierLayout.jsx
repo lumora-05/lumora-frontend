@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bell, Bike, History, ReceiptText, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
+import { deliveryApi } from '../api/deliveryApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { isCashierDeliveryAttention, unwrapDeliveryList } from '../utils/delivery';
 import { imageUrl } from '../utils/imageUrl';
 
 const items = [
@@ -16,15 +19,22 @@ const items = [
 const pageMeta = {
   '/cashier/delivery-orders': ['Đơn đặt online', 'Tiếp nhận và xử lý các đơn đặt online của khách hàng'],
   '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
-  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi các yêu cầu thanh toán tại bàn đang cần xử lý'],
+  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi công việc cần xử lý tại bàn và đơn đặt online'],
   '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/cashier': ['Thanh toán', 'Ưu tiên các bàn đã yêu cầu thanh toán lâu nhất'],
 };
+
+function isDeliveryRealtimeEvent(event) {
+  const type = String(event?.body?.type || '').toUpperCase();
+  return type.startsWith('DELIVERY_') || type.startsWith('PICKUP_');
+}
 
 export default function CashierLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [deliveryAttentionCount, setDeliveryAttentionCount] = useState(0);
+  const cashierEvent = useWebSocket(['/topic/cashier']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -41,6 +51,26 @@ export default function CashierLayout() {
       });
     return () => { active = false; };
   }, []);
+
+  const loadDeliveryAttentionCount = useCallback(async () => {
+    try {
+      const response = await deliveryApi.list('ALL');
+      setDeliveryAttentionCount(unwrapDeliveryList(response).filter(isCashierDeliveryAttention).length);
+    } catch {
+      // Badge là thông tin hỗ trợ; trang đơn online vẫn tự hiển thị lỗi tải dữ liệu nếu có.
+    }
+  }, []);
+
+  useEffect(() => { loadDeliveryAttentionCount(); }, [loadDeliveryAttentionCount]);
+  useEffect(() => {
+    if (isDeliveryRealtimeEvent(cashierEvent)) loadDeliveryAttentionCount();
+  }, [cashierEvent, loadDeliveryAttentionCount]);
+
+  const navigationItems = useMemo(() => items.map((item) => (
+    item.to === '/cashier/delivery-orders'
+      ? { ...item, badge: deliveryAttentionCount }
+      : item
+  )), [deliveryAttentionCount]);
 
   const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
   let title;
@@ -65,7 +95,7 @@ export default function CashierLayout() {
     <div className="app-shell cashier-shell">
       <Sidebar
         title="Thu ngân"
-        items={items}
+        items={navigationItems}
         logoUrl={imageUrl(brandSettings.logoUrl)}
         restaurantName={brandSettings.restaurantName}
       />
@@ -77,9 +107,10 @@ export default function CashierLayout() {
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Đóng menu"><X size={21} /></button>
         </div>
         <nav>
-          {items.map(({ to, label, mobileIcon: Icon }) => (
+          {navigationItems.map(({ to, label, mobileIcon: Icon, badge }) => (
             <NavLink key={to} to={to} end={to === '/cashier'} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={19} />{label}
+              {Number(badge || 0) > 0 ? <span className="sidebar-item-badge">{Number(badge) > 99 ? '99+' : badge}</span> : null}
             </NavLink>
           ))}
           <NavLink to="/cashier/notifications" className={({ isActive }) => isActive ? 'active' : ''}>

@@ -6,6 +6,7 @@ export const DELIVERY_ORDER_STATUSES = [
   'DANG_CHUAN_BI',
   'CHO_TAI_XE_NHAN',
   'CHO_BAN_GIAO',
+  'CHO_KHACH_NHAN',
   'DANG_GIAO',
   'CHO_DOI_SOAT',
   'HOAN_THANH',
@@ -21,6 +22,7 @@ const STATUS_LABELS = {
   DANG_CHUAN_BI: 'Đang chuẩn bị',
   CHO_TAI_XE_NHAN: 'Chờ tài xế đến nhận',
   CHO_BAN_GIAO: 'Chờ bàn giao',
+  CHO_KHACH_NHAN: 'Sẵn sàng để khách đến lấy',
   DANG_GIAO: 'Đang giao',
   CHO_DOI_SOAT: 'Đã giao · chờ ghi nhận nội bộ',
   HOAN_THANH: 'Đã giao',
@@ -100,4 +102,18 @@ export function deliveryData(order) {
 export function displayOrderCode(order) {
   const id = deliveryOrderId(order);
   return order?.maDonHangHienThi || (id == null ? '—' : `DH${String(id).padStart(7, '0')}`);
+}
+
+
+export const CASHIER_DELIVERY_ATTENTION_STATUSES = [
+  'CHO_THANH_TOAN',
+  'CHO_XAC_NHAN',
+  'CHO_TAI_XE_NHAN',
+  'CHO_BAN_GIAO',
+  'CHO_KHACH_NHAN',
+];
+
+export function isCashierDeliveryAttention(order) {
+  const status = String(deliveryData(order)?.trangThaiGiaoHang || order?.trangThaiGiaoHang || '').toUpperCase();
+  return CASHIER_DELIVERY_ATTENTION_STATUSES.includes(status);
 }

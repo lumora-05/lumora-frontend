@@ -1,38 +1,85 @@
 import { Bell, ChevronDown, LogOut, Menu, UserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { deliveryApi } from '../../api/deliveryApi';
 import { orderApi } from '../../api/orderApi';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
+import { displayOrderCode, isCashierDeliveryAttention, unwrapDeliveryList } from '../../utils/delivery';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
+
+function cashierOnlineAlert(event) {
+  const type = String(event?.body?.type || '').toUpperCase();
+  const data = event?.body?.data || event?.body || {};
+  const code = displayOrderCode(data);
+
+  if (type === 'DELIVERY_ORDER_WAITING_PAYMENT') {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Có đơn online mới ${code} · đang chờ khách thanh toán VietQR.` };
+  }
+  if (type === 'DELIVERY_ORDER_PENDING_CONFIRMATION') {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Có đơn online mới ${code} · cần thu ngân kiểm tra và xác nhận.` };
+  }
+  if (type === 'DELIVERY_PAYMENT_CONFIRMED') {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã ghi nhận VietQR · cần xác nhận để chuyển xuống bếp.` };
+  }
+  if (type === 'DELIVERY_READY_FOR_HANDOVER') {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã hoàn thành chế biến · sẵn sàng bàn giao cho tài xế.` };
+  }
+  if (type === 'PICKUP_READY') {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã hoàn thành chế biến · sẵn sàng để khách đến lấy.` };
+  }
+  return null;
+}
 
 export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
+  const toast = useToast();
   const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
   const [queueCount, setQueueCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
+  const lastToastKey = useRef('');
   const name = user?.hoTen || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Nhân viên thu ngân';
   const avatar = profileAvatarOf(user);
   useStaffOperationalAlerts('CASHIER', event);
 
   async function loadCount() {
+    let paymentCount = 0;
+    let deliveryCount = 0;
+
     try {
       const paymentResponse = await orderApi.getAll();
-      const paymentCount = unwrap(paymentResponse)
+      paymentCount = unwrap(paymentResponse)
         .filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length;
-      setQueueCount(paymentCount);
     } catch {
       // Badge chỉ mang tính hỗ trợ, lỗi chi tiết được hiển thị trong trang danh sách.
     }
+
+    try {
+      const deliveryResponse = await deliveryApi.list('ALL');
+      deliveryCount = unwrapDeliveryList(deliveryResponse).filter(isCashierDeliveryAttention).length;
+    } catch {
+      // Giữ phần đếm công việc thanh toán nếu danh sách đơn online tạm thời không tải được.
+    }
+
+    setQueueCount(paymentCount + deliveryCount);
   }
 
   useEffect(() => { loadCount(); }, []);
   useEffect(() => {
     if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(event?.topic)) loadCount();
   }, [event]);
+
+  useEffect(() => {
+    const alert = cashierOnlineAlert(event);
+    if (!alert || lastToastKey.current === alert.key) return;
+    lastToastKey.current = alert.key;
+    toast.info(alert.message, { id: `cashier-online-${alert.key}`, duration: 6500 });
+  }, [event, toast]);
+
   return (
     <header className="topbar admin-topbar cashier-topbar">
       <div className="cashier-title-wrap">

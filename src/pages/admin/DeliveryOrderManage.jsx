@@ -178,7 +178,7 @@ export default function DeliveryOrderManage() {
     total: orders.length,
     pending: orders.filter((item) => ['CHO_THANH_TOAN', 'CHO_XAC_NHAN'].includes(selectedStatus(item))).length,
     preparing: orders.filter((item) => ['CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(selectedStatus(item))).length,
-    delivery: orders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'CHO_DOI_SOAT'].includes(selectedStatus(item))).length,
+    delivery: orders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT'].includes(selectedStatus(item))).length,
   }), [orders]);
 
   async function runAction(key, action, successMessage) {
@@ -381,6 +381,10 @@ export default function DeliveryOrderManage() {
                           </div>
                         ) : null}
 
+                        {currentStatus === 'CHO_KHACH_NHAN' ? (
+                          <div className="delivery-action-block"><strong>Đơn đã sẵn sàng để khách đến lấy</strong><small>Toàn bộ món đã hoàn thành. Xác nhận khi khách đã nhận đủ món tại nhà hàng.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('pickup-complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã xác nhận khách nhận món tại nhà hàng')}><CheckCircle2 size={17} />{actionLoading === 'pickup-complete' ? 'Đang xử lý...' : 'Xác nhận khách đã nhận'}</button></div>
+                        ) : null}
+
                         {currentStatus === 'DANG_GIAO' ? (
                           <div className="delivery-action-block"><strong>Đối tác vận chuyển đang giao</strong><small>Trạng thái thật sẽ đi vào webhook. Hai nút dưới đây chỉ mô phỏng callback của đối tác để trình diễn đồ án.</small><button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('provider-success', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THANH_CONG', lyDo: null }), 'Đối tác đã báo giao thành công')}><CheckCircle2 size={17} />{actionLoading === 'provider-success' ? 'Đang mô phỏng...' : 'Demo webhook: giao thành công'}</button><label>Lý do giao thất bại<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Không liên lạc được với người nhận..." /></label><button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('provider-fail', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THAT_BAI', lyDo: form.reason.trim() }), 'Đối tác đã báo giao thất bại')}><XCircle size={17} />{actionLoading === 'provider-fail' ? 'Đang mô phỏng...' : 'Demo webhook: giao thất bại'}</button></div>
                         ) : null}
@@ -393,7 +397,7 @@ export default function DeliveryOrderManage() {
                           <div className="delivery-action-block"><button type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('retry', () => deliveryApi.retry(deliveryOrderId(selected)), 'Đã yêu cầu đối tác vận chuyển điều phối lại tài xế')}><RefreshCw size={17} />{actionLoading === 'retry' ? 'Đang xử lý...' : 'Điều phối lại tài xế'}</button></div>
                         ) : null}
 
-                        {!['CHO_THANH_TOAN', 'CHO_XAC_NHAN', 'CHO_DEN_GIO', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'DANG_GIAO', 'CHO_DOI_SOAT', 'GIAO_THAT_BAI'].includes(currentStatus) && paymentStatus !== 'CHO_HOAN_TIEN' ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
+                        {!['CHO_THANH_TOAN', 'CHO_XAC_NHAN', 'CHO_DEN_GIO', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT', 'GIAO_THAT_BAI'].includes(currentStatus) && paymentStatus !== 'CHO_HOAN_TIEN' ? <p className="delivery-no-action">Đơn đang được bếp xử lý hoặc đã kết thúc. Trạng thái sẽ tự động cập nhật.</p> : null}
                       </section>
                     ) : <section className="delivery-detail-section"><h3>Chế độ theo dõi</h3><p className="delivery-no-action">Bếp theo dõi thông tin giao hàng tại đây và cập nhật từng suất món trên Bảng chế biến. Bếp chỉ nhận đơn sau khi nhà hàng đã xác nhận; với đơn hẹn giờ, hệ thống chỉ chuyển món vào đúng thời điểm cần chuẩn bị. Thu ngân hoặc quản trị viên xử lý bước xác nhận, thanh toán, bàn giao và ngoại lệ giao hàng.</p></section>}
                   </aside>

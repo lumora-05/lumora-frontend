@@ -3874,3 +3874,28 @@
 @keyframes lumora-language-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.lumora-customer-auth-language{top:14px;right:14px}}
 @media(max-width:680px){.delivery-header-actions .lumora-language-trigger,.customer-header-actions .lumora-language-trigger{padding:0 8px}.delivery-header-actions .lumora-language-globe,.customer-header-actions .lumora-language-globe{display:none}.lumora-language-menu{width:166px}.v0-book-desktop .lumora-language-switcher{display:none}}
+
+/* Cashier online-order attention badge */
+.sidebar-item-badge{
+  margin-left:auto;
+  min-width:20px;
+  height:20px;
+  padding:0 6px;
+  border-radius:999px;
+  display:inline-grid;
+  place-items:center;
+  background:#ef4444;
+  color:#fff;
+  font-size:10px;
+  line-height:1;
+  font-weight:950;
+  box-shadow:0 0 0 2px rgba(255,255,255,.12);
+}
+.admin-sidebar a.active .sidebar-item-badge,
+.admin-sidebar a:hover .sidebar-item-badge,
+.cashier-mobile-drawer nav a.active .sidebar-item-badge,
+.cashier-mobile-drawer nav a:hover .sidebar-item-badge{
+  background:#fff;
+  color:#ea580c;
+  box-shadow:none;
+}
