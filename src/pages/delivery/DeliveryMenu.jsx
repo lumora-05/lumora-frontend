@@ -230,6 +230,7 @@ export default function DeliveryMenu() {
               key={categoryId(category)}
               className={String(selectedCategory) === String(categoryId(category)) ? 'active' : ''}
               onClick={() => setSelectedCategory(String(categoryId(category)))}
+              data-i18n-skip="true"
             >
               {localizedCategoryName(category, language, 'Danh mục')}
             </button>
@@ -251,19 +252,24 @@ export default function DeliveryMenu() {
                   className="delivery-food-image delivery-food-image-link"
                   to={`/menu/foods/${foodId(food)}`}
                   aria-label={`Xem chi tiết ${localizedFoodName(food, language, 'món ăn')}`}
+                  data-i18n-skip="true"
                 >
                   {food?.hinhAnh
                     ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                     : <span><ChefHat size={42} /></span>}
                 </Link>
                 <div className="delivery-food-body">
-                  <small>{localizedFoodCategory(food, language, 'Món ăn LUMORA')}</small>
+                  <small data-i18n-skip="true">{localizedFoodCategory(food, language, 'Món ăn LUMORA')}</small>
                   <h3 className="delivery-home-serif">
-                    <Link className="delivery-food-title-link" to={`/menu/foods/${foodId(food)}`}>
+                    <Link
+                      className="delivery-food-title-link"
+                      to={`/menu/foods/${foodId(food)}`}
+                      data-i18n-skip="true"
+                    >
                       {localizedFoodName(food, language, 'Món ăn')}
                     </Link>
                   </h3>
-                  <p>{localizedFoodDescription(food, language, language === 'en' ? 'Carefully prepared and packaged for delivery.' : 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.')}</p>
+                  <p data-i18n-skip="true">{localizedFoodDescription(food, language, language === 'en' ? 'Carefully prepared and packaged for delivery.' : 'Món ăn được chuẩn bị chỉn chu và đóng gói phù hợp để giao tận nơi.')}</p>
                   <div>
                     <strong>{formatMoney(food?.gia)}</strong>
                     <button type="button" onClick={() => addToCart(food)}><Plus size={18} /> Thêm</button>
@@ -296,7 +302,7 @@ export default function DeliveryMenu() {
             <div className="delivery-account-choice-food">
               <ShoppingBag size={18} />
               <span>Món đang chọn</span>
-              <strong>{localizedFoodName(authChoiceFood, language, 'Món ăn')}</strong>
+              <strong data-i18n-skip="true">{localizedFoodName(authChoiceFood, language, 'Món ăn')}</strong>
             </div>
             <div className="delivery-account-choice-actions">
               <button type="button" className="primary" onClick={loginBeforeAdding}>
