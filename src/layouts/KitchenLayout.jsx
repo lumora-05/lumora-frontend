@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bell, Bike, ChefHat, History, UserRound, Utensils, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import KitchenHeader from '../components/common/KitchenHeader';
+import { orderApi } from '../api/orderApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { canonicalKitchenStatus, flattenKitchenOrders, unwrapList } from '../utils/kitchenData';
 import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
@@ -27,6 +30,8 @@ export default function KitchenLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [kitchenAttentionCount, setKitchenAttentionCount] = useState(0);
+  const kitchenEvent = useWebSocket(['/topic/kitchen', '/topic/orders']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -44,6 +49,28 @@ export default function KitchenLayout() {
     return () => { active = false; };
   }, []);
 
+  const loadKitchenAttentionCount = useCallback(async () => {
+    try {
+      const response = await orderApi.getAll();
+      const waitingCount = flattenKitchenOrders(unwrapList(response))
+        .filter((item) => canonicalKitchenStatus(item) === 'CHO_BEP').length;
+      setKitchenAttentionCount(waitingCount);
+    } catch {
+      // Badge là thông tin hỗ trợ; bảng chế biến vẫn tự hiển thị lỗi tải dữ liệu nếu có.
+    }
+  }, []);
+
+  useEffect(() => { loadKitchenAttentionCount(); }, [loadKitchenAttentionCount]);
+  useEffect(() => {
+    if (['/topic/kitchen', '/topic/orders'].includes(kitchenEvent?.topic)) {
+      loadKitchenAttentionCount();
+    }
+  }, [kitchenEvent, loadKitchenAttentionCount]);
+
+  const navigationItems = useMemo(() => items.map((item) => (
+    item.to === '/kitchen' ? { ...item, badge: kitchenAttentionCount } : item
+  )), [kitchenAttentionCount]);
+
   const key = Object.keys(pageMeta)
     .filter((path) => path !== '/kitchen')
     .find((path) => location.pathname.startsWith(path));
@@ -58,7 +85,7 @@ export default function KitchenLayout() {
     <div className="app-shell kitchen-shell">
       <Sidebar
         title="Nhân viên bếp"
-        items={items}
+        items={navigationItems}
         logoUrl={imageUrl(brandSettings.logoUrl)}
         restaurantName={brandSettings.restaurantName}
       />
@@ -70,9 +97,10 @@ export default function KitchenLayout() {
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Đóng menu"><X size={21} /></button>
         </div>
         <nav>
-          {items.map(({ to, label, mobileIcon: Icon }) => (
+          {navigationItems.map(({ to, label, mobileIcon: Icon, badge }) => (
             <NavLink key={to} to={to} end={to === '/kitchen'} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={19} />{label}
+              {Number(badge || 0) > 0 ? <span className="sidebar-item-badge">{Number(badge) > 99 ? '99+' : badge}</span> : null}
             </NavLink>
           ))}
           <NavLink to="/kitchen/notifications" className={({ isActive }) => isActive ? 'active' : ''}>

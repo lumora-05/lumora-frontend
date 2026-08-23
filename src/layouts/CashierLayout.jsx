@@ -4,8 +4,10 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
 import { deliveryApi } from '../api/deliveryApi';
+import { orderApi } from '../api/orderApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { PAYMENT_REQUEST_STATUSES, unwrap } from '../utils/cashier';
 import { isCashierDeliveryAttention, unwrapDeliveryList } from '../utils/delivery';
 import { imageUrl } from '../utils/imageUrl';
 
@@ -33,8 +35,9 @@ export default function CashierLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [paymentAttentionCount, setPaymentAttentionCount] = useState(0);
   const [deliveryAttentionCount, setDeliveryAttentionCount] = useState(0);
-  const cashierEvent = useWebSocket(['/topic/cashier']);
+  const cashierEvent = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -52,6 +55,18 @@ export default function CashierLayout() {
     return () => { active = false; };
   }, []);
 
+
+  const loadPaymentAttentionCount = useCallback(async () => {
+    try {
+      const response = await orderApi.getAll();
+      setPaymentAttentionCount(
+        unwrap(response).filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length,
+      );
+    } catch {
+      // Badge là thông tin hỗ trợ; trang thanh toán vẫn tự hiển thị lỗi tải dữ liệu nếu có.
+    }
+  }, []);
+
   const loadDeliveryAttentionCount = useCallback(async () => {
     try {
       const response = await deliveryApi.list('ALL');
@@ -61,16 +76,20 @@ export default function CashierLayout() {
     }
   }, []);
 
+  useEffect(() => { loadPaymentAttentionCount(); }, [loadPaymentAttentionCount]);
   useEffect(() => { loadDeliveryAttentionCount(); }, [loadDeliveryAttentionCount]);
   useEffect(() => {
+    if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(cashierEvent?.topic)) {
+      loadPaymentAttentionCount();
+    }
     if (isDeliveryRealtimeEvent(cashierEvent)) loadDeliveryAttentionCount();
-  }, [cashierEvent, loadDeliveryAttentionCount]);
+  }, [cashierEvent, loadDeliveryAttentionCount, loadPaymentAttentionCount]);
 
-  const navigationItems = useMemo(() => items.map((item) => (
-    item.to === '/cashier/delivery-orders'
-      ? { ...item, badge: deliveryAttentionCount }
-      : item
-  )), [deliveryAttentionCount]);
+  const navigationItems = useMemo(() => items.map((item) => {
+    if (item.to === '/cashier') return { ...item, badge: paymentAttentionCount };
+    if (item.to === '/cashier/delivery-orders') return { ...item, badge: deliveryAttentionCount };
+    return item;
+  }), [deliveryAttentionCount, paymentAttentionCount]);
 
   const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
   let title;

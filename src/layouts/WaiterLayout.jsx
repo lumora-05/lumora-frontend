@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BellRing, CalendarCheck2, ClipboardList, History, PlusCircle, Table2, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import WaiterHeader from '../components/common/WaiterHeader';
+import { orderApi } from '../api/orderApi';
+import { serviceRequestApi } from '../api/serviceRequestApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { imageUrl } from '../utils/imageUrl';
+import { serviceRequestStatus, unwrapServiceRequestList } from '../utils/serviceRequests';
+import { isActiveOrder, orderGroup, pendingReadyCount, unwrapList } from '../utils/waiterData';
 
 const pageMeta = {
   '/waiter/order-entry': ['Gọi món tại bàn', 'Ghi nhận món khách gọi tại bàn'],
@@ -30,6 +35,9 @@ export default function WaiterLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [orderAttentionCount, setOrderAttentionCount] = useState(0);
+  const [serviceAttentionCount, setServiceAttentionCount] = useState(0);
+  const waiterEvent = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -47,6 +55,39 @@ export default function WaiterLayout() {
     return () => { active = false; };
   }, []);
 
+  const loadAttentionCounts = useCallback(async () => {
+    try {
+      const [orderResponse, serviceResponse] = await Promise.all([
+        orderApi.getAll(),
+        serviceRequestApi.list('ACTIVE'),
+      ]);
+      const orders = unwrapList(orderResponse).filter(isActiveOrder);
+      const serviceRequests = unwrapServiceRequestList(serviceResponse);
+
+      setOrderAttentionCount(orders.filter((order) => (
+        ['READY', 'PAYMENT'].includes(orderGroup(order)) || pendingReadyCount(order) > 0
+      )).length);
+      setServiceAttentionCount(serviceRequests.filter((item) => (
+        ['MOI', 'DA_TIEP_NHAN'].includes(serviceRequestStatus(item))
+      )).length);
+    } catch {
+      // Badge là thông tin hỗ trợ; các trang nghiệp vụ vẫn tự hiển thị lỗi nếu tải dữ liệu thất bại.
+    }
+  }, []);
+
+  useEffect(() => { loadAttentionCounts(); }, [loadAttentionCounts]);
+  useEffect(() => {
+    if (['/topic/orders', '/topic/kitchen', '/topic/service-requests'].includes(waiterEvent?.topic)) {
+      loadAttentionCounts();
+    }
+  }, [loadAttentionCounts, waiterEvent]);
+
+  const navigationItems = useMemo(() => items.map((item) => {
+    if (item.to === '/waiter/orders') return { ...item, badge: orderAttentionCount };
+    if (item.to === '/waiter/requests') return { ...item, badge: serviceAttentionCount };
+    return item;
+  }), [orderAttentionCount, serviceAttentionCount]);
+
   const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
   const readOnly = detail && new URLSearchParams(location.search).get('readonly') === '1';
   const key = Object.keys(pageMeta).find((path) => location.pathname.startsWith(path)) || '/waiter/orders';
@@ -60,7 +101,7 @@ export default function WaiterLayout() {
     <div className="app-shell waiter-shell">
       <Sidebar
         title="Nhân viên phục vụ"
-        items={items}
+        items={navigationItems}
         logoUrl={imageUrl(brandSettings.logoUrl)}
         restaurantName={brandSettings.restaurantName}
       />
@@ -72,9 +113,10 @@ export default function WaiterLayout() {
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Đóng menu"><X size={21} /></button>
         </div>
         <nav>
-          {items.map(({ to, label, mobileIcon: Icon }) => (
+          {navigationItems.map(({ to, label, mobileIcon: Icon, badge }) => (
             <NavLink key={to} to={to} end={to === '/waiter/orders'} className={({ isActive }) => isActive ? 'active' : ''}>
               <Icon size={19} />{label}
+              {Number(badge || 0) > 0 ? <span className="sidebar-item-badge">{Number(badge) > 99 ? '99+' : badge}</span> : null}
             </NavLink>
           ))}
         </nav>
