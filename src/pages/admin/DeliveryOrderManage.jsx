@@ -224,6 +224,7 @@ export default function DeliveryOrderManage() {
   const currentStatus = selectedStatus(selected);
   const paymentStatus = String(selectedDelivery?.trangThaiThanhToan || '').toUpperCase();
   const isVietQr = String(selectedDelivery?.phuongThucThanhToan || '').toUpperCase() === 'VIETQR';
+  const isCod = String(selectedDelivery?.phuongThucThanhToan || '').toUpperCase() === 'COD';
   const canAdminCancelDeliveryItem = role === 'ADMIN' && ['CHO_THANH_TOAN', 'CHO_XAC_NHAN', 'CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(currentStatus);
 
   return (
@@ -260,7 +261,7 @@ export default function DeliveryOrderManage() {
                       <td><strong className="delivery-code">{displayOrderCode(order)}</strong><small>{formatDate(order.thoiGianDat)}</small></td>
                       <td><strong>{delivery.tenNguoiNhan}</strong><small>{delivery.soDienThoaiNhan}</small></td>
                       <td className="delivery-address-cell"><span>{delivery.diaChiGiaoHang}</span><small>{deliveryAreaLabel(delivery.khuVucGiaoHang)}</small></td>
-                      <td><span className={`delivery-payment-badge ${deliveryStatusClass(delivery.trangThaiThanhToan)}`}>{deliveryPaymentLabel(delivery.trangThaiThanhToan)}</span><small>{delivery.phuongThucThanhToan}</small></td>
+                      <td><span className={`delivery-payment-badge ${deliveryStatusClass(delivery.trangThaiThanhToan)}`}>{String(delivery.phuongThucThanhToan || '').toUpperCase() === 'COD' && selectedStatus(order) === 'CHO_DOI_SOAT' ? 'Chờ đối soát COD' : deliveryPaymentLabel(delivery.trangThaiThanhToan)}</span><small>{delivery.phuongThucThanhToan}</small></td>
                       <td><strong>{formatMoney(order.tongTien)}</strong></td>
                       <td><span className={`delivery-order-badge ${deliveryStatusClass(deliveryStatus)}`}>{deliveryStatusLabel(deliveryStatus)}</span></td>
                       <td><span>{delivery.maVanChuyen || 'Chưa tạo'}</span></td>
@@ -342,7 +343,7 @@ export default function DeliveryOrderManage() {
                   <aside className="delivery-detail-side">
                     <section className="delivery-detail-section">
                       <h3><CreditCard size={19} /> Thanh toán</h3>
-                      <p className="delivery-detail-payment-line"><span>{selectedDelivery.phuongThucThanhToan}</span><b className={deliveryStatusClass(selectedDelivery.trangThaiThanhToan)}>{deliveryPaymentLabel(selectedDelivery.trangThaiThanhToan)}</b></p>
+                      <p className="delivery-detail-payment-line"><span>{selectedDelivery.phuongThucThanhToan}</span><b className={deliveryStatusClass(selectedDelivery.trangThaiThanhToan)}>{isCod && currentStatus === 'CHO_DOI_SOAT' ? 'Chờ đối soát COD' : deliveryPaymentLabel(selectedDelivery.trangThaiThanhToan)}</b></p>
                       <div className="delivery-detail-money"><p><span>Tạm tính</span><strong>{formatMoney(selected.tamTinh)}</strong></p><p><span>Giảm giá</span><strong>-{formatMoney(selected.tienGiam)}</strong></p><p><span>Phí giao hàng</span><strong>{formatMoney(selectedDelivery.phiGiaoHang)}</strong></p>{Number(selectedDelivery.soTienDaHoan || 0) > 0 ? <p><span>Đã hoàn khách</span><strong>{formatMoney(selectedDelivery.soTienDaHoan)}</strong></p> : null}{Number(selectedDelivery.soTienCanHoan || 0) > 0 ? <p><span>Cần hoàn thêm</span><strong>{formatMoney(selectedDelivery.soTienCanHoan)}</strong></p> : null}<div><span>Tổng cộng</span><strong>{formatMoney(selected.tongTien)}</strong></div></div>
                     </section>
 
@@ -389,8 +390,12 @@ export default function DeliveryOrderManage() {
                           <div className="delivery-action-block"><strong>Đối tác vận chuyển đang giao</strong><small>Trạng thái thật sẽ đi vào webhook. Hai nút dưới đây chỉ mô phỏng callback của đối tác để trình diễn đồ án.</small><button className="success" type="button" disabled={Boolean(actionLoading)} onClick={() => runAction('provider-success', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THANH_CONG', lyDo: null }), 'Đối tác đã báo giao thành công')}><CheckCircle2 size={17} />{actionLoading === 'provider-success' ? 'Đang mô phỏng...' : 'Demo webhook: giao thành công'}</button><label>Lý do giao thất bại<textarea value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} maxLength={500} placeholder="Không liên lạc được với người nhận..." /></label><button className="danger" type="button" disabled={Boolean(actionLoading) || !form.reason.trim()} onClick={() => runAction('provider-fail', () => deliveryApi.simulateProviderResult(deliveryOrderId(selected), { trangThai: 'GIAO_THAT_BAI', lyDo: form.reason.trim() }), 'Đối tác đã báo giao thất bại')}><XCircle size={17} />{actionLoading === 'provider-fail' ? 'Đang mô phỏng...' : 'Demo webhook: giao thất bại'}</button></div>
                         ) : null}
 
-                        {currentStatus === 'CHO_DOI_SOAT' ? (
-                          <div className="delivery-action-block"><strong>Đơn đã giao thành công</strong><small>Khách đã thấy trạng thái Đã giao. Đây chỉ là bước nội bộ để ghi nhận hóa đơn/kế toán.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã ghi nhận hóa đơn')}><CheckCircle2 size={17} />{actionLoading === 'complete' ? 'Đang xử lý...' : 'Ghi nhận hóa đơn'}</button></div>
+                        {currentStatus === 'CHO_DOI_SOAT' && isCod ? (
+                          <div className="delivery-action-block"><strong>Chờ đối soát COD</strong><small>Đối tác vận chuyển đã báo giao thành công và đã thu hộ tiền từ khách. Chỉ xác nhận khi nhà hàng đã thực sự nhận được khoản COD từ đơn vị vận chuyển.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã xác nhận đối soát COD')}><CheckCircle2 size={17} />{actionLoading === 'complete' ? 'Đang xử lý...' : 'Xác nhận đã đối soát COD'}</button></div>
+                        ) : null}
+
+                        {currentStatus === 'CHO_DOI_SOAT' && isVietQr ? (
+                          <div className="delivery-action-block"><strong>Đơn VietQR cũ đang chờ ghi nhận nội bộ</strong><small>Trạng thái này chỉ dùng để tương thích dữ liệu đã tạo trước bản cập nhật. Đơn VietQR mới sẽ tự hoàn tất khi đối tác báo giao thành công.</small><button className="success" type="button" disabled={Boolean(actionLoading) || paymentStatus === 'CHO_HOAN_TIEN'} onClick={() => runAction('complete', () => deliveryApi.complete(deliveryOrderId(selected)), 'Đã ghi nhận hóa đơn')}><CheckCircle2 size={17} />{actionLoading === 'complete' ? 'Đang xử lý...' : 'Ghi nhận hóa đơn'}</button></div>
                         ) : null}
 
                         {currentStatus === 'GIAO_THAT_BAI' ? (

@@ -24,7 +24,7 @@ const STATUS_LABELS = {
   CHO_BAN_GIAO: 'Chờ bàn giao',
   CHO_KHACH_NHAN: 'Sẵn sàng để khách đến lấy',
   DANG_GIAO: 'Đang giao',
-  CHO_DOI_SOAT: 'Đã giao · chờ ghi nhận nội bộ',
+  CHO_DOI_SOAT: 'Chờ đối soát COD',
   HOAN_THANH: 'Đã giao',
   GIAO_THAT_BAI: 'Giao thất bại',
   DA_HUY: 'Đã hủy',
@@ -111,6 +111,7 @@ export const CASHIER_DELIVERY_ATTENTION_STATUSES = [
   'CHO_TAI_XE_NHAN',
   'CHO_BAN_GIAO',
   'CHO_KHACH_NHAN',
+  'CHO_DOI_SOAT',
 ];
 
 export function isCashierDeliveryAttention(order) {

@@ -53,7 +53,7 @@ const STATUS_ITEMS = [
   { code: 'CHO_TAI_XE_NHAN', label: 'Online · chờ tài xế', color: '#7c3aed' },
   { code: 'CHO_BAN_GIAO', label: 'Online · chờ bàn giao', color: '#6d28d9' },
   { code: 'DANG_GIAO', label: 'Online · đang giao', color: '#0ea5e9' },
-  { code: 'CHO_DOI_SOAT', label: 'Online · chờ đối soát', color: '#06b6d4' },
+  { code: 'CHO_DOI_SOAT', label: 'Online · chờ đối soát COD', color: '#06b6d4' },
   { code: 'DA_THANH_TOAN', label: 'Hoàn thành tại bàn', color: '#14b8a6' },
   { code: 'HOAN_THANH', label: 'Online · hoàn thành', color: '#10b981' },
   { code: 'GIAO_THAT_BAI', label: 'Online · giao thất bại', color: '#f97316' },

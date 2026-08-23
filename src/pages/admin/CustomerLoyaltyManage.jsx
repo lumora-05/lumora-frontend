@@ -35,7 +35,7 @@ const ORDER_STATUS_LABELS = {
   DANG_CHUAN_BI: 'Đang chuẩn bị',
   CHO_TAI_XE_NHAN: 'Chờ tài xế nhận',
   DANG_GIAO: 'Đang giao',
-  CHO_DOI_SOAT: 'Chờ đối soát',
+  CHO_DOI_SOAT: 'Chờ đối soát COD',
   HOAN_THANH: 'Hoàn thành',
   DA_HUY: 'Đã hủy',
   HUY: 'Đã hủy',
