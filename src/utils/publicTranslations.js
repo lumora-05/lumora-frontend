@@ -730,6 +730,16 @@ Object.assign(EN_TEXT, {
 });
 
 
+// Bản đồ ngược giúp khôi phục các nhãn giao diện về tiếng Việt nếu một node DOM
+// được tạo mới trong lúc giao diện đang ở tiếng Anh. Dữ liệu động (tên món, mô tả...)
+// không nằm trong bảng này nên vẫn do localizedContent xử lý.
+const VI_TEXT = Object.entries(EN_TEXT).reduce((result, [vi, en]) => {
+  const key = String(en).replace(/\s+/g, ' ').trim();
+  if (key && !(key in result)) result[key] = vi;
+  return result;
+}, {});
+
+
 const PATTERNS = [
   [/^Lượt gọi thêm\s*(\d+)\s*đã được gửi trực tiếp xuống bếp\.?$/i, 'Additional order $1 was sent directly to the kitchen.'],
   [/^Bạn muốn gửi yêu cầu thanh toán cho đơn\s+(DH\d+)\?\s*Nhân viên sẽ đến hỗ trợ tại\s+(.+)\.?$/i, 'Would you like to request payment for order $1? A staff member will assist you at $2.'],
@@ -769,9 +779,16 @@ function preserveOuterWhitespace(original, translated) {
 
 export function translatePublicText(value, language = 'en') {
   const original = String(value ?? '');
-  if (language !== 'en' || !original.trim()) return original;
+  if (!original.trim()) return original;
   const trimmed = original.trim();
   const normalized = trimmed.replace(/\s+/g, ' ');
+
+  if (language === 'vi') {
+    const exactVi = VI_TEXT[normalized] ?? VI_TEXT[trimmed];
+    return exactVi ? preserveOuterWhitespace(original, exactVi) : original;
+  }
+
+  if (language !== 'en') return original;
   const exact = EN_TEXT[normalized] ?? EN_TEXT[trimmed];
   if (exact) return preserveOuterWhitespace(original, exact);
 

@@ -1672,7 +1672,7 @@
 .waiter-order-identifiers small{color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;}
 .waiter-order-identifiers strong{color:#334155;font-size:14px;}
 .waiter-service-stepper{
-  position:relative;
+  position:relative; 
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:0;

@@ -39,6 +39,7 @@ export default function LanguageSwitcher({ compact = false, className = '' }) {
   return (
     <div
       ref={rootRef}
+      data-i18n-skip="true"
       className={`lumora-language-switcher ${compact ? 'compact' : ''} ${open ? 'open' : ''} ${className}`.trim()}
     >
       <button

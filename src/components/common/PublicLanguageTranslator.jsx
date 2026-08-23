@@ -30,7 +30,7 @@ function translateTextNode(node, language, refreshOriginal = false) {
     TEXT_ORIGINAL.set(node, current);
   }
   const original = TEXT_ORIGINAL.get(node) ?? current;
-  const next = language === 'en' ? translatePublicText(original, 'en') : original;
+  const next = translatePublicText(original, language);
   TEXT_LAST_APPLIED.set(node, next);
   if (current !== next) node.nodeValue = next;
 }
@@ -45,7 +45,7 @@ function translateAttribute(element, name, language, refreshOriginal = false) {
     ATTR_ORIGINAL.set(element, originals);
   }
   const original = originals[name] ?? current;
-  const next = language === 'en' ? translatePublicText(original, 'en') : original;
+  const next = translatePublicText(original, language);
   lastMap = { ...lastMap, [name]: next };
   ATTR_LAST_APPLIED.set(element, lastMap);
   if (current !== next) element.setAttribute(name, next);

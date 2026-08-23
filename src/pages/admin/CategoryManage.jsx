@@ -6,7 +6,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pagination';
 import ConfirmActionModal from '../../components/common/ConfirmActionModal';
 
-const emptyForm = { tenDanhMuc: '', moTa: '', trangThai: true };
+const emptyForm = { tenDanhMuc: '', tenDanhMucEn: '', moTa: '', moTaEn: '', trangThai: true };
 
 export default function CategoryManage() {
   const toast = useToast();
@@ -60,7 +60,9 @@ export default function CategoryManage() {
     setEditing(item.maDanhMuc);
     setForm({
       tenDanhMuc: item.tenDanhMuc || '',
+      tenDanhMucEn: item.tenDanhMucEn || '',
       moTa: item.moTa || '',
+      moTaEn: item.moTaEn || '',
       trangThai: item.trangThai !== false,
     });
     setOpenForm(true);
@@ -219,12 +221,32 @@ export default function CategoryManage() {
             </label>
 
             <label>
+              <span>Tên danh mục (English)</span>
+              <input
+                value={form.tenDanhMucEn}
+                onChange={(e) => setForm({ ...form, tenDanhMucEn: e.target.value })}
+                placeholder="Example: Main course"
+              />
+            </label>
+
+            <label>
               <span>Mô tả</span>
               <textarea
                 rows="4"
                 value={form.moTa}
                 onChange={(e) => setForm({ ...form, moTa: e.target.value })}
                 placeholder="Ví dụ: Các món ăn chính của nhà hàng"
+              />
+            </label>
+
+
+            <label>
+              <span>Mô tả (English)</span>
+              <textarea
+                rows="4"
+                value={form.moTaEn}
+                onChange={(e) => setForm({ ...form, moTaEn: e.target.value })}
+                placeholder="Example: The restaurant's main dishes"
               />
             </label>
 
