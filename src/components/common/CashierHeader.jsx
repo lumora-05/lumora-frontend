@@ -1,5 +1,5 @@
-import { Bell, ChevronDown, Clock3, LogOut, Menu, UserRound } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Bell, ChevronDown, LogOut, Menu, UserRound } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,7 +14,6 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments']);
   const [queueCount, setQueueCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [now, setNow] = useState(new Date());
   const name = user?.hoTen || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Nhân viên thu ngân';
   const avatar = profileAvatarOf(user);
   useStaffOperationalAlerts('CASHIER', event);
@@ -34,15 +33,6 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   useEffect(() => {
     if (['/topic/cashier', '/topic/orders', '/topic/payments'].includes(event?.topic)) loadCount();
   }, [event]);
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 60000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const dateLabel = useMemo(() => new Intl.DateTimeFormat('vi-VN', {
-    weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-  }).format(now), [now]);
-
   return (
     <header className="topbar admin-topbar cashier-topbar">
       <div className="cashier-title-wrap">
@@ -54,9 +44,6 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
       </div>
 
       <div className="cashier-header-actions">
-        <span className="cashier-live-time"><Clock3 size={17} />{dateLabel}</span>
-
-
         <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} công việc cần theo dõi`}>
           <Bell size={21} />
           {queueCount > 0 ? <span>{queueCount > 99 ? '99+' : queueCount}</span> : null}
