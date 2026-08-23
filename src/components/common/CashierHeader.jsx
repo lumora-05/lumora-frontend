@@ -8,7 +8,6 @@ import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
-import StaffAlertToggle from './StaffAlertToggle';
 
 export default function CashierHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
@@ -57,7 +56,6 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
       <div className="cashier-header-actions">
         <span className="cashier-live-time"><Clock3 size={17} />{dateLabel}</span>
 
-        <StaffAlertToggle channel="CASHIER" />
 
         <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} công việc cần theo dõi`}>
           <Bell size={21} />

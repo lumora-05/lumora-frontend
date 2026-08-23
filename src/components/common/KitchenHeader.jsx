@@ -8,7 +8,6 @@ import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts
 import { canonicalKitchenStatus, flattenKitchenOrders, unwrapList } from '../../utils/kitchenData';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
-import StaffAlertToggle from './StaffAlertToggle';
 
 export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
   const { user, logout } = useAuth();
@@ -47,7 +46,6 @@ export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="kitchen-top-actions">
-        <StaffAlertToggle channel="KITCHEN" />
         <Link to="/kitchen/notifications" className="kitchen-notification-button" aria-label={`${newCount} món mới`}>
           <Bell size={21} />
           {newCount > 0 ? <span>{badge}</span> : null}
