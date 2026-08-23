@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  BellRing,
   Camera,
   Check,
   CheckCircle2,
@@ -24,6 +25,7 @@ import { useToast, errorMessageOf, messageOf } from '../../context/ToastContext'
 import { useAuth } from '../../hooks/useAuth';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
+import StaffAlertToggle from '../../components/common/StaffAlertToggle';
 
 const EMPTY_FORM = {
   hoTen: '',
@@ -337,6 +339,16 @@ export default function WaiterAccount() {
           <ShieldCheck size={18} />
           Bảo mật
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'notifications'}
+          className={activeTab === 'notifications' ? 'active' : ''}
+          onClick={() => setActiveTab('notifications')}
+        >
+          <BellRing size={18} />
+          Thông báo
+        </button>
       </div>
 
       {activeTab === 'profile' ? (
@@ -501,7 +513,7 @@ export default function WaiterAccount() {
             ) : null}
           </div>
         </form>
-      ) : (
+      ) : activeTab === 'security' ? (
         <form className="kitchen-account-surface kitchen-account-security" onSubmit={submitPassword} noValidate>
           <header className="kitchen-account-security-head">
             <span><KeyRound size={22} /></span>
@@ -624,6 +636,30 @@ export default function WaiterAccount() {
             </button>
           </footer>
         </form>
+      ) : (
+        <section className="kitchen-account-surface waiter-alert-settings">
+          <header className="kitchen-account-security-head">
+            <span><BellRing size={22} /></span>
+            <div>
+              <h2>Thông báo trình duyệt</h2>
+              <p>Bật cảnh báo để nhận âm thanh, rung và thông báo nhắc việc khi đang phục vụ.</p>
+            </div>
+          </header>
+
+          <div className="waiter-alert-settings-body">
+            <div className="waiter-alert-setting-row">
+              <div>
+                <strong>Cảnh báo nhắc việc</strong>
+                <p>Nhận cảnh báo khi có món sẵn sàng, yêu cầu tại bàn hoặc công việc cần xử lý.</p>
+              </div>
+              <StaffAlertToggle channel="WAITER" />
+            </div>
+
+            <div className="waiter-alert-settings-note">
+              Trình duyệt có thể yêu cầu bạn cấp quyền thông báo ở lần bật đầu tiên. Nếu quyền bị chặn, bạn có thể cấp lại trong cài đặt của trình duyệt.
+            </div>
+          </div>
+        </section>
       )}
     </section>
   );

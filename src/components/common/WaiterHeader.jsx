@@ -20,7 +20,6 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
-import StaffAlertToggle from './StaffAlertToggle';
 import {
   serviceRequestId,
   serviceRequestStatus,
@@ -256,7 +255,6 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
         </div>
       </div>
       <div className="waiter-top-actions">
-        <StaffAlertToggle channel="WAITER" />
         <div className="waiter-notification-wrap" ref={notificationRef}>
           <button
             type="button"
