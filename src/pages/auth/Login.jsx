@@ -192,7 +192,6 @@ export default function Login() {
 
           <div className="lumora-login-form-wrap">
             <div className="lumora-login-heading">
-              <span>Tài khoản hệ thống</span>
               <h2>Đăng nhập</h2>
               <p>Khách hàng dùng số điện thoại; nhân viên dùng tên đăng nhập được cấp.</p>
             </div>
