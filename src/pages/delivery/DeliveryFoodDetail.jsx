@@ -167,14 +167,14 @@ export default function DeliveryFoodDetail() {
               <span>/</span>
               <Link to="/menu">Thực đơn</Link>
               <span>/</span>
-              <strong>{localizedFoodName(food, language, 'Món ăn')}</strong>
+              <strong data-i18n-skip="true">{localizedFoodName(food, language, 'Món ăn')}</strong>
             </nav>
 
             <div className="delivery-food-detail-grid">
               <div className="delivery-food-detail-image-wrap">
                 <div className="delivery-food-detail-image">
                   {food?.hinhAnh ? (
-                    <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
+                    <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} data-i18n-skip="true" />
                   ) : (
                     <span><ChefHat size={86} /></span>
                   )}
@@ -182,12 +182,12 @@ export default function DeliveryFoodDetail() {
               </div>
 
               <article className="delivery-food-detail-content">
-                <span className="delivery-food-detail-category">
+                <span className="delivery-food-detail-category" data-i18n-skip="true">
                   {localizedFoodCategory(food, language, 'Món ăn LUMORA')}
                 </span>
-                <h1 className="delivery-home-serif">{localizedFoodName(food, language, 'Món ăn')}</h1>
+                <h1 className="delivery-home-serif" data-i18n-skip="true">{localizedFoodName(food, language, 'Món ăn')}</h1>
                 <strong className="delivery-food-detail-price">{formatMoney(food?.gia)}</strong>
-                <p className="delivery-food-detail-description">
+                <p className="delivery-food-detail-description" data-i18n-skip="true">
                   {localizedFoodDescription(
                     food,
                     language,
@@ -200,7 +200,7 @@ export default function DeliveryFoodDetail() {
                 <div className="delivery-food-detail-status-card">
                   <div>
                     <span>Danh mục</span>
-                    <strong>{localizedFoodCategory(food, language, 'Món ăn')}</strong>
+                    <strong data-i18n-skip="true">{localizedFoodCategory(food, language, 'Món ăn')}</strong>
                   </div>
                   <div>
                     <span>Tình trạng</span>
@@ -278,7 +278,7 @@ export default function DeliveryFoodDetail() {
             <div className="delivery-account-choice-food">
               <ShoppingBag size={18} />
               <span>Món đang chọn</span>
-              <strong>{localizedFoodName(food, language, 'Món ăn')} · {quantity} suất</strong>
+              <strong data-i18n-skip="true">{localizedFoodName(food, language, 'Món ăn')} · {quantity} suất</strong>
             </div>
             <div className="delivery-account-choice-actions">
               <button type="button" className="primary" onClick={loginBeforeAdding}>
