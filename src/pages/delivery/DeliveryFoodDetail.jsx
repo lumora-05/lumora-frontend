@@ -24,6 +24,7 @@ import {
   localizedFoodDescription,
   localizedFoodName,
 } from '../../utils/localizedContent';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 import {
   continueAsGuest,
   getCustomerUser,
@@ -47,6 +48,7 @@ export default function DeliveryFoodDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [authChoiceOpen, setAuthChoiceOpen] = useState(false);
+  usePublicContentTranslations({ language, foods: food });
 
   const available = food?.trangThai !== false && food?.trangThai !== 'NGUNG_BAN';
   const total = useMemo(() => Number(food?.gia || 0) * quantity, [food, quantity]);

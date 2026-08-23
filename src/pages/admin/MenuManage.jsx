@@ -14,10 +14,8 @@ import { normalizePage, pageDisplayRange, paginationItems } from '../../utils/pa
 const empty = {
   maDanhMuc: '',
   tenMonAn: '',
-  tenMonAnEn: '',
   gia: '',
   moTa: '',
-  moTaEn: '',
   hinhAnh: '',
   trangThai: true
 };
@@ -174,10 +172,8 @@ export default function MenuManage() {
     setForm({
       maDanhMuc: r.danhMuc?.maDanhMuc || r.maDanhMuc || '',
       tenMonAn: r.tenMonAn || '',
-      tenMonAnEn: r.tenMonAnEn || '',
       gia: r.gia || '',
       moTa: r.moTa || '',
-      moTaEn: r.moTaEn || '',
       hinhAnh: r.hinhAnh || '',
       trangThai: r.trangThai !== false
     });
@@ -338,11 +334,6 @@ export default function MenuManage() {
           </label>
 
           <label>
-            <span>Tên món (English)</span>
-            <input placeholder="Example: Honey Grilled Chicken" value={form.tenMonAnEn} onChange={(e) => setForm({ ...form, tenMonAnEn: e.target.value })} />
-          </label>
-
-          <label>
             <span>Giá bán</span>
             <input required min="0" type="number" placeholder="Ví dụ: 150000" value={form.gia} onChange={(e) => setForm({ ...form, gia: e.target.value })} />
           </label>
@@ -387,11 +378,6 @@ export default function MenuManage() {
             <textarea rows="3" placeholder="Mô tả ngắn về món ăn" value={form.moTa} onChange={(e) => setForm({ ...form, moTa: e.target.value })} />
           </label>
 
-
-          <label className="full-field">
-            <span>Mô tả (English)</span>
-            <textarea rows="3" placeholder="Short English description of the dish" value={form.moTaEn} onChange={(e) => setForm({ ...form, moTaEn: e.target.value })} />
-          </label>
 
           <div className="form-actions full-field food-form-actions">
             <button type="button" className="btn food-cancel-btn" onClick={() => setModalOpen(false)}><X size={16} /> Hủy</button>

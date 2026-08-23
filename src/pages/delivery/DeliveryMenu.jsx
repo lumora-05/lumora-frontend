@@ -24,6 +24,7 @@ import { imageUrl } from '../../utils/imageUrl';
 import { continueAsGuest, getCustomerUser, hasContinuedAsGuest } from '../../utils/customerSession';
 import { useLanguage } from '../../context/LanguageContext';
 import { localizedCategoryName, localizedFoodCategory, localizedFoodDescription, localizedFoodName } from '../../utils/localizedContent';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 
 
 function unwrapRows(response) {
@@ -61,6 +62,7 @@ export default function DeliveryMenu() {
   const [error, setError] = useState('');
   const [authChoiceFood, setAuthChoiceFood] = useState(null);
   const [sharedBannerUrl, setSharedBannerUrl] = useState('');
+  const translationRevision = usePublicContentTranslations({ language, foods, categories });
 
   useEffect(() => {
     let active = true;
@@ -119,7 +121,7 @@ export default function DeliveryMenu() {
         || String(localizedFoodDescription(food, language, '')).toLocaleLowerCase(language === 'en' ? 'en' : 'vi').includes(query);
       return matchesCategory && matchesKeyword;
     });
-  }, [foods, keyword, selectedCategory, language]);
+  }, [foods, keyword, selectedCategory, language, translationRevision]);
 
   function performAddToCart(food) {
     const id = foodId(food);

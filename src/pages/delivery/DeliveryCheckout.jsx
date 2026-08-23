@@ -33,6 +33,7 @@ import { readDeliveryAddress, saveDeliveryAddress } from '../../utils/deliveryAd
 import { getCustomerUser, onCustomerSessionChange } from '../../utils/customerSession';
 import { useLanguage } from '../../context/LanguageContext';
 import { localizedFoodName, localizedPromotionName } from '../../utils/localizedContent';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 
 function createRequestId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -287,6 +288,7 @@ export default function DeliveryCheckout() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
+  usePublicContentTranslations({ language, foods: cart.items });
   const [addressQuery, setAddressQuery] = useState(() => savedAddress?.addressQuery
     || [savedAddress?.form?.soNha, savedAddress?.form?.tenDuong].filter(Boolean).join(' '));
   const [addressSuggestions, setAddressSuggestions] = useState([]);

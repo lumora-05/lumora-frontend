@@ -39,6 +39,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import { localizedFoodName } from '../../utils/localizedContent';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 
 const ORDER_PLACED_STEP = { code: 'DA_DAT', label: 'Đã đặt hàng', icon: ShoppingBag };
 
@@ -94,6 +95,7 @@ export default function DeliveryTracking() {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(() => localStorage.getItem(`lumora_delivery_review_${trackingCode}`) === '1');
+  usePublicContentTranslations({ language, foods: order?.items });
   const deliverySocketEvent = useWebSocket(trackingCode ? [`/topic/customer/menu/${trackingCode}`] : []);
 
   const loadOrder = useCallback(async ({ silent = false } = {}) => {

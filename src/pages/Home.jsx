@@ -24,6 +24,7 @@ import { imageUrl } from '../utils/imageUrl';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedFoodDescription, localizedFoodName } from '../utils/localizedContent';
+import { usePublicContentTranslations } from '../hooks/usePublicContentTranslations';
 import { normalizePage } from '../utils/pagination';
 import '../styles/home.css';
 
@@ -228,7 +229,8 @@ function Hero({ settings }) {
 
 function FeaturedMenu({ restaurantName }) {
   const { language } = useLanguage();
-  const [dishes, setDishes] = useState(DEFAULT_DISHES);
+  const [foods, setFoods] = useState([]);
+  usePublicContentTranslations({ language, foods });
 
   useEffect(() => {
     let active = true;
@@ -236,23 +238,25 @@ function FeaturedMenu({ restaurantName }) {
     menuApi.getTopSelling(4, { skipAuth: true })
       .then((response) => {
         if (!active) return;
-        const foods = Array.isArray(response?.data) ? response.data : [];
-        if (foods.length === 0) return;
-
-        setDishes(foods.map((food) => ({
-          name: localizedFoodName(food, language, 'Món ăn'),
-          desc: localizedFoodDescription(food, language, language === 'en' ? 'A dish from our restaurant menu.' : 'Món ăn trong thực đơn nhà hàng'),
-          price: `${new Intl.NumberFormat('vi-VN').format(Number(food.gia || 0))}đ`,
-          img: imageUrl(food.hinhAnh) || '/dish-bo-luc-lac.png',
-          tag: language === 'en' ? 'Best seller' : 'Bán chạy',
-        })));
+        const nextFoods = Array.isArray(response?.data) ? response.data : [];
+        if (nextFoods.length) setFoods(nextFoods);
       })
       .catch(() => {
         // Giữ bộ món mặc định nếu backend tạm thời không phản hồi.
       });
 
     return () => { active = false; };
-  }, [language]);
+  }, []);
+
+  const dishes = foods.length
+    ? foods.map((food) => ({
+      name: localizedFoodName(food, language, 'Món ăn'),
+      desc: localizedFoodDescription(food, language, language === 'en' ? 'A dish from our restaurant menu.' : 'Món ăn trong thực đơn nhà hàng'),
+      price: `${new Intl.NumberFormat('vi-VN').format(Number(food.gia || 0))}đ`,
+      img: imageUrl(food.hinhAnh) || '/dish-bo-luc-lac.png',
+      tag: language === 'en' ? 'Best seller' : 'Bán chạy',
+    }))
+    : DEFAULT_DISHES;
 
   return (
     <section id="thuc-don" className="v0-shell v0-section v0-menu-section">
