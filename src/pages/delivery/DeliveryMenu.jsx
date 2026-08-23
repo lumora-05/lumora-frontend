@@ -180,7 +180,13 @@ export default function DeliveryMenu() {
         <div className="delivery-public-container delivery-hero-grid">
           <div>
             <span className="delivery-eyebrow">Tinh hoa ẩm thực</span>
-            <h1 className="delivery-home-serif">Khám phá<br />thực đơn Lumora</h1>
+            <h1 className="delivery-home-serif" data-i18n-skip="true">
+              {language === 'en' ? (
+                <>Explore<br />Lumora&apos;s menu</>
+              ) : (
+                <>Khám phá<br />thực đơn Lumora</>
+              )}
+            </h1>
             <p>
               Tuyển chọn những nguyên liệu tươi ngon nhất, chế biến tinh tế bởi đội ngũ đầu bếp tài hoa.
             </p>
