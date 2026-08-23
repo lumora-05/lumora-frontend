@@ -38,8 +38,32 @@ const TABLE_ICON_BY_GROUP = {
   PAYMENT: '/waiter-icons/table-chair-payment.png',
 };
 
+const PREPARING_ITEM_STATUSES = new Set([
+  'MOI',
+  'CHO_CHE_BIEN',
+  'CHO_BEP',
+  'DANG_NAU',
+  'DANG_CHE_BIEN',
+]);
+
+function queueGroup(order) {
+  const orderStatusGroup = orderGroup(order);
+  if (orderStatusGroup === 'PAYMENT') return 'PAYMENT';
+
+  const rawItems = order?.chiTietDonHang;
+  if (!Array.isArray(rawItems)) return orderStatusGroup;
+
+  const activeItems = rawItems.filter((item) => String(item?.trangThaiMon || '').toUpperCase() !== 'DA_HUY');
+  if (pendingReadyCount(order) > 0) return 'READY';
+  if (activeItems.some((item) => PREPARING_ITEM_STATUSES.has(String(item?.trangThaiMon || item?.trangThai || '').toUpperCase()))) {
+    return 'PREPARING';
+  }
+
+  return 'OTHER';
+}
+
 function matchesTab(order, tab) {
-  const group = orderGroup(order);
+  const group = queueGroup(order);
   if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(group);
   return group === tab;
 }
