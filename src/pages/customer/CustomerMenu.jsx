@@ -21,6 +21,7 @@ import { tableApi } from '../../api/tableApi';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { useLanguage } from '../../context/LanguageContext';
@@ -105,6 +106,7 @@ export default function CustomerMenu() {
     totalPages: 0,
     last: true,
   });
+  const translationRevision = usePublicContentTranslations({ language, foods, categories: cats });
 
   const loadTableAccess = useCallback(async () => {
     try {
@@ -188,8 +190,8 @@ export default function CustomerMenu() {
   const categoryList = useMemo(() => cats.map((item) => ({
     id: String(categoryId(item)),
     name: localizedCategoryName(item, language, 'Danh mục'),
-    iconType: categoryIconType(localizedCategoryName(item, language, 'Danh mục')),
-  })), [cats, language]);
+    iconType: categoryIconType(localizedCategoryName(item, 'vi', 'Danh mục')),
+  })), [cats, language, translationRevision]);
 
   const tableName = table?.tenBan || table?.soBan || 'Bàn';
   const currentTitle = cat === 'all'
@@ -247,6 +249,7 @@ export default function CustomerMenu() {
                   className={String(cat) === item.id ? 'active' : ''}
                   aria-pressed={String(cat) === item.id}
                   onClick={() => setCat(item.id)}
+                  data-i18n-skip="true"
                 >
                   <CategoryIcon type={item.iconType} />
                   <span>{item.name}</span>
@@ -281,7 +284,7 @@ export default function CustomerMenu() {
                     return (
                       <article className="v0-dish-card" key={foodId(food) || index}>
                         <div className="v0-dish-image-wrap">
-                          <Link className="customer-menu-home-image-link" to={detailUrl}>
+                          <Link className="customer-menu-home-image-link" to={detailUrl} data-i18n-skip="true">
                             {food.hinhAnh
                               ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                               : <span className="customer-menu-home-image-placeholder"><UtensilsCrossed size={42} /></span>}
@@ -290,9 +293,9 @@ export default function CustomerMenu() {
                         </div>
                         <div className="v0-dish-body">
                           <h3 className="v0-serif">
-                            <Link className="customer-menu-home-title-link" to={detailUrl}>{localizedFoodName(food, language, 'Món ăn')}</Link>
+                            <Link className="customer-menu-home-title-link" to={detailUrl} data-i18n-skip="true">{localizedFoodName(food, language, 'Món ăn')}</Link>
                           </h3>
-                          <p>{localizedFoodDescription(food, language, language === 'en' ? 'Freshly prepared with carefully selected ingredients at LUMORA.' : 'Hương vị hấp dẫn, được chuẩn bị từ nguyên liệu tươi ngon tại LUMORA.')}</p>
+                          <p data-i18n-skip="true">{localizedFoodDescription(food, language, language === 'en' ? 'Freshly prepared with carefully selected ingredients at LUMORA.' : 'Hương vị hấp dẫn, được chuẩn bị từ nguyên liệu tươi ngon tại LUMORA.')}</p>
                           <div className="v0-dish-bottom">
                             <span className="v0-serif v0-price">{formatMoney(food.gia)}</span>
                             <button type="button" className="v0-button v0-button-primary v0-dish-add v0-pill" onClick={() => handleAdd(food)}>

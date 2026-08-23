@@ -17,6 +17,7 @@ import { tableApi } from '../../api/tableApi';
 import { useCart } from '../../context/CartContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
 import { useLanguage } from '../../context/LanguageContext';
@@ -55,6 +56,7 @@ export default function Cart() {
   const resolvedTableId = table?.maBan ?? table?.id;
   const tableTopic = resolvedTableId ? `/topic/customer/tables/${resolvedTableId}` : '';
   const socketEvent = useWebSocket([tableTopic || '/topic/customer/tables/pending']);
+  usePublicContentTranslations({ language, foods: cart.items, categories: [] });
 
   const loadCurrentOrder = useCallback(async () => {
     try {
@@ -160,17 +162,17 @@ export default function Cart() {
                     <article className="customer-cart-item" key={id}>
                       <div className="customer-cart-item-image">
                         {item.hinhAnh
-                          ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} />
+                          ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} data-i18n-skip="true" />
                           : <UtensilsCrossed size={27} />}
                       </div>
 
                       <div className="customer-cart-item-main">
                         <div className="customer-cart-item-title">
                           <div>
-                            <strong>{localizedFoodName(item, language, 'Món ăn')}</strong>
+                            <strong data-i18n-skip="true">{localizedFoodName(item, language, 'Món ăn')}</strong>
                             <span>{formatMoney(item.gia)} / phần</span>
                           </div>
-                          <button type="button" onClick={() => cart.remove(id)} aria-label={`Xóa ${localizedFoodName(item, language, 'món ăn')}`}><Trash2 size={17} /></button>
+                          <button type="button" onClick={() => cart.remove(id)} aria-label={`Xóa ${localizedFoodName(item, language, 'món ăn')}`} data-i18n-skip="true"><Trash2 size={17} /></button>
                         </div>
 
                         <input
