@@ -737,6 +737,74 @@ Object.assign(EN_TEXT, {
 });
 
 
+
+// Bổ sung các nhãn/câu còn thiếu trên Trang chủ và trang Đặt bàn công khai.
+// Chỉ dịch nội dung giao diện cố định; dữ liệu động như tên/mô tả món vẫn lấy
+// từ các trường *En do backend trả về và fallback về tiếng Việt khi chưa có.
+Object.assign(EN_TEXT, {
+  // Trang chủ - phần giới thiệu/liên hệ
+  'hướng đến việc mang đến cho thực khách trải nghiệm ẩm thực chất lượng trong không gian hiện đại và thân thiện. Thực đơn được xây dựng đa dạng, phù hợp với nhiều nhu cầu và sở thích của khách hàng.': 'aims to offer guests a quality dining experience in a modern and welcoming setting. Our diverse menu is designed to suit a wide range of tastes and preferences.',
+  'chú trọng ứng dụng công nghệ vào quá trình phục vụ. Khách hàng có thể xem thực đơn, đặt bàn, đặt món trực tuyến hoặc quét mã QR tại bàn để gọi món nhanh chóng và thuận tiện.': 'embraces technology throughout the service experience. Guests can view the menu, reserve a table, order online, or scan the table QR code to order quickly and conveniently.',
+  'Liên hệ với chúng tôi': 'Contact us',
+  'Thông tin liên hệ': 'Contact information',
+
+  // Đặt bàn công khai - hero
+  'Đặt bàn tại Lumora': 'Reserve a table at Lumora',
+  'Không gian nhà hàng Lumora ấm cúng với món ăn được bày trí trên bàn': 'Warm Lumora restaurant interior with beautifully presented dishes on the table',
+  'Đặt bàn dễ dàng': 'Easy reservation',
+  'Đặt bàn ngay hôm nay để tận hưởng không gian ấm cúng và những món ăn tuyệt hảo tại Lumora.': 'Reserve your table today and enjoy a warm atmosphere and exceptional dishes at Lumora.',
+  'Thông tin được bảo mật': 'Your information is secure',
+  'Tra cứu dễ dàng': 'Easy reservation lookup',
+
+  // Đặt bàn công khai - form
+  'Điền đầy đủ thông tin để nhà hàng sắp xếp bàn phù hợp.': 'Complete the information below so the restaurant can arrange a suitable table.',
+  'Hủy chỉnh sửa': 'Cancel editing',
+  'Họ tên khách': 'Guest name',
+  'Ngày giờ đến': 'Arrival date & time',
+  'Giờ': 'Hour',
+  'Phút': 'Minute',
+  'Số lượng khách': 'Number of guests',
+  'Khu vực mong muốn': 'Preferred area',
+  'Bạn có muốn đặt món trước?': 'Would you like to pre-order dishes?',
+  'Chọn món trước để nhà hàng chủ động chuẩn bị khi bạn đến. Đây là tùy chọn, không bắt buộc.': 'Pre-order dishes so the restaurant can prepare in advance. This is optional.',
+  'Đặt món trước': 'Pre-order dishes',
+  'Ví dụ: cần ghế trẻ em, khách lớn tuổi, dịp sinh nhật...': 'Example: high chair needed, elderly guest, birthday occasion...',
+  'Nguyễn Văn A': 'Alex Nguyen',
+  'Nhập mã đặt bàn và số điện thoại đã sử dụng khi đăng ký.': 'Enter the reservation code and phone number used when booking.',
+  'Thông tin đặt bàn sẽ hiển thị tại đây': 'Reservation information will appear here',
+  'Nhà hàng cập nhật trạng thái theo thời gian thực sau khi nhận yêu cầu.': 'The restaurant updates the status in real time after receiving your request.',
+  'Kiểm tra thông tin trước khi gửi cho nhà hàng.': 'Review the information before sending it to the restaurant.',
+  'Thời lượng': 'Duration',
+  'Ghi chú đặt bàn:': 'Reservation note:',
+  'Vui lòng lưu mã tra cứu và số điện thoại để theo dõi lịch đặt.': 'Keep your reservation code and phone number to track your booking.',
+  'Mã đặt bàn:': 'Reservation code:',
+  'Ghi chú:': 'Note:',
+  'Lý do:': 'Reason:',
+  'Bạn chỉ đặt bàn. Có thể chọn món trước sau trong phần tra cứu khi lịch vẫn còn cho phép.': 'You are reserving a table only. You can add pre-ordered dishes later from reservation lookup while the booking still allows it.',
+  'Hủy yêu cầu đặt bàn?': 'Cancel this reservation request?',
+  'Lịch': 'Reservation',
+  'sẽ được hủy và không thể khôi phục.': 'will be cancelled and cannot be restored.',
+  'Lý do hủy': 'Cancellation reason',
+
+  // Món đặt trước dùng trên trang đặt bàn công khai
+  'ĐẶT MÓN TRƯỚC': 'PRE-ORDER DISHES',
+  'Món chỉ được chuyển xuống bếp sau khi bạn check-in và được xếp bàn.': 'Dishes are sent to the kitchen only after you check in and are assigned a table.',
+  'HỦY MÓN ĐẶT TRƯỚC': 'CANCEL PRE-ORDER',
+  'Xác nhận hủy thực đơn?': 'Cancel the pre-order menu?',
+  'Lịch đặt bàn vẫn được giữ nguyên.': 'Your table reservation will remain unchanged.',
+  'Thao tác này chỉ hủy danh sách món đã chọn trước, không hủy lịch đặt bàn.': 'This only cancels the pre-ordered dishes, not the table reservation.',
+  'Chọn món ngay khi gửi yêu cầu đặt bàn. Món chưa chuyển xuống bếp cho đến khi bạn đến và được xếp bàn.': 'Choose dishes when submitting the reservation. They are not sent to the kitchen until you arrive and are assigned a table.',
+  'Đang tải thực đơn đặt trước...': 'Loading pre-order menu...',
+  'Món đã được lưu cùng yêu cầu đặt bàn và đang chờ nhà hàng xử lý. Món chưa được gửi xuống bếp.': 'The dishes were saved with your reservation request and are awaiting restaurant processing. They have not been sent to the kitchen.',
+  'Nhà hàng yêu cầu điều chỉnh:': 'Restaurant requested changes:',
+  'Nhà hàng đã duyệt thực đơn. Món chỉ được chuyển xuống bếp sau khi bạn đến và được xếp bàn.': 'The restaurant approved the menu. Dishes are sent to the kitchen only after you arrive and are assigned a table.',
+  'Bạn chưa chọn món cho lịch đặt bàn này.': 'You have not selected any dishes for this reservation.',
+  'Ghi chú chung:': 'General note:',
+  'Hủy món đặt trước': 'Cancel pre-order',
+  'THỰC ĐƠN ĐẶT TRƯỚC': 'PRE-ORDER MENU',
+  'Thời gian chế biến dự kiến': 'Estimated preparation time',
+});
+
 // Bản đồ ngược giúp khôi phục các nhãn giao diện về tiếng Việt nếu một node DOM
 // được tạo mới trong lúc giao diện đang ở tiếng Anh. Dữ liệu động (tên món, mô tả...)
 // không nằm trong bảng này nên vẫn do localizedContent xử lý.
@@ -764,6 +832,7 @@ const PATTERNS = [
   [/^Mã đặt bàn:\s*(.+)$/i, 'Reservation code: $1'],
   [/^Ghi chú:\s*(.+)$/i, 'Note: $1'],
   [/^Lý do:\s*(.+)$/i, 'Reason: $1'],
+  [/^Mở cửa\s+(.+)\s+hằng ngày$/i, 'Open $1 daily'],
   [/^Mở cửa\s+(.+)$/i, 'Open $1'],
   [/^Dựa trên\s+(\d+)\s+lượt đánh giá$/i, 'Based on $1 reviews'],
   [/^Đã thêm\s+(.+)\s+vào giỏ hàng\.?$/i, 'Added $1 to cart.'],
@@ -776,6 +845,11 @@ const PATTERNS = [
   [/^Giảm\s+(.+)$/i, 'Save $1'],
   [/^Đơn hàng\s+#(.+)$/i, 'Order #$1'],
   [/^(.+)\s+trên 5 sao$/i, '$1 out of 5 stars'],
+  [/^Giờ phục vụ:\s*(.+)\s+hằng ngày\.$/i, 'Service hours: $1 daily.'],
+  [/^Giờ phục vụ:\s*(.+)\.$/i, 'Service hours: $1.'],
+  [/^Vui lòng đặt bàn trước ít nhất\s*(\d+)\s*phút\.$/i, 'Please reserve at least $1 minutes in advance.'],
+  [/^Chỉ có thể đặt bàn trước tối đa\s*(\d+)\s*ngày\.$/i, 'Reservations can be made up to $1 days in advance.'],
+  [/^Đã tạo lịch\s+(.+),\s*nhưng món đặt trước chưa được lưu\. Bạn có thể chọn lại món trong phần tra cứu\.$/i, 'Reservation $1 was created, but the pre-order was not saved. You can choose dishes again from reservation lookup.'],
 ];
 
 function preserveOuterWhitespace(original, translated) {
