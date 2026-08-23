@@ -49,12 +49,6 @@ const STATUS_OPTIONS = [
   ['HET_HAN', 'Hết hạn'],
 ];
 
-const today = () => {
-  const date = new Date();
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 10);
-};
-
 function ActionButton({ children, tone = '', ...props }) {
   return <button type="button" className={`reservation-action-button ${tone}`} {...props}>{children}</button>;
 }
@@ -159,8 +153,8 @@ export default function ReservationManagement({ role = 'admin' }) {
     checkInEarlyMinutes: 30,
   });
   const [status, setStatus] = useState('');
-  const [from, setFrom] = useState(today());
-  const [to, setTo] = useState(today());
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [area, setArea] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -319,7 +313,7 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   function resetFilters() {
-    setStatus(''); setArea(''); setFrom(today()); setTo(today()); setKeywordInput(''); setKeyword(''); setPage(0);
+    setStatus(''); setArea(''); setFrom(''); setTo(''); setKeywordInput(''); setKeyword(''); setPage(0);
   }
 
   return (
