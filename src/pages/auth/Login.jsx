@@ -11,7 +11,6 @@ import {
   ReceiptText,
   ShoppingBag,
   ShieldCheck,
-  Sparkles,
   UserRound,
   UtensilsCrossed,
 } from 'lucide-react';
@@ -161,13 +160,15 @@ export default function Login() {
           </div>
 
           <div className="lumora-login-copy">
-            <span className="lumora-login-eyebrow">
-              <Sparkles size={13} />
-              Tài khoản LUMORA
-            </span>
-            <h1>Chào mừng bạn đến với LUMORA</h1>
+            <span className="lumora-login-welcome-script">Welcome to</span>
+            <h1 className="lumora-login-lumora-title">LUMORA</h1>
+            <div className="lumora-login-tagline" aria-label="Nhà hàng và Ẩm thực tinh tế">
+              <span aria-hidden="true" />
+              <em>Nhà hàng &amp; Ẩm thực tinh tế</em>
+              <span aria-hidden="true" />
+            </div>
             <p>
-              Một cổng đăng nhập chung dành cho khách hàng và đội ngũ vận hành nhà hàng.
+              Hệ thống quản lý nhà hàng hiện đại, giúp kết nối khách hàng và đội ngũ vận hành một cách hiệu quả.
             </p>
           </div>
 
