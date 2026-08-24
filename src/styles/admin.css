@@ -421,6 +421,7 @@
   color:#ff4d00;
   font-size:13px;
   font-weight:900;
+  white-space:nowrap;
 }
 .menu-price{
   color:#ff4d00;
@@ -437,6 +438,7 @@
   color:#18a341;
   font-size:13px;
   font-weight:900;
+  white-space:nowrap;
 }
 .menu-status-pill::before{
   content:"";
