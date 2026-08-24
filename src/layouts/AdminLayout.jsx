@@ -58,7 +58,12 @@ export default function AdminLayout() {
   const normalizedPath = location.pathname.length > 1
     ? location.pathname.replace(/\/+$/, '')
     : location.pathname;
-  const [title, defaultSubtitle] = pageMeta[normalizedPath] || pageMeta['/admin'];
+  const pageKey = Object.keys(pageMeta)
+    .filter((path) => path === '/admin'
+      ? normalizedPath === path
+      : normalizedPath === path || normalizedPath.startsWith(`${path}/`))
+    .sort((a, b) => b.length - a.length)[0] || '/admin';
+  const [title, defaultSubtitle] = pageMeta[pageKey];
   const displayName = user?.hoTen || user?.fullName || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Quản trị viên';
   const subtitle = normalizedPath === '/admin'
     ? `Xin chào ${displayName}, chúc bạn một ngày làm việc hiệu quả!`
