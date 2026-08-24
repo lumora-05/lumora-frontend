@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Save,
   Trash2,
+  Truck,
   Upload,
 } from 'lucide-react';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
@@ -33,7 +34,14 @@ const EMPTY_FORM = {
   reservationNoShowGraceMinutes: '15',
   reservationCheckInEarlyMinutes: '30',
   reservationMinimumAdvanceMinutes: '30',
-  reservationMaximumAdvanceDays: '60',  vietQrBankId: '',
+  reservationMaximumAdvanceDays: '60',
+  deliveryTier1DistanceKm: '3',
+  deliveryTier2DistanceKm: '6',
+  deliveryMaxDistanceKm: '10',
+  deliveryTier1Fee: '15000',
+  deliveryTier2Fee: '20000',
+  deliveryTier3Fee: '30000',
+  vietQrBankId: '',
   vietQrBankName: '',
   vietQrAccountNo: '',
   vietQrAccountName: '',
@@ -54,7 +62,9 @@ const EMPTY_FORM = {
 const TABS = [
   { id: 'restaurant', label: 'Thông tin nhà hàng', icon: Building2 },
   { id: 'branding', label: 'Thương hiệu & giao diện', icon: ImagePlus },
-  { id: 'reservation', label: 'Đặt bàn', icon: CalendarClock },  { id: 'payment', label: 'Thanh toán', icon: CreditCard },
+  { id: 'reservation', label: 'Đặt bàn', icon: CalendarClock },
+  { id: 'delivery', label: 'Giao hàng', icon: Truck },
+  { id: 'payment', label: 'Thanh toán', icon: CreditCard },
   { id: 'loyalty', label: 'Tích điểm', icon: Coins },
 ];
 
@@ -89,7 +99,14 @@ function formOf(settings = {}) {
     reservationNoShowGraceMinutes: textValue(settings.reservationNoShowGraceMinutes, '15'),
     reservationCheckInEarlyMinutes: textValue(settings.reservationCheckInEarlyMinutes, '30'),
     reservationMinimumAdvanceMinutes: textValue(settings.reservationMinimumAdvanceMinutes, '30'),
-    reservationMaximumAdvanceDays: textValue(settings.reservationMaximumAdvanceDays, '60'),    vietQrBankId: settings.vietQrBankId || '',
+    reservationMaximumAdvanceDays: textValue(settings.reservationMaximumAdvanceDays, '60'),
+    deliveryTier1DistanceKm: textValue(settings.deliveryTier1DistanceKm, '3'),
+    deliveryTier2DistanceKm: textValue(settings.deliveryTier2DistanceKm, '6'),
+    deliveryMaxDistanceKm: textValue(settings.deliveryMaxDistanceKm, '10'),
+    deliveryTier1Fee: textValue(settings.deliveryTier1Fee, '15000'),
+    deliveryTier2Fee: textValue(settings.deliveryTier2Fee, '20000'),
+    deliveryTier3Fee: textValue(settings.deliveryTier3Fee, '30000'),
+    vietQrBankId: settings.vietQrBankId || '',
     vietQrBankName: settings.vietQrBankName || '',
     vietQrAccountNo: settings.vietQrAccountNo || '',
     vietQrAccountName: settings.vietQrAccountName || '',
@@ -206,6 +223,26 @@ export default function SystemSettings() {
       return;
     }
 
+    const deliveryTier1Distance = Number(form.deliveryTier1DistanceKm);
+    const deliveryTier2Distance = Number(form.deliveryTier2DistanceKm);
+    const deliveryMaxDistance = Number(form.deliveryMaxDistanceKm);
+    if (!numberInRange(deliveryTier1Distance, 0.1, 100)
+      || !numberInRange(deliveryTier2Distance, 0.1, 100)
+      || !numberInRange(deliveryMaxDistance, 0.1, 100)
+      || deliveryTier1Distance >= deliveryTier2Distance
+      || deliveryTier2Distance >= deliveryMaxDistance) {
+      setActiveTab('delivery');
+      toast.error('Khoảng cách giao hàng phải thỏa mãn: mức 1 < mức 2 < khoảng cách tối đa');
+      return;
+    }
+    if (!numberInRange(form.deliveryTier1Fee, 0, Number.MAX_SAFE_INTEGER)
+      || !numberInRange(form.deliveryTier2Fee, 0, Number.MAX_SAFE_INTEGER)
+      || !numberInRange(form.deliveryTier3Fee, 0, Number.MAX_SAFE_INTEGER)) {
+      setActiveTab('delivery');
+      toast.error('Phí giao hàng không được âm');
+      return;
+    }
+
     if (!numberInRange(form.loyaltyMoneyPerEarnedPoint, 1, Number.MAX_SAFE_INTEGER)
       || !numberInRange(form.loyaltyValuePerRedeemedPoint, 1, Number.MAX_SAFE_INTEGER)
       || !numberInRange(form.loyaltyMinimumRedeemPoints, 1, 1000000)
@@ -236,7 +273,14 @@ export default function SystemSettings() {
       reservationNoShowGraceMinutes: Number(form.reservationNoShowGraceMinutes),
       reservationCheckInEarlyMinutes: Number(form.reservationCheckInEarlyMinutes),
       reservationMinimumAdvanceMinutes: Number(form.reservationMinimumAdvanceMinutes),
-      reservationMaximumAdvanceDays: Number(form.reservationMaximumAdvanceDays),      vietQrBankId: form.vietQrBankId.trim(),
+      reservationMaximumAdvanceDays: Number(form.reservationMaximumAdvanceDays),
+      deliveryTier1DistanceKm: Number(form.deliveryTier1DistanceKm),
+      deliveryTier2DistanceKm: Number(form.deliveryTier2DistanceKm),
+      deliveryMaxDistanceKm: Number(form.deliveryMaxDistanceKm),
+      deliveryTier1Fee: Number(form.deliveryTier1Fee),
+      deliveryTier2Fee: Number(form.deliveryTier2Fee),
+      deliveryTier3Fee: Number(form.deliveryTier3Fee),
+      vietQrBankId: form.vietQrBankId.trim(),
       vietQrBankName: form.vietQrBankName.trim(),
       vietQrAccountNo: form.vietQrAccountNo.trim(),
       vietQrAccountName: form.vietQrAccountName.trim(),
@@ -474,6 +518,45 @@ export default function SystemSettings() {
                 <div className="system-settings-input"><Link2 size={17} /><input name="reservationUrl" value={form.reservationUrl} onChange={changeField} maxLength={255} placeholder="/reservations" /></div>
               </label>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'delivery' && (
+          <div className="system-settings-card">
+            {cardHead(Truck, 'Giao hàng', 'Thiết lập phạm vi phục vụ và mức phí giao hàng theo quãng đường từ nhà hàng.')}
+            <div className="system-settings-form-grid three-columns">
+              <label>
+                <span>Mốc khoảng cách mức 1</span>
+                <div className="system-settings-input suffix"><input type="number" min="0.1" max="100" step="0.1" name="deliveryTier1DistanceKm" value={form.deliveryTier1DistanceKm} onChange={changeField} /><em>km</em></div>
+                <small>Đơn trong phạm vi này áp dụng phí mức 1.</small>
+              </label>
+              <label>
+                <span>Mốc khoảng cách mức 2</span>
+                <div className="system-settings-input suffix"><input type="number" min="0.1" max="100" step="0.1" name="deliveryTier2DistanceKm" value={form.deliveryTier2DistanceKm} onChange={changeField} /><em>km</em></div>
+                <small>Phải lớn hơn mốc mức 1.</small>
+              </label>
+              <label>
+                <span>Khoảng cách giao tối đa</span>
+                <div className="system-settings-input suffix"><input type="number" min="0.1" max="100" step="0.1" name="deliveryMaxDistanceKm" value={form.deliveryMaxDistanceKm} onChange={changeField} /><em>km</em></div>
+                <small>Ngoài phạm vi này hệ thống không nhận giao.</small>
+              </label>
+              <label>
+                <span>Phí giao mức 1</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" step="1000" name="deliveryTier1Fee" value={form.deliveryTier1Fee} onChange={changeField} /><em>₫</em></div>
+                <small>Áp dụng từ 0 đến {form.deliveryTier1DistanceKm || '0'} km.</small>
+              </label>
+              <label>
+                <span>Phí giao mức 2</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" step="1000" name="deliveryTier2Fee" value={form.deliveryTier2Fee} onChange={changeField} /><em>₫</em></div>
+                <small>Áp dụng trên {form.deliveryTier1DistanceKm || '0'} đến {form.deliveryTier2DistanceKm || '0'} km.</small>
+              </label>
+              <label>
+                <span>Phí giao mức 3</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" step="1000" name="deliveryTier3Fee" value={form.deliveryTier3Fee} onChange={changeField} /><em>₫</em></div>
+                <small>Áp dụng trên {form.deliveryTier2DistanceKm || '0'} đến {form.deliveryMaxDistanceKm || '0'} km.</small>
+              </label>
+            </div>
+            <p className="system-settings-note">Các mức phí mới sẽ được backend dùng để tính phí cho đơn giao tận nơi sau khi lưu.</p>
           </div>
         )}
 
