@@ -58,11 +58,19 @@ export default function AdminLayout() {
   const normalizedPath = location.pathname.length > 1
     ? location.pathname.replace(/\/+$/, '')
     : location.pathname;
-  const pageKey = Object.keys(pageMeta)
-    .filter((path) => path === '/admin'
-      ? normalizedPath === path
-      : normalizedPath === path || normalizedPath.startsWith(`${path}/`))
-    .sort((a, b) => b.length - a.length)[0] || '/admin';
+
+  // Ưu tiên khớp chính xác route hiện tại. Với các trang con (ví dụ
+  // /admin/orders/123), mới fallback về route cha dài nhất. Cách này tránh
+  // tiêu đề của trang trước bị dùng nhầm khi chuyển giữa các mục sidebar.
+  const exactPageKey = Object.prototype.hasOwnProperty.call(pageMeta, normalizedPath)
+    ? normalizedPath
+    : null;
+  const parentPageKey = exactPageKey
+    ? null
+    : Object.keys(pageMeta)
+      .filter((path) => path !== '/admin' && normalizedPath.startsWith(`${path}/`))
+      .sort((a, b) => b.length - a.length)[0];
+  const pageKey = exactPageKey || parentPageKey || '/admin';
   const [title, defaultSubtitle] = pageMeta[pageKey];
   const displayName = user?.hoTen || user?.fullName || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Quản trị viên';
   const subtitle = normalizedPath === '/admin'
@@ -78,7 +86,7 @@ export default function AdminLayout() {
         restaurantName={brandSettings.restaurantName}
       />
       <main className="admin-main">
-        <Header title={title} subtitle={subtitle} />
+        <Header key={pageKey} title={title} subtitle={subtitle} />
         <Outlet />
       </main>
     </div>
