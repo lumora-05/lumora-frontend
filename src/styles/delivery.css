@@ -440,6 +440,15 @@
 .delivery-address-selection-help.success{color:#27845a!important}
 
 
+/* ===== FIX CHECKOUT: khoảng cách rõ ràng giữa các nhóm form ===== */
+.delivery-checkout-card > .delivery-checkout-subsection + .delivery-checkout-subsection{
+  margin-top:20px;
+}
+
+.delivery-promotion-field + .delivery-payment-options{
+  margin-top:16px;
+}
+
 /* ===== FIX CHECKOUT: loại bỏ khoảng trắng bất thường trong khối địa chỉ ===== */
 .delivery-checkout-grid{
   align-items:start!important;
