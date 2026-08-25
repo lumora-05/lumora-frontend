@@ -16,7 +16,6 @@ import {
   kitchenOrderedAt,
   kitchenStatusMeta,
   kitchenTableName,
-  kitchenUnitPosition,
   kitchenWaitMinutes,
   unwrapList,
 } from '../../utils/kitchenData';
@@ -36,6 +35,55 @@ function groupStatus(list) {
 
 function groupKey(item) {
   return `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`;
+}
+
+function kitchenDishKey(item) {
+  const foodId = item?.monAn?.maMonAn ?? item?.maMonAn ?? kitchenItemName(item);
+  const note = String(item?.ghiChu || '').trim();
+  return `${foodId}::${note}`;
+}
+
+function itemQuantity(item) {
+  const value = Number(item?.soLuong || 1);
+  return Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+function groupSameDishes(list) {
+  const map = new Map();
+  list.forEach((item) => {
+    const key = kitchenDishKey(item);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+  });
+  return [...map.entries()].map(([key, dishItems]) => ({ key, items: dishItems }));
+}
+
+function dishProgress(dishItems) {
+  const quantities = dishItems.reduce((result, item) => {
+    const quantity = itemQuantity(item);
+    const status = canonicalKitchenStatus(item);
+    result.total += quantity;
+    if (status === 'CHO_BEP') result.waiting += quantity;
+    if (status === 'DANG_NAU') result.cooking += quantity;
+    if (status === 'HOAN_THANH') result.done += quantity;
+    return result;
+  }, { total: 0, waiting: 0, cooking: 0, done: 0 });
+
+  const status = quantities.done === quantities.total
+    ? 'HOAN_THANH'
+    : quantities.waiting === quantities.total
+      ? 'CHO_BEP'
+      : 'DANG_NAU';
+
+  const parts = [];
+  if (quantities.waiting === quantities.total) parts.push(`${quantities.total} suất chờ bắt đầu`);
+  else {
+    if (quantities.cooking) parts.push(`${quantities.cooking} đang chế biến`);
+    if (quantities.done) parts.push(`${quantities.done} hoàn thành`);
+    if (quantities.waiting) parts.push(`${quantities.waiting} mới`);
+  }
+
+  return { ...quantities, status, summary: parts.join(' · ') };
 }
 
 export default function KitchenBoard() {
@@ -159,13 +207,6 @@ export default function KitchenBoard() {
     }
   }
 
-  function quickUpdate(item) {
-    const current = canonicalKitchenStatus(item);
-    if (current === 'CHO_BEP') return updateItems([item], 'DANG_NAU', 'Đã bắt đầu chế biến món');
-    if (current === 'DANG_NAU') return updateItems([item], 'HOAN_THANH', 'Đã xác nhận món hoàn thành');
-    return undefined;
-  }
-
   return (
     <section className="kitchen-page kitchen-queue-page">
       <div className="kitchen-live-summary">
@@ -200,6 +241,7 @@ export default function KitchenBoard() {
             const overdue = status !== 'HOAN_THANH' && waitMinutes >= 15;
             const waitingItems = list.filter((item) => canonicalKitchenStatus(item) === 'CHO_BEP');
             const cookingItems = list.filter((item) => canonicalKitchenStatus(item) === 'DANG_NAU');
+            const displayRows = groupSameDishes(list);
             const isBatchBusy = list.some((item) => busyIds.has(kitchenItemId(item)));
             return (
               <article className={`kitchen-batch-card ${batchMeta.tone} ${overdue ? 'overdue' : ''}`} key={key}>
@@ -221,32 +263,56 @@ export default function KitchenBoard() {
                 <div className="kitchen-table-scroll">
                   <table className="kitchen-compact-table kitchen-action-table">
                     <thead>
-                      <tr><th>STT</th><th>Tên món</th><th>Suất</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                      <tr><th>STT</th><th>Tên món</th><th>Số lượng</th><th>Trạng thái</th><th>Thao tác</th></tr>
                     </thead>
                     <tbody>
-                      {list.map((item, index) => {
-                        const id = kitchenItemId(item);
-                        const current = canonicalKitchenStatus(item);
-                        const meta = kitchenStatusMeta(current);
-                        const busy = busyIds.has(id);
-                        const unit = kitchenUnitPosition(list, index);
+                      {displayRows.map(({ key: dishKey, items: dishItems }, index) => {
+                        const item = dishItems[0];
+                        const progress = dishProgress(dishItems);
+                        const meta = kitchenStatusMeta(progress.status);
+                        const waitingDishItems = dishItems.filter((entry) => canonicalKitchenStatus(entry) === 'CHO_BEP');
+                        const cookingDishItems = dishItems.filter((entry) => canonicalKitchenStatus(entry) === 'DANG_NAU');
+                        const busy = dishItems.some((entry) => busyIds.has(kitchenItemId(entry)));
                         return (
-                          <tr key={id || `${key}-${index}`}>
+                          <tr key={`${key}-${dishKey}`}>
                             <td data-label="STT">{index + 1}</td>
                             <td data-label="Tên món">
                               <b>{kitchenItemName(item)}</b>
                               {item?.ghiChu ? <small className="kitchen-item-note">Ghi chú: {item.ghiChu}</small> : null}
                             </td>
-                            <td data-label="Suất"><strong className="kitchen-quantity">{unit.total > 1 ? `${unit.position}/${unit.total}` : '1'}</strong></td>
-                            <td data-label="Trạng thái"><span className={`kitchen-state-pill ${meta.tone}`}>{meta.label}</span></td>
+                            <td data-label="Số lượng"><strong className="kitchen-quantity">×{progress.total}</strong></td>
+                            <td data-label="Trạng thái">
+                              <span className={`kitchen-state-pill ${meta.tone}`}>{meta.label}</span>
+                              {progress.summary ? <small className="kitchen-status-progress">{progress.summary}</small> : null}
+                            </td>
                             <td data-label="Thao tác">
-                              {current === 'HOAN_THANH' ? (
+                              {progress.status === 'HOAN_THANH' ? (
                                 <span className="kitchen-row-complete"><Check size={16} />Đã xong</span>
                               ) : (
-                                <button type="button" className={`kitchen-item-action ${current === 'CHO_BEP' ? 'start' : 'finish'}`} disabled={busy} onClick={() => quickUpdate(item)}>
-                                  {current === 'CHO_BEP' ? <Play size={15} /> : <Check size={15} />}
-                                  {busy ? 'Đang cập nhật...' : current === 'CHO_BEP' ? 'Bắt đầu' : 'Hoàn thành'}
-                                </button>
+                                <div className="kitchen-row-actions">
+                                  {waitingDishItems.length ? (
+                                    <button
+                                      type="button"
+                                      className="kitchen-item-action start"
+                                      disabled={busy}
+                                      onClick={() => updateItems(waitingDishItems, 'DANG_NAU', `Đã bắt đầu ${progress.waiting} suất ${kitchenItemName(item)}`)}
+                                    >
+                                      <Play size={15} />
+                                      {busy ? 'Đang cập nhật...' : progress.waiting > 1 ? `Bắt đầu ${progress.waiting} suất` : 'Bắt đầu'}
+                                    </button>
+                                  ) : null}
+                                  {cookingDishItems.length ? (
+                                    <button
+                                      type="button"
+                                      className="kitchen-item-action finish"
+                                      disabled={busy}
+                                      onClick={() => updateItems(cookingDishItems, 'HOAN_THANH', `Đã hoàn thành ${progress.cooking} suất ${kitchenItemName(item)}`)}
+                                    >
+                                      <Check size={15} />
+                                      {busy ? 'Đang cập nhật...' : progress.cooking > 1 ? `Hoàn thành ${progress.cooking} suất` : 'Hoàn thành'}
+                                    </button>
+                                  ) : null}
+                                </div>
                               )}
                             </td>
                           </tr>

@@ -2016,6 +2016,7 @@
 .kitchen-order-note b{color:#9a3412}
 .kitchen-item-note{color:#c2410c!important;font-weight:750}
 .kitchen-quantity{color:#111827;font-size:15px}
+.kitchen-status-progress{display:block;margin-top:5px;color:#64748b;font-size:11px;font-weight:750;white-space:nowrap}
 .kitchen-action-table th:last-child,.kitchen-action-table td:last-child{width:180px}
 .kitchen-item-action{min-height:36px;padding:0 12px;border:0;border-radius:9px;color:#fff;font-weight:850;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap}
 .kitchen-item-action.start{background:#2563eb}.kitchen-item-action.finish{background:#16a34a}
