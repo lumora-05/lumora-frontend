@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  ChefHat,
   Eye,
   EyeOff,
-  LayoutDashboard,
   LoaderCircle,
   LockKeyhole,
-  ReceiptText,
-  ShoppingBag,
   ShieldCheck,
   UserRound,
-  UtensilsCrossed,
 } from 'lucide-react';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
@@ -32,14 +27,6 @@ const getHomePath = (role = '') => {
 
   return '/';
 };
-
-const roleItems = [
-  { icon: ShoppingBag, label: 'Khách hàng' },
-  { icon: LayoutDashboard, label: 'Quản trị' },
-  { icon: UtensilsCrossed, label: 'Phục vụ' },
-  { icon: ChefHat, label: 'Bếp' },
-  { icon: ReceiptText, label: 'Thu ngân' },
-];
 
 function LoginBrandLogo({ restaurantName, logoUrl }) {
   const logo = imageUrl(logoUrl);
@@ -170,17 +157,6 @@ export default function Login() {
             <p>
               Hệ thống quản lý nhà hàng hiện đại, giúp kết nối khách hàng và đội ngũ vận hành một cách hiệu quả.
             </p>
-          </div>
-
-          
-
-          <div className="lumora-login-roles" aria-label="Các vai trò sử dụng hệ thống">
-            {roleItems.map(({ icon: Icon, label }) => (
-              <div key={label}>
-                <Icon size={15} />
-                <span>{label}</span>
-              </div>
-            ))}
           </div>
         </aside>
 
