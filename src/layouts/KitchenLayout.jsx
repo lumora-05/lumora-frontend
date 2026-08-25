@@ -6,7 +6,7 @@ import KitchenHeader from '../components/common/KitchenHeader';
 import { orderApi } from '../api/orderApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { canonicalKitchenStatus, flattenKitchenOrders, unwrapList } from '../utils/kitchenData';
+import { canonicalKitchenStatus, flattenKitchenOrders, kitchenCallNumber, kitchenOrderId, unwrapList } from '../utils/kitchenData';
 import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
@@ -52,9 +52,12 @@ export default function KitchenLayout() {
   const loadKitchenAttentionCount = useCallback(async () => {
     try {
       const response = await orderApi.getAll();
-      const waitingCount = flattenKitchenOrders(unwrapList(response))
-        .filter((item) => canonicalKitchenStatus(item) === 'CHO_BEP').length;
-      setKitchenAttentionCount(waitingCount);
+      const attentionTicketKeys = new Set(
+        flattenKitchenOrders(unwrapList(response))
+          .filter((item) => canonicalKitchenStatus(item) !== 'HOAN_THANH')
+          .map((item) => `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`),
+      );
+      setKitchenAttentionCount(attentionTicketKeys.size);
     } catch {
       // Badge là thông tin hỗ trợ; bảng chế biến vẫn tự hiển thị lỗi tải dữ liệu nếu có.
     }
