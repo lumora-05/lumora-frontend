@@ -6,7 +6,6 @@ import {
   EyeOff,
   LoaderCircle,
   LockKeyhole,
-  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
@@ -224,7 +223,6 @@ export default function Login() {
 
               <div className="lumora-login-form-tools">
                 <Link to="/forgot-password">Quên mật khẩu?</Link>
-                <Link to={`/menu/account/login?mode=register&next=${encodeURIComponent(customerNext)}`}>Đăng ký khách hàng</Link>
               </div>
 
               <button className="lumora-login-submit" type="submit" disabled={isSubmitting}>
@@ -259,9 +257,11 @@ export default function Login() {
               }}
             />
 
-            <div className="lumora-login-security">
-              <ShieldCheck size={15} />
-              <span>Hệ thống tự xác định vai trò và chuyển đến đúng khu vực sau khi đăng nhập.</span>
+            <div className="lumora-login-register">
+              <span>Chưa có tài khoản khách hàng?</span>
+              <Link to={`/menu/account/login?mode=register&next=${encodeURIComponent(customerNext)}`}>
+                Đăng ký ngay
+              </Link>
             </div>
           </div>
 

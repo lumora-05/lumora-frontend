@@ -536,20 +536,26 @@
   animation: lumoraLoginSpin .75s linear infinite;
 }
 
-.lumora-login-security {
+.lumora-login-register {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  margin-top: 17px;
-  color: #8a817b;
-  font-size: 10px;
+  gap: 5px;
+  margin-top: 14px;
+  color: #7f756e;
+  font-size: 11px;
   text-align: center;
 }
 
-.lumora-login-security svg {
-  flex: 0 0 auto;
-  color: #f97316;
+.lumora-login-register a {
+  color: var(--login-orange-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.lumora-login-register a:hover {
+  color: #c2410c;
+  text-decoration: underline;
 }
 
 .lumora-login-copyright {
