@@ -5,7 +5,7 @@ import { orderApi } from '../../api/orderApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
-import { canonicalKitchenStatus, flattenKitchenOrders, unwrapList } from '../../utils/kitchenData';
+import { canonicalKitchenStatus, flattenKitchenOrders, kitchenCallNumber, kitchenOrderId, unwrapList } from '../../utils/kitchenData';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 
@@ -21,9 +21,12 @@ export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
   async function loadCount() {
     try {
       const response = await orderApi.getAll();
-      const count = flattenKitchenOrders(unwrapList(response))
-        .filter((item) => canonicalKitchenStatus(item) === 'CHO_BEP').length;
-      setNewCount(count);
+      const ticketKeys = new Set(
+        flattenKitchenOrders(unwrapList(response))
+          .filter((item) => canonicalKitchenStatus(item) !== 'HOAN_THANH')
+          .map((item) => `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`),
+      );
+      setNewCount(ticketKeys.size);
     } catch {
       // Badge is supplementary; page-level requests still show detailed errors.
     }
