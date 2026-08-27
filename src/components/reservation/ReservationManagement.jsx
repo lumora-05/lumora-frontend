@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   CalendarCheck2,
   CalendarClock,
   CalendarDays,
@@ -31,6 +32,9 @@ import {
   reservationDate,
   reservationDateTime,
   reservationId,
+  reservationNeedsCashierAttention,
+  reservationPreorderChangedAfterApproval,
+  reservationPreorderNeedsReview,
   reservationStatus,
   reservationStatusMeta,
   reservationTime,
@@ -70,11 +74,14 @@ function DetailModal({ item, onClose, defaultDurationMinutes = 120 }) {
     ['Người xếp bàn', item?.tenNguoiXepBan || '—'],
     ['Món đặt trước', Number(item?.soMonDatTruoc || 0) ? `${item.soMonDatTruoc} loại món` : 'Chưa đặt'],
     ['Trạng thái món trước', preorderStatusMeta(item?.trangThaiDatMonTruoc).label],
+    ['Cần duyệt lại món', item?.canDuyetLaiDatMonTruoc ? 'Có - khách đã thay đổi sau lần duyệt' : 'Không'],
+    ['Khách thay đổi món lúc', item?.thoiGianThayDoiDatMonTruoc ? reservationDateTime(item.thoiGianThayDoiDatMonTruoc) : '—'],
   ];
   return (
     <section className="reservation-manage-modal reservation-detail-modal" role="dialog" aria-modal="true">
       <header><div><span>CHI TIẾT ĐẶT BÀN</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>Tạo lúc {reservationDateTime(item?.thoiGianTao)}</p></div><button type="button" onClick={onClose}><X size={20} /></button></header>
       <div className="reservation-detail-status"><span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>{item?.maDonHang ? <b>Đã liên kết đơn #{item.maDonHang}</b> : null}</div>
+      {reservationPreorderChangedAfterApproval(item) ? <div className="reservation-preorder-reapproval-alert"><AlertTriangle size={19} /><p><b>Khách vừa thay đổi món đặt trước.</b> Thực đơn cần được kiểm tra và duyệt lại trước khi chuyển xuống bếp.</p></div> : null}
       <div className="reservation-detail-grid">{lines.map(([label, value]) => <p key={label}><span>{label}</span><strong>{value || '—'}</strong></p>)}</div>
       {item?.ghiChu ? <div className="reservation-detail-note"><b>Ghi chú:</b> {item.ghiChu}</div> : null}
       {item?.lyDoHuyTuChoi ? <div className="reservation-detail-reason"><b>Lý do kết thúc:</b> {item.lyDoHuyTuChoi}</div> : null}
@@ -241,10 +248,12 @@ export default function ReservationManagement({ role = 'admin' }) {
 
   const stats = useMemo(() => ({
     total: totalElements,
-    pending: rows.filter((item) => reservationStatus(item) === 'CHO_XAC_NHAN').length,
+    pending: rows.filter((item) => canManageReservation
+      ? reservationNeedsCashierAttention(item)
+      : reservationStatus(item) === 'CHO_XAC_NHAN').length,
     upcoming: rows.filter((item) => reservationStatus(item) === 'DA_XAC_NHAN').length,
     arrived: rows.filter((item) => ['KHACH_DA_DEN', 'DA_XEP_BAN'].includes(reservationStatus(item))).length,
-  }), [rows, totalElements]);
+  }), [canManageReservation, rows, totalElements]);
 
   const range = pageDisplayRange(page, size, numberOfElements, totalElements);
   const pageItems = paginationItems(page, totalPages);
@@ -320,7 +329,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     <section className="reservation-manage-page">
       <div className="reservation-manage-stats">
         <article><span className="orange"><CalendarCheck2 size={22} /></span><p>Tổng lịch theo bộ lọc<strong>{stats.total}</strong></p></article>
-        <article><span className="warning"><Clock3 size={22} /></span><p>Chờ xác nhận trên trang<strong>{stats.pending}</strong></p></article>
+        <article><span className="warning"><Clock3 size={22} /></span><p>{canManageReservation ? 'Cần xử lý trên trang' : 'Chờ xác nhận trên trang'}<strong>{stats.pending}</strong></p></article>
         <article><span className="blue"><CalendarClock size={22} /></span><p>Sắp đến trên trang<strong>{stats.upcoming}</strong></p></article>
         <article><span className="green"><UserCheck size={22} /></span><p>Đã đến/xếp bàn<strong>{stats.arrived}</strong></p></article>
       </div>
@@ -344,16 +353,29 @@ export default function ReservationManagement({ role = 'admin' }) {
                 : rows.length ? rows.map((item) => {
                   const statusValue = reservationStatus(item);
                   const meta = reservationStatusMeta(statusValue);
+                  const preorderNeedsReview = reservationPreorderNeedsReview(item);
+                  const preorderChangedAfterApproval = reservationPreorderChangedAfterApproval(item);
                   return (
-                    <tr key={reservationId(item)}>
+                    <tr key={reservationId(item)} className={preorderChangedAfterApproval ? 'reservation-row-reapproval' : preorderNeedsReview ? 'reservation-row-preorder-review' : ''}>
                       <td><strong>{reservationTime(item?.ngayGioDen)}</strong><small>{reservationDate(item?.ngayGioDen)}</small><em>{item?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes} phút</em></td>
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
-                      <td><span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>{preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small> : null}{item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}</td>
+                      <td>
+                        <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
+                        {preorderChangedAfterApproval ? (
+                          <>
+                            <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
+                            {item?.thoiGianThayDoiDatMonTruoc ? <small className="reservation-preorder-change-time">Thay đổi lúc {reservationDateTime(item.thoiGianThayDoiDatMonTruoc, { hideYear: true })}</small> : null}
+                          </>
+                        ) : preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? (
+                          <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small>
+                        ) : null}
+                        {item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}
+                      </td>
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
-                        {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone="preorder" onClick={() => openAction('preorder', item)}><ChefHat size={15} /> Món đặt trước</ActionButton> : null}
+                        {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone={canManageReservation && preorderNeedsReview ? 'preorder-attention' : 'preorder'} onClick={() => openAction('preorder', item)}><ChefHat size={15} /> {canManageReservation && preorderChangedAfterApproval ? 'Duyệt lại món' : canManageReservation && preorderNeedsReview ? 'Duyệt món' : 'Món đặt trước'}</ActionButton> : null}
                         {canManageReservation && statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
                         {statusValue === 'DA_XAC_NHAN' ? <>
                           {canHandleArrival && canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, clockTick)

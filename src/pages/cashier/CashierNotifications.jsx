@@ -7,7 +7,13 @@ import { reservationApi } from '../../api/reservationApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatMoney } from '../../utils/formatMoney';
 import { normalizePage } from '../../utils/pagination';
-import { reservationDateTime } from '../../utils/reservations';
+import {
+  currentLocalDate,
+  reservationDateTime,
+  reservationPreorderChangedAfterApproval,
+  reservationPreorderNeedsReview,
+  reservationStatus,
+} from '../../utils/reservations';
 import {
   PAYMENT_REQUEST_STATUSES,
   documentCode,
@@ -68,14 +74,24 @@ export default function CashierNotifications() {
     setLoading(true);
     setError('');
     try {
-      const [orderResponse, deliveryResponse, reservationResponse] = await Promise.all([
+      const [orderResponse, deliveryResponse, pendingReservationResponse, activeReservationResponse] = await Promise.all([
         orderApi.getAll(),
         deliveryApi.list('ALL'),
         reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 20 }),
+        reservationApi.list({ from: currentLocalDate(), page: 0, size: 100 }),
       ]);
       setOrders(unwrap(orderResponse));
       setDeliveryOrders(unwrapDeliveryList(deliveryResponse));
-      setReservations(normalizePage(reservationResponse, 20).content);
+      const pendingReservations = normalizePage(pendingReservationResponse, 20).content;
+      const preorderReviews = normalizePage(activeReservationResponse, 100).content
+        .filter((item) => reservationStatus(item) !== 'CHO_XAC_NHAN' && reservationPreorderNeedsReview(item));
+      const seen = new Set();
+      setReservations([...preorderReviews, ...pendingReservations].filter((item) => {
+        const key = item?.maDatBan ?? item?.maTraCuu;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }));
     } catch {
       setError('Không tải được thông báo công việc của thu ngân.');
     } finally {
@@ -122,16 +138,26 @@ export default function CashierNotifications() {
         ) : null}
 
         {!loading ? reservations.map((reservation) => {
-          const elapsed = elapsedInfo(reservation?.thoiGianTao, now);
+          const changedAfterApproval = reservationPreorderChangedAfterApproval(reservation);
+          const preorderReview = reservationPreorderNeedsReview(reservation);
+          const attentionTime = changedAfterApproval
+            ? reservation?.thoiGianThayDoiDatMonTruoc
+            : preorderReview ? reservation?.thoiGianDatMonTruoc : reservation?.thoiGianTao;
+          const elapsed = elapsedInfo(attentionTime, now);
+          const title = changedAfterApproval
+            ? `Khách vừa thay đổi món ${reservation?.maTraCuu || ''} · cần duyệt lại`
+            : preorderReview
+              ? `Thực đơn ${reservation?.maTraCuu || ''} đang chờ duyệt`
+              : `Đặt bàn ${reservation?.maTraCuu || ''} đang chờ xác nhận`;
           return (
-            <article key={`reservation-${reservation?.maDatBan || reservation?.maTraCuu}`} className={`cashier-notification-card ${elapsed.tone}`}>
+            <article key={`reservation-${reservation?.maDatBan || reservation?.maTraCuu}`} className={`cashier-notification-card ${changedAfterApproval ? 'urgent' : elapsed.tone}`}>
               <div className="cashier-notification-icon"><CalendarCheck2 size={22} /></div>
               <div className="cashier-notification-content">
-                <div><strong>Đặt bàn {reservation?.maTraCuu || ''} đang chờ xác nhận</strong><span>{reservationDateTime(reservation?.ngayGioDen)}</span></div>
+                <div><strong>{title}</strong><span>{reservationDateTime(reservation?.ngayGioDen)}</span></div>
                 <p>{reservation?.hoTenKhach || 'Khách hàng'} · {reservation?.soLuongKhach || 0} khách{reservation?.khuVucMongMuon ? ` · ${reservation.khuVucMongMuon}` : ''}</p>
                 <small><Clock3 size={14} />{elapsed.label}</small>
               </div>
-              <Link to="/cashier/reservations">Xử lý đặt bàn</Link>
+              <Link to="/cashier/reservations">{preorderReview ? 'Duyệt thực đơn' : 'Xử lý đặt bàn'}</Link>
             </article>
           );
         }) : null}

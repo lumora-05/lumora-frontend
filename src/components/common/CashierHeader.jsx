@@ -12,6 +12,7 @@ import { profileAvatarOf } from '../../utils/profileAvatar';
 import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
 import { displayOrderCode, isCashierDeliveryAttention, unwrapDeliveryList } from '../../utils/delivery';
 import { normalizePage } from '../../utils/pagination';
+import { currentLocalDate, reservationPreorderNeedsReview, reservationStatus } from '../../utils/reservations';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 
 function cashierOnlineAlert(event) {
@@ -39,6 +40,12 @@ function cashierOnlineAlert(event) {
   }
   if (type === 'RESERVATION_UPDATED' && String(data?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN') {
     return { key: `${type}-${data?.maDatBan || data?.maTraCuu || 'latest'}`, message: `Khách vừa cập nhật đặt bàn${data?.maTraCuu ? ` ${data.maTraCuu}` : ''} · cần thu ngân xác nhận lại.` };
+  }
+  if (type === 'RESERVATION_PREORDER_CHANGED_AFTER_CONFIRMATION') {
+    return { key: `${type}-${data?.maDatBan || data?.maTraCuu || 'latest'}`, message: `Khách vừa thay đổi món đặt trước${data?.maTraCuu ? ` ${data.maTraCuu}` : ''} · cần kiểm tra và duyệt lại.` };
+  }
+  if (type === 'RESERVATION_PREORDER_REVIEW_REQUIRED_AT_CHECKIN') {
+    return { key: `${type}-${data?.maDatBan || data?.maTraCuu || 'latest'}`, message: `Khách đã đến nhưng thực đơn đặt trước${data?.maTraCuu ? ` ${data.maTraCuu}` : ''} chưa duyệt xong · cần xử lý ngay.` };
   }
   return null;
 }
@@ -76,8 +83,14 @@ export default function CashierHeader({ title, subtitle, onOpenMenu }) {
 
 
     try {
-      const reservationResponse = await reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 });
-      reservationCount = normalizePage(reservationResponse, 1).totalElements;
+      const [pendingResponse, activeResponse] = await Promise.all([
+        reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 }),
+        reservationApi.list({ from: currentLocalDate(), page: 0, size: 100 }),
+      ]);
+      const pendingCount = normalizePage(pendingResponse, 1).totalElements;
+      const preorderReviewCount = normalizePage(activeResponse, 100).content
+        .filter((item) => reservationStatus(item) !== 'CHO_XAC_NHAN' && reservationPreorderNeedsReview(item)).length;
+      reservationCount = pendingCount + preorderReviewCount;
     } catch {
       // Giữ các phần đếm khác nếu danh sách đặt bàn tạm thời không tải được.
     }

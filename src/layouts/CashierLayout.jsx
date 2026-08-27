@@ -12,6 +12,7 @@ import { PAYMENT_REQUEST_STATUSES, unwrap } from '../utils/cashier';
 import { isCashierDeliveryAttention, unwrapDeliveryList } from '../utils/delivery';
 import { imageUrl } from '../utils/imageUrl';
 import { normalizePage } from '../utils/pagination';
+import { currentLocalDate, reservationPreorderNeedsReview, reservationStatus } from '../utils/reservations';
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
@@ -84,8 +85,14 @@ export default function CashierLayout() {
 
   const loadReservationAttentionCount = useCallback(async () => {
     try {
-      const response = await reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 });
-      setReservationAttentionCount(normalizePage(response, 1).totalElements);
+      const [pendingResponse, activeResponse] = await Promise.all([
+        reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 }),
+        reservationApi.list({ from: currentLocalDate(), page: 0, size: 100 }),
+      ]);
+      const pendingCount = normalizePage(pendingResponse, 1).totalElements;
+      const preorderReviewCount = normalizePage(activeResponse, 100).content
+        .filter((item) => reservationStatus(item) !== 'CHO_XAC_NHAN' && reservationPreorderNeedsReview(item)).length;
+      setReservationAttentionCount(pendingCount + preorderReviewCount);
     } catch {
       // Badge là thông tin hỗ trợ; trang đặt bàn vẫn tự hiển thị lỗi nếu tải dữ liệu thất bại.
     }

@@ -30,6 +30,27 @@ export function reservationStatusMeta(value) {
   return RESERVATION_STATUS[status] || { label: status || 'Không xác định', tone: 'neutral' };
 }
 
+export function reservationPreorderNeedsReview(item) {
+  const bookingStatus = reservationStatus(item);
+  const preorderStatus = String(item?.trangThaiDatMonTruoc || '').trim().toUpperCase();
+  return preorderStatus === 'CHO_XAC_NHAN'
+    && ['DA_XAC_NHAN', 'KHACH_DA_DEN', 'DA_XEP_BAN'].includes(bookingStatus);
+}
+
+export function reservationPreorderChangedAfterApproval(item) {
+  return Boolean(item?.canDuyetLaiDatMonTruoc) && reservationPreorderNeedsReview(item);
+}
+
+export function reservationNeedsCashierAttention(item) {
+  return reservationStatus(item) === 'CHO_XAC_NHAN' || reservationPreorderNeedsReview(item);
+}
+
+export function currentLocalDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
 export function reservationDateTime(value, options = {}) {
   if (!value) return '—';
   const date = new Date(value);

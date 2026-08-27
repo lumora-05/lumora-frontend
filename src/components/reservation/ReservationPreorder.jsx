@@ -198,8 +198,11 @@ function MenuEditorModal({ reservation, code, phone, current, onSaved, onClose, 
         ghiChu: generalNote.trim() || null,
         items,
       });
-      toast.success(messageOf(response, 'Đã gửi thực đơn đặt trước cho nhà hàng.'));
-      onSaved(reservationData(response));
+      const saved = reservationData(response);
+      toast.success(saved?.canDuyetLaiDatMonTruoc
+        ? 'Đã cập nhật món. Nhà hàng sẽ kiểm tra và duyệt lại thực đơn của bạn.'
+        : messageOf(response, 'Đã gửi thực đơn đặt trước cho nhà hàng.'));
+      onSaved(saved);
       onClose();
     } catch (error) {
       toast.error(errorMessageOf(error, 'Không thể lưu thực đơn đặt trước.'));
@@ -359,6 +362,7 @@ export function CustomerReservationPreorder({ reservation, code, phone, onChange
         {loading ? <div className="reservation-preorder-inline-loading"><LoaderCircle className="spin" size={20} /> Đang tải thực đơn đặt trước...</div> : (
           <>
             {bookingStatus === 'CHO_XAC_NHAN' && itemCount > 0 ? <div className="reservation-preorder-approved"><Clock3 size={19} /><p>Món đã được lưu cùng yêu cầu đặt bàn và đang chờ nhà hàng xử lý. Món chưa được gửi xuống bếp.</p></div> : null}
+            {preorder?.canDuyetLaiDatMonTruoc ? <div className="reservation-preorder-reapproval-alert"><AlertTriangle size={19} /><p><b>Bạn đã thay đổi thực đơn sau lần nhà hàng duyệt gần nhất.</b> Thực đơn mới đang chờ được duyệt lại và chưa thể chuyển xuống bếp.</p></div> : null}
             {status === 'TU_CHOI' && preorder?.lyDoTuChoiDatMonTruoc ? <div className="reservation-preorder-alert"><AlertTriangle size={19} /><p><b>Nhà hàng yêu cầu điều chỉnh:</b> {preorder.lyDoTuChoiDatMonTruoc}</p></div> : null}
             {status === 'DA_XAC_NHAN' ? <div className="reservation-preorder-approved"><CheckCircle2 size={19} /><p>Nhà hàng đã duyệt thực đơn. Món chỉ được chuyển xuống bếp sau khi bạn đến và được xếp bàn.</p></div> : null}
             {status === 'DA_CHUYEN_BEP' ? <div className="reservation-preorder-approved"><ChefHat size={19} /><p>Món đặt trước đã chuyển xuống bếp{preorder?.maDonHang ? ` thành đơn #${preorder.maDonHang}` : ''}.</p></div> : null}
@@ -440,6 +444,8 @@ export function StaffReservationPreorderModal({ item, role = 'admin', onClose, o
   const bookingStatus = reservationStatus(item);
   const canApprove = status === 'CHO_XAC_NHAN'
     && ['DA_XAC_NHAN', 'KHACH_DA_DEN', 'DA_XEP_BAN'].includes(bookingStatus);
+  const needsReapproval = Boolean(preorder?.canDuyetLaiDatMonTruoc ?? item?.canDuyetLaiDatMonTruoc);
+  const changeTime = preorder?.thoiGianThayDoiDatMonTruoc || item?.thoiGianThayDoiDatMonTruoc;
   const canSend = status === 'DA_XAC_NHAN' && bookingStatus === 'DA_XEP_BAN';
 
   return (
@@ -454,6 +460,7 @@ export function StaffReservationPreorderModal({ item, role = 'admin', onClose, o
             <span className={`reservation-preorder-status ${meta.tone}`}>{meta.label}</span>
             <strong>{formatMoney(preorder?.tongTienDuKien || 0)}</strong>
           </div>
+          {needsReapproval ? <div className="reservation-preorder-reapproval-alert"><AlertTriangle size={19} /><p><b>Khách đã thay đổi thực đơn sau lần duyệt gần nhất.</b> Cần kiểm tra và duyệt lại trước khi chuyển xuống bếp{changeTime ? ` · thay đổi lúc ${reservationDateTime(changeTime, { hideYear: true })}` : ''}.</p></div> : null}
           {preorder?.lyDoTuChoiDatMonTruoc ? <div className="reservation-preorder-alert"><AlertTriangle size={19} /><p><b>Lý do:</b> {preorder.lyDoTuChoiDatMonTruoc}</p></div> : null}
           <PreorderItems preorder={preorder} />
           {preorder?.ghiChuDatMonTruoc ? <div className="reservation-preorder-note"><b>Ghi chú chung:</b> {preorder.ghiChuDatMonTruoc}</div> : null}
@@ -474,7 +481,7 @@ export function StaffReservationPreorderModal({ item, role = 'admin', onClose, o
         <button type="button" onClick={onClose} disabled={busy}>Đóng</button>
         {canReview && status === 'CHO_XAC_NHAN' ? <>
           <button type="button" className="danger" onClick={() => runAction('reject')} disabled={busy || !rejectReason.trim()}>{busy ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Yêu cầu điều chỉnh</button>
-          <button type="button" className="primary" onClick={() => runAction('confirm')} disabled={busy || !canApprove}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />} Duyệt thực đơn</button>
+          <button type="button" className="primary" onClick={() => runAction('confirm')} disabled={busy || !canApprove}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />} {needsReapproval ? 'Duyệt lại thực đơn' : 'Duyệt thực đơn'}</button>
         </> : null}
         {canDispatch && status === 'DA_XAC_NHAN' ? <button type="button" className="primary" onClick={() => runAction('send')} disabled={busy || !canSend}>{busy ? <LoaderCircle className="spin" size={17} /> : <ChefHat size={17} />} Chuyển xuống bếp</button> : null}
       </footer>
