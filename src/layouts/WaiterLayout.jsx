@@ -16,7 +16,7 @@ const pageMeta = {
   '/waiter/tables': ['Sơ đồ bàn ăn', 'Theo dõi nhanh bàn đang phục vụ và bàn chờ thanh toán'],
   '/waiter/history': ['Lịch sử phục vụ', 'Tra cứu các đơn đã thanh toán hoặc đã hủy'],
   '/waiter/requests': ['Yêu cầu tại bàn', 'Tiếp nhận và hoàn thành yêu cầu hỗ trợ của khách'],
-  '/waiter/reservations': ['Đặt bàn', 'Check-in và xếp bàn cho khách đã được thu ngân xác nhận'],
+  '/waiter/reservations': ['Đặt bàn', 'Check-in khách đã xác nhận và xử lý đổi bàn khi cần'],
   '/waiter/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/waiter/orders': ['Đơn cần xử lý', 'Theo dõi đơn đã chuyển bếp, món sẵn sàng và yêu cầu thanh toán'],
 };

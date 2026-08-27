@@ -465,7 +465,7 @@ export function StaffReservationPreorderModal({ item, role = 'admin', onClose, o
               <label className="wide">Lý do nếu yêu cầu khách chỉnh sửa<textarea rows="3" maxLength="500" value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} placeholder="Ví dụ: Một món đang hết nguyên liệu" /></label>
             </div>
           ) : null}
-          {status === 'DA_XAC_NHAN' ? <div className={`reservation-preorder-send-info ${canSend ? 'ready' : ''}`}><ChefHat size={21} /><p>{canSend ? 'Khách đã được xếp bàn. Có thể chuyển toàn bộ món đặt trước xuống bếp.' : 'Thực đơn đã duyệt. Chỉ được chuyển xuống bếp sau khi khách check-in và được xếp bàn thực tế.'}</p></div> : null}
+          {status === 'DA_XAC_NHAN' ? <div className={`reservation-preorder-send-info ${canSend ? 'ready' : ''}`}><ChefHat size={21} /><p>{canSend ? 'Khách đã check-in và nhận bàn. Có thể chuyển toàn bộ món đặt trước xuống bếp.' : 'Thực đơn đã duyệt. Chỉ được chuyển xuống bếp sau khi khách check-in và đã có bàn thực tế.'}</p></div> : null}
           {preorder?.thoiGianDuKienChuyenBep ? <div className="reservation-preorder-kitchen-time"><Clock3 size={16} /> Mốc chuẩn bị tham khảo: {reservationDateTime(preorder.thoiGianDuKienChuyenBep)}</div> : null}
           {status === 'DA_CHUYEN_BEP' ? <div className="reservation-preorder-approved"><CheckCircle2 size={19} /><p>Đã chuyển xuống bếp{preorder?.maDonHang ? ` và tạo đơn #${preorder.maDonHang}` : ''} lúc {reservationDateTime(preorder?.thoiGianChuyenBep)}.</p></div> : null}
         </div>

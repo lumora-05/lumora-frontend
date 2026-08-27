@@ -87,8 +87,8 @@ function TableSelectModal({ action, item, tables, loadingTables, selectedTable, 
   const isConfirm = action === 'confirm';
   return (
     <section className="reservation-manage-modal reservation-table-modal" role="dialog" aria-modal="true">
-      <header><div><span>{isConfirm ? 'XÁC NHẬN ĐẶT BÀN' : 'XẾP BÀN THỰC TẾ'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{item?.soLuongKhach} khách · {reservationDateTime(item?.ngayGioDen)}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
-      <div className="reservation-table-intro"><Table2 size={20} /><p>{isConfirm ? 'Chọn bàn hoặc nhóm bàn ghép dự kiến phù hợp. Bàn chưa chuyển sang đang sử dụng cho đến khi khách check-in và được xếp bàn.' : 'Chọn bàn hoặc nhóm bàn ghép đang trống để bắt đầu phiên phục vụ cho khách.'}</p></div>
+      <header><div><span>{isConfirm ? 'XÁC NHẬN ĐẶT BÀN' : item?.maBanDuKien ? 'CHỌN BÀN KHÁC' : 'XẾP BÀN THỰC TẾ'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{item?.soLuongKhach} khách · {reservationDateTime(item?.ngayGioDen)}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
+      <div className="reservation-table-intro"><Table2 size={20} /><p>{isConfirm ? 'Chọn bàn hoặc nhóm bàn ghép dự kiến phù hợp. Bàn sẽ được giữ cho lịch này và tự chuyển sang sử dụng khi khách check-in nếu vẫn sẵn sàng.' : item?.maBanDuKien ? `Bàn dự kiến ${item?.tenBanDuKien || `Bàn ${item.maBanDuKien}`} không thể tự nhận khi check-in. Hãy chọn một bàn khác đang trống để phục vụ khách.` : 'Chọn bàn hoặc nhóm bàn ghép đang trống để bắt đầu phiên phục vụ cho khách.'}</p></div>
       <div className="reservation-table-list">
         {loadingTables ? <div className="reservation-modal-loading"><LoaderCircle className="spin" size={22} /> Đang kiểm tra bàn khả dụng...</div>
           : tables.length ? tables.map((table) => {
@@ -103,7 +103,7 @@ function TableSelectModal({ action, item, tables, loadingTables, selectedTable, 
           }) : <div className="reservation-modal-empty">Không có bàn hoặc nhóm bàn phù hợp trong khung giờ này. Với đoàn đông, hãy ghép các bàn phù hợp trước khi xác nhận.</div>}
       </div>
       {isConfirm ? <label className="reservation-modal-field">Ghi chú xác nhận<textarea rows="3" maxLength="500" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Không bắt buộc" /></label> : null}
-      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || !selectedTable}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />}{isConfirm ? 'Xác nhận đặt bàn' : 'Xếp bàn'}</button></footer>
+      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || !selectedTable}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />}{isConfirm ? 'Xác nhận đặt bàn' : 'Xác nhận bàn'}</button></footer>
     </section>
   );
 }
@@ -122,7 +122,7 @@ function ReasonModal({ action, item, reason, setReason, busy, onSubmit, onClose 
 
 function SimpleConfirmModal({ action, item, busy, onSubmit, onClose }) {
   const config = {
-    'check-in': { title: 'Xác nhận khách đã đến?', text: 'Sau khi check-in, nhân viên có thể chọn bàn thực tế để phục vụ khách.', button: 'Xác nhận check-in', icon: UserCheck },
+    'check-in': { title: 'Xác nhận khách đã đến?', text: 'Nếu bàn dự kiến vẫn sẵn sàng, hệ thống sẽ tự nhận bàn đó cho khách. Chỉ cần chọn bàn khác khi bàn dự kiến không còn khả dụng.', button: 'Xác nhận check-in', icon: UserCheck },
     'no-show': { title: 'Đánh dấu khách không đến?', text: 'Lịch sẽ kết thúc với trạng thái không đến và bàn dự kiến được giải phóng.', button: 'Xác nhận không đến', icon: CalendarClock },
   }[action];
   const Icon = config.icon;
@@ -282,7 +282,7 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   function openAction(action, item) {
-    setSelectedTable(action === 'confirm' ? item?.maBanDuKien || '' : item?.maBanThucTe || item?.maBanDuKien || '');
+    setSelectedTable(action === 'confirm' ? item?.maBanDuKien || '' : action === 'assign' ? '' : item?.maBanThucTe || item?.maBanDuKien || '');
     setNote('');
     setReason('');
     setModal({ action, item });
@@ -363,7 +363,7 @@ export default function ReservationManagement({ role = 'admin' }) {
                             ? <ActionButton tone="warning" onClick={() => openAction('no-show', item)}><CalendarClock size={15} /> Không đến</ActionButton>
                             : null}
                         </> : null}
-                        {canHandleArrival && statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> Xếp bàn</ActionButton> : null}
+                        {canHandleArrival && statusValue === 'KHACH_DA_DEN' ? <ActionButton tone="primary" onClick={() => openAction('assign', item)}><Table2 size={15} /> {item?.maBanDuKien ? 'Chọn bàn khác' : 'Xếp bàn'}</ActionButton> : null}
                         {canManageReservation && ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'KHACH_DA_DEN'].includes(statusValue) ? <ActionButton tone="muted-danger" onClick={() => openAction('cancel', item)}>Hủy</ActionButton> : null}
                       </div></td>
                     </tr>
