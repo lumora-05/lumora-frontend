@@ -5,6 +5,7 @@ const encode = (value) => encodeURIComponent(String(value ?? '').trim());
 export const reservationApi = {
   publicAreas: () => axiosClient.get('/customer/reservations/areas'),
   customerCreate: (data) => axiosClient.post('/customer/reservations', data),
+  customerLookup: (query) => axiosClient.get('/customer/reservations/lookup', { params: { query }, skipAuth: true }),
   customerDetail: (code, phone) => axiosClient.get(`/customer/reservations/${encode(code)}`, { params: { phone } }),
   customerUpdate: (code, phone, data) => axiosClient.put(`/customer/reservations/${encode(code)}`, data, { params: { phone } }),
   customerCancel: (code, phone, reason) => axiosClient.post(`/customer/reservations/${encode(code)}/cancel`, { reason }, { params: { phone } }),

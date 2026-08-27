@@ -188,7 +188,7 @@ function ReservationDetail({ item, onEdit, onCancel, defaultDurationMinutes = 12
         <div>
           <span className="reservation-public-code">Mã đặt bàn: <b>{item?.maTraCuu}</b></span>
           <h2>{item?.hoTenKhach}</h2>
-          <p>Vui lòng lưu mã tra cứu và số điện thoại để theo dõi lịch đặt.</p>
+          <p>Bạn có thể dùng mã đặt bàn hoặc số điện thoại để theo dõi lịch đặt.</p>
         </div>
         <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
       </header>
@@ -240,7 +240,8 @@ export default function PublicReservation() {
   const [arrivalDate, setArrivalDate] = useState('');
   const [arrivalHour, setArrivalHour] = useState('');
   const [arrivalMinute, setArrivalMinute] = useState('');
-  const [lookup, setLookup] = useState({ code: '', phone: '' });
+  const [lookup, setLookup] = useState({ query: '', code: '', phone: '' });
+  const [lookupResults, setLookupResults] = useState([]);
   const [reservation, setReservation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -282,22 +283,62 @@ export default function PublicReservation() {
       .catch(() => {});
   }, []);
 
-  const loadReservation = useCallback(async (silent = false) => {
+  const selectLookupReservation = useCallback((item) => {
+    if (!item) return;
+    const code = String(item?.maTraCuu || '').trim();
+    const phone = normalizeVietnamPhone(item?.soDienThoai);
+    setReservation(item);
+    setLookup((current) => ({ ...current, code, phone }));
+  }, []);
+
+  const searchReservations = useCallback(async (silent = false) => {
+    const rawQuery = lookup.query.trim();
+    if (!rawQuery) {
+      if (!silent) toast.error('Vui lòng nhập mã đặt bàn hoặc số điện thoại.');
+      return;
+    }
+
+    const isCode = rawQuery.toUpperCase().startsWith('DB-');
+    const normalizedQuery = isCode ? rawQuery.toUpperCase() : normalizeVietnamPhone(rawQuery);
+    if (!isCode && !VIETNAM_MOBILE_PATTERN.test(normalizedQuery)) {
+      if (!silent) toast.error('Vui lòng nhập mã đặt bàn hoặc số điện thoại hợp lệ.');
+      return;
+    }
+
+    try {
+      if (!silent) setSearching(true);
+      const response = await reservationApi.customerLookup(normalizedQuery);
+      const data = reservationData(response);
+      const items = Array.isArray(data) ? data : data ? [data] : [];
+      setLookupResults(items);
+      setMode('lookup');
+
+      if (items.length === 1) {
+        selectLookupReservation(items[0]);
+      } else {
+        setReservation(null);
+        setLookup((current) => ({ ...current, code: '', phone: '' }));
+      }
+    } catch (error) {
+      setLookupResults([]);
+      setReservation(null);
+      setLookup((current) => ({ ...current, code: '', phone: '' }));
+      if (!silent) toast.error(errorMessageOf(error, 'Không tìm thấy thông tin đặt bàn.'));
+    } finally {
+      if (!silent) setSearching(false);
+    }
+  }, [lookup.query, selectLookupReservation, toast]);
+
+  const refreshSelectedReservation = useCallback(async (silent = false) => {
     const code = lookup.code.trim();
     const phone = normalizeVietnamPhone(lookup.phone);
-    if (!code || !phone) {
-      if (!silent) toast.error('Vui lòng nhập mã đặt bàn và số điện thoại.');
-      return;
-    }
-    if (!VIETNAM_MOBILE_PATTERN.test(phone)) {
-      if (!silent) toast.error('Vui lòng nhập số điện thoại hợp lệ.');
-      return;
-    }
+    if (!code || !phone) return;
     try {
       if (!silent) setSearching(true);
       const response = await reservationApi.customerDetail(code, phone);
-      setReservation(reservationData(response));
-      setMode('lookup');
+      const data = reservationData(response);
+      setReservation(data);
+      setLookupResults((current) => current.map((item) => item?.maTraCuu === data?.maTraCuu ? data : item));
     } catch (error) {
       if (!silent) toast.error(errorMessageOf(error, 'Không tìm thấy thông tin đặt bàn.'));
     } finally {
@@ -306,8 +347,8 @@ export default function PublicReservation() {
   }, [lookup.code, lookup.phone, toast]);
 
   useEffect(() => {
-    if (socketEvent && reservation?.maTraCuu) loadReservation(true);
-  }, [loadReservation, reservation?.maTraCuu, socketEvent]);
+    if (socketEvent && reservation?.maTraCuu) refreshSelectedReservation(true);
+  }, [refreshSelectedReservation, reservation?.maTraCuu, socketEvent]);
 
   const minDateTime = useMemo(
     () => minReservationDateTime(reservationPolicy.minimumAdvanceMinutes),
@@ -403,7 +444,8 @@ export default function PublicReservation() {
       }
 
       setReservation(data);
-      setLookup({ code, phone });
+      setLookup({ query: code, code, phone });
+      setLookupResults(data ? [data] : []);
       setEditing(false);
       setReviewOpen(false);
       setMode('lookup');
@@ -583,12 +625,29 @@ export default function PublicReservation() {
           </form>
         ) : (
           <div className="reservation-public-lookup">
-            <form onSubmit={(event) => { event.preventDefault(); loadReservation(); }}>
-              <div><h2>Tra cứu đặt bàn</h2><p>Nhập mã đặt bàn và số điện thoại đã sử dụng khi đăng ký.</p></div>
-              <label><span>Mã đặt bàn</span><input value={lookup.code} onChange={(e) => setLookup((current) => ({ ...current, code: e.target.value.toUpperCase() }))} placeholder="DB-7A1B2C3D4E" /></label>
-              <label><span>Số điện thoại</span><input inputMode="numeric" autoComplete="tel" maxLength="10" value={lookup.phone} onChange={(e) => setLookup((current) => ({ ...current, phone: normalizeVietnamPhone(e.target.value) }))} placeholder="0901234567" /></label>
+            <form onSubmit={(event) => { event.preventDefault(); searchReservations(); }}>
+              <div><h2>Tra cứu đặt bàn</h2><p>Nhập mã đặt bàn hoặc số điện thoại đã sử dụng khi đăng ký.</p></div>
+              <label className="reservation-public-lookup-query"><span>Mã đặt bàn hoặc số điện thoại</span><input value={lookup.query} onChange={(e) => { const value = e.target.value.toUpperCase(); setLookup({ query: value, code: '', phone: '' }); setLookupResults([]); setReservation(null); }} placeholder="DB-7A1B2C3D4E hoặc 0901234567" /></label>
               <button type="submit" disabled={searching}>{searching ? <LoaderCircle className="spin" size={18} /> : <Search size={18} />} Tra cứu</button>
             </form>
+
+            {!reservation && lookupResults.length > 1 ? (
+              <section className="reservation-public-lookup-results">
+                <header><strong>Tìm thấy {lookupResults.length} lịch đặt bàn</strong><span>Chọn lịch bạn muốn xem</span></header>
+                <div>
+                  {lookupResults.map((item) => {
+                    const meta = reservationStatusMeta(item);
+                    return (
+                      <button type="button" key={item?.maDatBan || item?.maTraCuu} onClick={() => selectLookupReservation(item)}>
+                        <span><b>{item?.maTraCuu}</b><small>{reservationDateTime(item?.ngayGioDen)}</small></span>
+                        <span><b>{item?.soLuongKhach || 0} khách</b><small>{item?.khuVucMongMuon || 'Không yêu cầu khu vực'}</small></span>
+                        <em className={`reservation-status-badge ${meta.tone}`}>{meta.label}</em>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
 
             {reservation ? (
               <>
@@ -598,7 +657,7 @@ export default function PublicReservation() {
                   reservation={reservation}
                   code={lookup.code}
                   phone={lookup.phone}
-                  onChanged={() => loadReservation(true)}
+                  onChanged={() => refreshSelectedReservation(true)}
                 />
               </>
             ) : <div className="reservation-public-lookup-empty"><CalendarCheck2 size={42} /><strong>Thông tin đặt bàn sẽ hiển thị tại đây</strong><p>Nhà hàng cập nhật trạng thái theo thời gian thực sau khi nhận yêu cầu.</p></div>}
