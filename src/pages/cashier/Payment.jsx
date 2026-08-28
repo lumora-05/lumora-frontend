@@ -62,6 +62,7 @@ export default function Payment() {
   const toast = useToast();
   const previousPayableRef = useRef(0);
   const [order, setOrder] = useState(null);
+  const [paymentSlip, setPaymentSlip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [method, setMethod] = useState('TIEN_MAT');
   const [cashReceived, setCashReceived] = useState('');
@@ -83,13 +84,20 @@ export default function Payment() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    orderApi.getById(orderId).then((response) => {
+    Promise.all([
+      orderApi.getById(orderId),
+      paymentApi.paymentSlipByOrder(orderId).catch(() => null),
+    ]).then(([response, slipResponse]) => {
       if (!active) return;
       const data = response?.data || response;
+      const slipData = slipResponse?.data || slipResponse || null;
       const initialTotal = totalOf(data);
+      const initialDeposit = Math.min(Number(slipData?.tienCocDaKhauTru || 0), initialTotal);
+      const initialPayable = Math.max(0, initialTotal - initialDeposit);
       setOrder(data);
-      setCashReceived(String(initialTotal));
-      previousPayableRef.current = initialTotal;
+      setPaymentSlip(slipData);
+      setCashReceived(initialPayable > 0 ? String(initialPayable) : '0');
+      previousPayableRef.current = initialPayable;
       if (data?.trangThai === 'DA_THANH_TOAN') {
         setError('Hóa đơn này đã được thanh toán.');
       }
@@ -105,7 +113,10 @@ export default function Payment() {
   const discount = useMemo(() => discountOf(order), [order]);
   const totalBeforePoints = useMemo(() => totalOf(order), [order]);
   const pointDiscount = Number(loyaltyPreview?.tienGiamTuDiem || 0);
-  const total = Number(loyaltyPreview?.tongThanhToan ?? totalBeforePoints);
+  const grossTotal = Number(loyaltyPreview?.tongThanhToan ?? totalBeforePoints);
+  const depositCredit = Math.max(0, Number(paymentSlip?.tienCocDaKhauTru || 0));
+  const depositApplied = Math.min(depositCredit, grossTotal);
+  const total = Math.max(0, grossTotal - depositApplied);
   const promotionCode = order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
   const cashValue = Number(cashReceived);
   const change = useMemo(
@@ -211,6 +222,11 @@ export default function Payment() {
       if (customerName.trim().length > 100) return 'Họ tên khách hàng tối đa 100 ký tự.';
     }
 
+    if (total <= 0) {
+      if (note.trim().length > 255) return 'Ghi chú tối đa 255 ký tự.';
+      return '';
+    }
+
     if (method === 'TIEN_MAT') {
       if (cashReceived === '') return 'Vui lòng nhập số tiền khách đưa.';
       if (!Number.isFinite(cashValue) || cashValue <= 0 || !Number.isInteger(cashValue)) {
@@ -259,7 +275,7 @@ export default function Payment() {
       const payload = {
         maDonHang: Number(orderId),
         phuongThucThanhToan: method,
-        tienKhachDua: method === 'TIEN_MAT' ? cashValue : null,
+        tienKhachDua: total > 0 && method === 'TIEN_MAT' ? cashValue : null,
         ghiChu: note.trim() || null,
         soDienThoaiKhachHang: hasLoyaltyCustomer ? customerPhone : null,
         hoTenKhachHang: hasLoyaltyCustomer ? (customerName.trim() || null) : null,
@@ -322,7 +338,9 @@ export default function Payment() {
             <p><span>Tạm tính</span><b>{formatMoney(subtotal)}</b></p>
             {discount > 0 ? <p><span>Khuyến mãi {promotionCode ? `(${promotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p> : null}
             {pointDiscount > 0 ? <p><span>Giảm bằng điểm ({appliedPoints} điểm)</span><b>-{formatMoney(pointDiscount)}</b></p> : null}
-            <div><span>Tổng tiền cần thu</span><strong>{formatMoney(total)}</strong></div>
+            <p><span>Tổng sau ưu đãi</span><b>{formatMoney(grossTotal)}</b></p>
+            {depositApplied > 0 ? <p className="cashier-deposit-deduction"><span>Cọc đặt bàn đã thanh toán</span><b>-{formatMoney(depositApplied)}</b></p> : null}
+            <div><span>Còn phải thu</span><strong>{formatMoney(total)}</strong></div>
           </div>
 
           <section className="cashier-loyalty-box">
@@ -418,7 +436,7 @@ export default function Payment() {
             ) : null}
           </section>
 
-          {method === 'TIEN_MAT' && (
+          {total > 0 && method === 'TIEN_MAT' && (
             <div className="cashier-cash-area">
               <div className="cashier-cash-fields">
                 <label>
@@ -470,16 +488,18 @@ export default function Payment() {
             <h2>Chọn hình thức thanh toán</h2>
           </div>
 
-          <div className="cashier-method-grid cashier-method-grid-two">
-            {METHODS.map(({ key, label, icon: Icon }) => (
-              <button key={key} type="button" className={method === key ? 'active' : ''} onClick={() => chooseMethod(key)}>
-                <Icon size={23} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
+          {total > 0 ? (
+            <div className="cashier-method-grid cashier-method-grid-two">
+              {METHODS.map(({ key, label, icon: Icon }) => (
+                <button key={key} type="button" className={method === key ? 'active' : ''} onClick={() => chooseMethod(key)}>
+                  <Icon size={23} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          ) : <div className="cashier-deposit-covered"><CheckCircle2 size={22} /><div><strong>Tiền cọc đã đủ thanh toán</strong><p>Không cần thu thêm tiền từ khách. Hệ thống sẽ hoàn tất hóa đơn bằng khoản cọc đã thanh toán.</p></div></div>}
 
-          {method === 'CHUYEN_KHOAN' && (
+          {total > 0 && method === 'CHUYEN_KHOAN' && (
             <div className="cashier-transfer-confirmation">
               <div className="cashier-transfer-heading">
                 <div className="cashier-transfer-icon"><Printer size={22} /></div>
@@ -514,11 +534,12 @@ export default function Payment() {
 
           <div className="cashier-payment-review">
             <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
-            <p><span>Phương thức</span><strong>{methodLabel}</strong></p>
+            <p><span>Phương thức</span><strong>{total <= 0 ? 'Khấu trừ tiền cọc' : methodLabel}</strong></p>
             {promotionCode ? <p><span>Khuyến mãi</span><strong>{promotionCode}</strong></p> : null}
             {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName || customerPhone}</strong></p> : null}
             {appliedPoints > 0 ? <p><span>Điểm sử dụng</span><strong>{appliedPoints} điểm</strong></p> : null}
-            <p><span>Số tiền</span><strong>{formatMoney(total)}</strong></p>
+            {depositApplied > 0 ? <p><span>Cọc khấu trừ</span><strong>-{formatMoney(depositApplied)}</strong></p> : null}
+            <p><span>Còn phải thu</span><strong>{formatMoney(total)}</strong></p>
           </div>
 
           {error && <div className="cashier-error">{error}</div>}
@@ -526,7 +547,7 @@ export default function Payment() {
           <div className="cashier-payment-actions">
             <Link className="cashier-outline-action" to={`/cashier/invoices/${orderId}`}>Quay lại chi tiết</Link>
             <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
-              <WalletCards size={18} />{method === 'CHUYEN_KHOAN' ? 'Xác nhận đã nhận tiền' : 'Xác nhận thanh toán'}
+              <WalletCards size={18} />{total <= 0 ? 'Hoàn tất bằng tiền cọc' : method === 'CHUYEN_KHOAN' ? 'Xác nhận đã nhận tiền' : 'Xác nhận thanh toán'}
             </button>
           </div>
         </div>
@@ -540,28 +561,28 @@ export default function Payment() {
             <button type="button" className="cashier-confirm-close" onClick={() => setConfirmOpen(false)} disabled={submitting} aria-label="Đóng"><X size={20} /></button>
             <div className="cashier-confirm-icon"><CheckCircle2 size={30} /></div>
             <h2 id="cashier-confirm-title">Xác nhận giao dịch</h2>
-            <p>{method === 'CHUYEN_KHOAN' ? 'Xác nhận khoản chuyển đã vào tài khoản trước khi hoàn tất đơn.' : 'Vui lòng kiểm tra lại thông tin trước khi ghi nhận thanh toán.'}</p>
+            <p>{total <= 0 ? 'Khoản cọc đã đủ để thanh toán hóa đơn. Xác nhận để hoàn tất đơn và ghi nhận khấu trừ cọc.' : method === 'CHUYEN_KHOAN' ? 'Xác nhận khoản chuyển đã vào tài khoản trước khi hoàn tất đơn.' : 'Vui lòng kiểm tra lại thông tin trước khi ghi nhận thanh toán.'}</p>
             <div className="cashier-confirm-summary">
               <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
               {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName} · {customerPhone}</strong></p> : null}
               {appliedPoints > 0 ? <p><span>Dùng điểm</span><strong>{appliedPoints} điểm (-{formatMoney(pointDiscount)})</strong></p> : null}
               {loyaltyPreview ? <p><span>Điểm được cộng</span><strong>+{Number(loyaltyPreview.diemDuKienCong || 0)} điểm</strong></p> : null}
               <p><span>Tổng tiền</span><strong>{formatMoney(total)}</strong></p>
-              <p><span>Phương thức</span><strong>{methodLabel}</strong></p>
-              {method === 'TIEN_MAT' ? (
+              <p><span>Phương thức</span><strong>{total <= 0 ? 'Khấu trừ tiền cọc' : methodLabel}</strong></p>
+              {total > 0 && method === 'TIEN_MAT' ? (
                 <>
                   <p><span>Khách đưa</span><strong>{formatMoney(cashValue || 0)}</strong></p>
                   <p><span>Tiền thừa</span><strong>{formatMoney(change)}</strong></p>
                 </>
-              ) : (
+              ) : total > 0 ? (
                 <p><span>Kiểm tra tiền</span><strong className="cashier-confirm-verified">Đã nhận đủ</strong></p>
-              )}
+              ) : null}
               {note.trim() ? <p><span>Ghi chú</span><strong>{note.trim()}</strong></p> : null}
             </div>
             <div className="cashier-confirm-buttons">
               <button type="button" className="cashier-outline-action" onClick={() => setConfirmOpen(false)} disabled={submitting}>Kiểm tra lại</button>
               <button type="button" className="cashier-confirm-action" onClick={confirmPayment} disabled={submitting}>
-                <WalletCards size={18} />{submitting ? 'Đang xử lý...' : 'Xác nhận thu tiền'}
+                <WalletCards size={18} />{submitting ? 'Đang xử lý...' : total <= 0 ? 'Hoàn tất hóa đơn' : 'Xác nhận thu tiền'}
               </button>
             </div>
           </div>

@@ -35,6 +35,9 @@ const EMPTY_FORM = {
   reservationCheckInEarlyMinutes: '30',
   reservationMinimumAdvanceMinutes: '30',
   reservationMaximumAdvanceDays: '60',
+  reservationDepositAmount: '100000',
+  reservationDepositPaymentTimeoutMinutes: '10',
+  reservationDepositRefundAdvanceMinutes: '120',
   deliveryTier1DistanceKm: '3',
   deliveryTier2DistanceKm: '6',
   deliveryMaxDistanceKm: '10',
@@ -100,6 +103,9 @@ function formOf(settings = {}) {
     reservationCheckInEarlyMinutes: textValue(settings.reservationCheckInEarlyMinutes, '30'),
     reservationMinimumAdvanceMinutes: textValue(settings.reservationMinimumAdvanceMinutes, '30'),
     reservationMaximumAdvanceDays: textValue(settings.reservationMaximumAdvanceDays, '60'),
+    reservationDepositAmount: textValue(settings.reservationDepositAmount, '100000'),
+    reservationDepositPaymentTimeoutMinutes: textValue(settings.reservationDepositPaymentTimeoutMinutes, '10'),
+    reservationDepositRefundAdvanceMinutes: textValue(settings.reservationDepositRefundAdvanceMinutes, '120'),
     deliveryTier1DistanceKm: textValue(settings.deliveryTier1DistanceKm, '3'),
     deliveryTier2DistanceKm: textValue(settings.deliveryTier2DistanceKm, '6'),
     deliveryMaxDistanceKm: textValue(settings.deliveryMaxDistanceKm, '10'),
@@ -223,6 +229,22 @@ export default function SystemSettings() {
       return;
     }
 
+    if (!numberInRange(form.reservationDepositAmount, 1000, Number.MAX_SAFE_INTEGER)) {
+      setActiveTab('reservation');
+      toast.error('Tiền cọc đặt bàn phải từ 1.000đ');
+      return;
+    }
+    if (!numberInRange(form.reservationDepositPaymentTimeoutMinutes, 1, 60)) {
+      setActiveTab('reservation');
+      toast.error('Thời gian thanh toán cọc phải từ 1 đến 60 phút');
+      return;
+    }
+    if (!numberInRange(form.reservationDepositRefundAdvanceMinutes, 0, 10080)) {
+      setActiveTab('reservation');
+      toast.error('Mốc hoàn cọc phải từ 0 đến 10.080 phút');
+      return;
+    }
+
     const deliveryTier1Distance = Number(form.deliveryTier1DistanceKm);
     const deliveryTier2Distance = Number(form.deliveryTier2DistanceKm);
     const deliveryMaxDistance = Number(form.deliveryMaxDistanceKm);
@@ -274,6 +296,9 @@ export default function SystemSettings() {
       reservationCheckInEarlyMinutes: Number(form.reservationCheckInEarlyMinutes),
       reservationMinimumAdvanceMinutes: Number(form.reservationMinimumAdvanceMinutes),
       reservationMaximumAdvanceDays: Number(form.reservationMaximumAdvanceDays),
+      reservationDepositAmount: Number(form.reservationDepositAmount),
+      reservationDepositPaymentTimeoutMinutes: Number(form.reservationDepositPaymentTimeoutMinutes),
+      reservationDepositRefundAdvanceMinutes: Number(form.reservationDepositRefundAdvanceMinutes),
       deliveryTier1DistanceKm: Number(form.deliveryTier1DistanceKm),
       deliveryTier2DistanceKm: Number(form.deliveryTier2DistanceKm),
       deliveryMaxDistanceKm: Number(form.deliveryMaxDistanceKm),
@@ -481,7 +506,7 @@ export default function SystemSettings() {
 
         {activeTab === 'reservation' && (
           <div className="system-settings-card">
-            {cardHead(CalendarClock, 'Đặt bàn', 'Thiết lập thời lượng, khoảng đệm, check-in và giới hạn thời gian đặt bàn.')}
+            {cardHead(CalendarClock, 'Đặt bàn', 'Thiết lập thời lượng, check-in, giới hạn đặt bàn và chính sách tiền cọc giữ chỗ.')}
             <div className="system-settings-form-grid three-columns">
               <label>
                 <span>Thời lượng đặt bàn mặc định</span>
@@ -512,6 +537,21 @@ export default function SystemSettings() {
                 <span>Đặt trước tối đa</span>
                 <div className="system-settings-input suffix"><input type="number" min="1" max="365" name="reservationMaximumAdvanceDays" value={form.reservationMaximumAdvanceDays} onChange={changeField} /><em>ngày</em></div>
                 <small>Giới hạn khách đặt lịch quá xa trong tương lai.</small>
+              </label>
+              <label>
+                <span>Tiền cọc mỗi lượt đặt bàn</span>
+                <div className="system-settings-input suffix"><input type="number" min="1000" step="1000" name="reservationDepositAmount" value={form.reservationDepositAmount} onChange={changeField} /><em>₫</em></div>
+                <small>Cọc cố định, không phụ thuộc số lượng khách. Hiện tại: {moneyLabel(form.reservationDepositAmount)}.</small>
+              </label>
+              <label>
+                <span>Thời hạn thanh toán cọc</span>
+                <div className="system-settings-input suffix"><input type="number" min="1" max="60" name="reservationDepositPaymentTimeoutMinutes" value={form.reservationDepositPaymentTimeoutMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Quá thời hạn này, yêu cầu chưa cọc sẽ tự hết hạn.</small>
+              </label>
+              <label>
+                <span>Hoàn cọc nếu hủy trước</span>
+                <div className="system-settings-input suffix"><input type="number" min="0" max="10080" name="reservationDepositRefundAdvanceMinutes" value={form.reservationDepositRefundAdvanceMinutes} onChange={changeField} /><em>phút</em></div>
+                <small>Hủy sớm hơn mốc này: chờ hoàn cọc. Hủy sát giờ hoặc không đến: mất cọc.</small>
               </label>
               <label className="full">
                 <span>Đường dẫn đặt bàn trực tuyến</span>

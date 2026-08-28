@@ -10,6 +10,32 @@ export const RESERVATION_STATUS = {
   HET_HAN: { label: 'Hết hạn', tone: 'expired' },
 };
 
+
+export const RESERVATION_DEPOSIT_STATUS = {
+  CHO_THANH_TOAN: { label: 'Chờ thanh toán cọc', tone: 'pending' },
+  DA_THANH_TOAN: { label: 'Đã thanh toán cọc', tone: 'paid' },
+  CHO_HOAN: { label: 'Chờ hoàn cọc', tone: 'refund-pending' },
+  DA_HOAN: { label: 'Đã hoàn cọc', tone: 'refunded' },
+  MAT_COC: { label: 'Mất cọc', tone: 'forfeited' },
+  DA_KHAU_TRU: { label: 'Đã khấu trừ cọc', tone: 'deducted' },
+  DA_HUY: { label: 'Cọc đã hủy', tone: 'cancelled' },
+};
+
+export function reservationDepositStatus(item) {
+  return String(item?.trangThaiCoc || '').trim().toUpperCase();
+}
+
+export function reservationDepositStatusMeta(value) {
+  const status = typeof value === 'string' ? value.trim().toUpperCase() : reservationDepositStatus(value);
+  return RESERVATION_DEPOSIT_STATUS[status] || { label: status || 'Chưa có thông tin cọc', tone: 'neutral' };
+}
+
+export function formatReservationMoney(value) {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount)) return '0 ₫';
+  return `${new Intl.NumberFormat('vi-VN').format(amount)} ₫`;
+}
+
 export function reservationData(response) {
   if (response && typeof response === 'object' && Object.prototype.hasOwnProperty.call(response, 'data')) {
     return response.data;
@@ -42,7 +68,15 @@ export function reservationPreorderChangedAfterApproval(item) {
 }
 
 export function reservationNeedsCashierAttention(item) {
-  return reservationStatus(item) === 'CHO_XAC_NHAN' || reservationPreorderNeedsReview(item);
+  const depositStatus = reservationDepositStatus(item);
+  const expiredByDepositTimeout = reservationStatus(item) === 'HET_HAN'
+    && depositStatus === 'DA_HUY'
+    && String(item?.lyDoHuyTuChoi || '').trim() === 'Quá thời hạn thanh toán tiền cọc';
+  return depositStatus === 'CHO_THANH_TOAN'
+    || depositStatus === 'CHO_HOAN'
+    || (reservationStatus(item) === 'CHO_XAC_NHAN' && depositStatus === 'DA_THANH_TOAN')
+    || expiredByDepositTimeout
+    || reservationPreorderNeedsReview(item);
 }
 
 export function currentLocalDate() {

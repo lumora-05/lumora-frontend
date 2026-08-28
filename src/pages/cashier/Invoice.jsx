@@ -58,6 +58,8 @@ export default function Invoice() {
   const discount = useMemo(() => discountOf(order), [order]);
   const total = useMemo(() => Number(payment?.tongTien ?? totalOf(order)), [order, payment]);
   const pointDiscount = useMemo(() => Number(payment?.tienGiamTuDiem ?? order?.tienGiamTuDiem ?? 0), [order, payment]);
+  const depositApplied = useMemo(() => Math.max(0, Number(payment?.tienCocDaKhauTru || 0)), [payment]);
+  const amountPaidAfterDeposit = useMemo(() => Math.max(0, total - Math.min(depositApplied, total)), [depositApplied, total]);
 
   if (loading || !order) {
     return <section className="page cashier-page"><div className="cashier-table-empty cashier-loading-card">Đang tải chi tiết hóa đơn...</div></section>;
@@ -214,7 +216,9 @@ export default function Invoice() {
             <p><span>Phí phục vụ{serviceFee ? '' : ' (nếu có)'}</span><strong>{formatMoney(serviceFee)}</strong></p>
             {discount > 0 && <p><span>Khuyến mãi {appliedPromotionCode ? `(${appliedPromotionCode})` : ''}</span><strong>-{formatMoney(discount)}</strong></p>}
             {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><strong>-{formatMoney(pointDiscount)}</strong></p>}
-            <p className="grand"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></p>
+            {depositApplied > 0 ? <p><span>Tổng sau ưu đãi</span><strong>{formatMoney(total)}</strong></p> : null}
+            {depositApplied > 0 ? <p><span>Cọc đặt bàn đã khấu trừ</span><strong>-{formatMoney(Math.min(depositApplied, total))}</strong></p> : null}
+            <p className="grand"><span>{depositApplied > 0 ? 'Đã thanh toán thêm' : 'Tổng cộng'}</span><strong>{formatMoney(depositApplied > 0 ? amountPaidAfterDeposit : total)}</strong></p>
           </div>
         </div>
 

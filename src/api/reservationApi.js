@@ -7,6 +7,7 @@ export const reservationApi = {
   customerCreate: (data) => axiosClient.post('/customer/reservations', data),
   customerLookup: (query) => axiosClient.get('/customer/reservations/lookup', { params: { query }, skipAuth: true }),
   customerDetail: (code, phone) => axiosClient.get(`/customer/reservations/${encode(code)}`, { params: { phone } }),
+  customerDepositVietQr: (code, phone) => axiosClient.get(`/customer/reservations/${encode(code)}/deposit/vietqr`, { params: { phone }, skipAuth: true }),
   customerUpdate: (code, phone, data) => axiosClient.put(`/customer/reservations/${encode(code)}`, data, { params: { phone } }),
   customerCancel: (code, phone, reason) => axiosClient.post(`/customer/reservations/${encode(code)}/cancel`, { reason }, { params: { phone } }),
   customerPreorderDetail: (code, phone) => axiosClient.get(`/customer/reservations/${encode(code)}/preorder`, { params: { phone }, skipAuth: true }),
@@ -15,6 +16,8 @@ export const reservationApi = {
 
   list: (params = {}) => axiosClient.get('/reservations', { params }),
   detail: (id) => axiosClient.get(`/reservations/${id}`),
+  confirmDeposit: (id, maGiaoDich) => axiosClient.post(`/reservations/${id}/deposit/confirm`, { maGiaoDich }),
+  refundDeposit: (id, reason) => axiosClient.post(`/reservations/${id}/deposit/refund`, { reason }),
   availableTables: (params = {}) => axiosClient.get('/reservations/availability/tables', { params }),
   confirm: (id, data) => axiosClient.post(`/reservations/${id}/confirm`, data),
   reject: (id, reason) => axiosClient.post(`/reservations/${id}/reject`, { reason }),

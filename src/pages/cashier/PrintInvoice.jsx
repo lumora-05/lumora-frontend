@@ -18,6 +18,7 @@ import {
 const METHOD_LABELS = {
   TIEN_MAT: 'Tiền mặt',
   CHUYEN_KHOAN: 'Chuyển khoản',
+  TIEN_COC: 'Tiền cọc đặt bàn',
 };
 
 const RESTAURANT = {
@@ -97,6 +98,8 @@ function Receipt({ order, payment, slip, preview }) {
     ? Number(slip?.tienGiamTuDiem || 0)
     : Number(payment?.tienGiamTuDiem ?? order?.tienGiamTuDiem ?? 0);
   const total = preview ? Number(slip?.tongTien || 0) : Number(payment?.tongTien ?? totalOf(order));
+  const depositApplied = preview ? Number(slip?.tienCocDaKhauTru || 0) : Number(payment?.tienCocDaKhauTru || 0);
+  const payable = preview ? Number(slip?.conLaiPhaiThanhToan ?? Math.max(0, total - depositApplied)) : Math.max(0, total - depositApplied);
   const promotionCode = preview
     ? slip?.maCodeKhuyenMai
     : (payment?.maCodeKhuyenMai || order?.maCodeKhuyenMai || order?.khuyenMai?.maCode);
@@ -165,7 +168,9 @@ function Receipt({ order, payment, slip, preview }) {
         {!preview && <p><span>Phí phục vụ</span><b>{formatMoney(serviceFee)}</b></p>}
         {discount > 0 && <p><span>Khuyến mãi{promotionCode ? ` (${promotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p>}
         {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><b>-{formatMoney(pointDiscount)}</b></p>}
-        <p className="grand"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></p>
+        <p><span>Tổng sau ưu đãi</span><b>{formatMoney(total)}</b></p>
+        {depositApplied > 0 ? <p><span>Cọc đặt bàn đã khấu trừ</span><b>-{formatMoney(depositApplied)}</b></p> : null}
+        <p className="grand"><span>{preview ? 'Còn phải thanh toán' : 'Đã thanh toán thêm'}</span><strong>{formatMoney(payable)}</strong></p>
       </div>
 
       {hasLoyalty ? (
@@ -184,7 +189,7 @@ function Receipt({ order, payment, slip, preview }) {
             <p><span>Ngân hàng</span><b>{qr.bankName || qr.bankId}</b></p>
             <p><span>Số tài khoản</span><b>{qr.accountNo}</b></p>
             <p><span>Chủ tài khoản</span><b>{qr.accountName}</b></p>
-            <p><span>Số tiền</span><b>{formatMoney(Number(qr.amount || total))}</b></p>
+            <p><span>Số tiền</span><b>{formatMoney(Number(qr.amount ?? payable))}</b></p>
             <p><span>Nội dung</span><b>{qr.addInfo}</b></p>
           </div>
           <p className="cashier-receipt-qr-note">Vui lòng chuyển đúng số tiền và giữ nguyên nội dung chuyển khoản.</p>
@@ -193,7 +198,7 @@ function Receipt({ order, payment, slip, preview }) {
 
       {!preview && payment?.phuongThucThanhToan === 'TIEN_MAT' ? (
         <div className="cashier-receipt-payment-detail">
-          <p><span>Khách đưa</span><b>{formatMoney(Number(payment?.tienKhachDua || total))}</b></p>
+          <p><span>Khách đưa</span><b>{formatMoney(Number(payment?.tienKhachDua ?? payable))}</b></p>
           <p><span>Tiền thừa</span><b>{formatMoney(Number(payment?.tienThua || 0))}</b></p>
         </div>
       ) : null}

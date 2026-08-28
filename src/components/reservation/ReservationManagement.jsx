@@ -5,10 +5,12 @@ import {
   CalendarDays,
   CheckCircle2,
   ChefHat,
+  CreditCard,
   Clock3,
   Eye,
   LoaderCircle,
   MapPin,
+  ReceiptText,
   RefreshCw,
   Search,
   Table2,
@@ -31,6 +33,9 @@ import {
   reservationData,
   reservationDate,
   reservationDateTime,
+  reservationDepositStatus,
+  reservationDepositStatusMeta,
+  formatReservationMoney,
   reservationId,
   reservationNeedsCashierAttention,
   reservationPreorderChangedAfterApproval,
@@ -72,6 +77,13 @@ function DetailModal({ item, onClose, defaultDurationMinutes = 120 }) {
     ['Người xác nhận', item?.tenNguoiXacNhan || '—'],
     ['Người check-in', item?.tenNguoiCheckIn || '—'],
     ['Người xếp bàn', item?.tenNguoiXepBan || '—'],
+    ['Tiền cọc', formatReservationMoney(item?.tienCoc)],
+    ['Trạng thái cọc', reservationDepositStatusMeta(item).label],
+    ['Hạn thanh toán cọc', item?.thoiHanThanhToanCoc ? reservationDateTime(item.thoiHanThanhToanCoc) : '—'],
+    ['Thời gian nhận cọc', item?.thoiGianThanhToanCoc ? reservationDateTime(item.thoiGianThanhToanCoc) : '—'],
+    ['Cọc đã khấu trừ', Number(item?.tienCocDaKhauTru || 0) > 0 ? formatReservationMoney(item.tienCocDaKhauTru) : 'Chưa khấu trừ'],
+    ['Thời gian hoàn cọc', item?.thoiGianHoanCoc ? reservationDateTime(item.thoiGianHoanCoc) : '—'],
+    ['Xử lý cọc', item?.lyDoXuLyCoc || '—'],
     ['Món đặt trước', Number(item?.soMonDatTruoc || 0) ? `${item.soMonDatTruoc} loại món` : 'Chưa đặt'],
     ['Trạng thái món trước', preorderStatusMeta(item?.trangThaiDatMonTruoc).label],
     ['Cần duyệt lại món', item?.canDuyetLaiDatMonTruoc ? 'Có - khách đã thay đổi sau lần duyệt' : 'Không'],
@@ -127,10 +139,27 @@ function ReasonModal({ action, item, reason, setReason, busy, onSubmit, onClose 
   );
 }
 
+function DepositActionModal({ action, item, transactionCode, setTransactionCode, reason, setReason, busy, onSubmit, onClose }) {
+  const confirming = action === 'deposit-confirm';
+  const meta = reservationDepositStatusMeta(item);
+  return (
+    <section className="reservation-manage-modal reservation-deposit-modal" role="dialog" aria-modal="true">
+      <header><div><span>{confirming ? 'XÁC NHẬN TIỀN CỌC' : 'GHI NHẬN HOÀN CỌC'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{formatReservationMoney(item?.tienCoc)} · {meta.label}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
+      <div className={`reservation-deposit-action-alert ${confirming ? 'confirm' : 'refund'}`}><CreditCard size={21} /><p>{confirming ? 'Chỉ xác nhận sau khi đã kiểm tra tiền thực sự vào tài khoản nhà hàng. Sau bước này mới được xác nhận và giữ bàn cho khách.' : 'Chỉ ghi nhận hoàn cọc sau khi nhà hàng đã thực sự chuyển tiền lại cho khách.'}</p></div>
+      {confirming ? (
+        <label className="reservation-modal-field">Mã giao dịch ngân hàng<input autoFocus maxLength="100" value={transactionCode} onChange={(e) => setTransactionCode(e.target.value)} placeholder="Ví dụ: FT260828123456" /></label>
+      ) : (
+        <label className="reservation-modal-field">Ghi chú hoàn cọc<textarea autoFocus rows="4" maxLength="500" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: Đã hoàn cọc qua chuyển khoản" /></label>
+      )}
+      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || (confirming ? transactionCode.trim().length < 4 : !reason.trim())}>{busy ? <LoaderCircle className="spin" size={17} /> : confirming ? <CheckCircle2 size={17} /> : <ReceiptText size={17} />}{confirming ? 'Xác nhận đã nhận cọc' : 'Xác nhận đã hoàn cọc'}</button></footer>
+    </section>
+  );
+}
+
 function SimpleConfirmModal({ action, item, busy, onSubmit, onClose }) {
   const config = {
     'check-in': { title: 'Xác nhận khách đã đến?', text: 'Nếu bàn dự kiến vẫn sẵn sàng, hệ thống sẽ tự nhận bàn đó cho khách. Chỉ cần chọn bàn khác khi bàn dự kiến không còn khả dụng.', button: 'Xác nhận check-in', icon: UserCheck },
-    'no-show': { title: 'Đánh dấu khách không đến?', text: 'Lịch sẽ kết thúc với trạng thái không đến và bàn dự kiến được giải phóng.', button: 'Xác nhận không đến', icon: CalendarClock },
+    'no-show': { title: 'Đánh dấu khách không đến?', text: 'Lịch sẽ kết thúc, bàn dự kiến được giải phóng và nếu khách đã thanh toán cọc thì khoản cọc sẽ chuyển sang mất cọc.', button: 'Xác nhận không đến', icon: CalendarClock },
   }[action];
   const Icon = config.icon;
   return (
@@ -178,6 +207,7 @@ export default function ReservationManagement({ role = 'admin' }) {
   const [selectedTable, setSelectedTable] = useState('');
   const [note, setNote] = useState('');
   const [reason, setReason] = useState('');
+  const [transactionCode, setTransactionCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [clockTick, setClockTick] = useState(Date.now());
 
@@ -294,6 +324,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     setSelectedTable(action === 'confirm' ? item?.maBanDuKien || '' : action === 'assign' ? '' : item?.maBanThucTe || item?.maBanDuKien || '');
     setNote('');
     setReason('');
+    setTransactionCode('');
     setModal({ action, item });
     if (['confirm', 'assign'].includes(action)) loadAvailableTables(item);
   }
@@ -305,6 +336,8 @@ export default function ReservationManagement({ role = 'admin' }) {
     try {
       setBusy(true);
       let response;
+      if (action === 'deposit-confirm') response = await reservationApi.confirmDeposit(id, transactionCode.trim());
+      if (action === 'deposit-refund') response = await reservationApi.refundDeposit(id, reason.trim());
       if (action === 'confirm') response = await reservationApi.confirm(id, { maBanDuKien: Number(selectedTable), ghiChu: note.trim() || null });
       if (action === 'assign') response = await reservationApi.assignTable(id, Number(selectedTable));
       if (action === 'reject') response = await reservationApi.reject(id, reason.trim());
@@ -353,16 +386,22 @@ export default function ReservationManagement({ role = 'admin' }) {
                 : rows.length ? rows.map((item) => {
                   const statusValue = reservationStatus(item);
                   const meta = reservationStatusMeta(statusValue);
+                  const depositStatus = reservationDepositStatus(item);
+                  const depositMeta = reservationDepositStatusMeta(depositStatus);
+                  const expiredByDepositTimeout = statusValue === 'HET_HAN'
+                    && depositStatus === 'DA_HUY'
+                    && String(item?.lyDoHuyTuChoi || '').trim() === 'Quá thời hạn thanh toán tiền cọc';
                   const preorderNeedsReview = reservationPreorderNeedsReview(item);
                   const preorderChangedAfterApproval = reservationPreorderChangedAfterApproval(item);
                   return (
-                    <tr key={reservationId(item)} className={preorderChangedAfterApproval ? 'reservation-row-reapproval' : preorderNeedsReview ? 'reservation-row-preorder-review' : ''}>
+                    <tr key={reservationId(item)} className={preorderChangedAfterApproval ? 'reservation-row-reapproval' : preorderNeedsReview ? 'reservation-row-preorder-review' : depositStatus === 'CHO_THANH_TOAN' ? 'reservation-row-deposit-pending' : depositStatus === 'CHO_HOAN' ? 'reservation-row-refund-pending' : ''}>
                       <td><strong>{reservationTime(item?.ngayGioDen)}</strong><small>{reservationDate(item?.ngayGioDen)}</small><em>{item?.thoiLuongPhut || reservationPolicy.defaultDurationMinutes} phút</em></td>
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
                       <td>
                         <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
+                        {depositStatus ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label} · {formatReservationMoney(item?.tienCoc)}</small> : null}
                         {preorderChangedAfterApproval ? (
                           <>
                             <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
@@ -376,7 +415,11 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
                         {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone={canManageReservation && preorderNeedsReview ? 'preorder-attention' : 'preorder'} onClick={() => openAction('preorder', item)}><ChefHat size={15} /> {canManageReservation && preorderChangedAfterApproval ? 'Duyệt lại món' : canManageReservation && preorderNeedsReview ? 'Duyệt món' : 'Món đặt trước'}</ActionButton> : null}
-                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' ? <><ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton><ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton></> : null}
+                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' && depositStatus === 'CHO_THANH_TOAN' ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm', item)}><CreditCard size={15} /> Xác nhận cọc</ActionButton> : null}
+                        {canManageReservation && expiredByDepositTimeout ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm', item)}><CreditCard size={15} /> Xác nhận cọc trễ</ActionButton> : null}
+                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' && depositStatus === 'DA_THANH_TOAN' ? <ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton> : null}
+                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' ? <ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton> : null}
+                        {canManageReservation && depositStatus === 'CHO_HOAN' ? <ActionButton tone="refund" onClick={() => openAction('deposit-refund', item)}><ReceiptText size={15} /> Hoàn cọc</ActionButton> : null}
                         {statusValue === 'DA_XAC_NHAN' ? <>
                           {canHandleArrival && canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, clockTick)
                             ? <ActionButton tone="primary" onClick={() => openAction('check-in', item)}><UserCheck size={15} /> Check-in</ActionButton>
@@ -407,6 +450,7 @@ export default function ReservationManagement({ role = 'admin' }) {
           {detail ? <DetailModal item={detail} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onClose={() => setDetail(null)} /> : null}
           {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
+          {modal && ['deposit-confirm', 'deposit-refund'].includes(modal.action) ? <DepositActionModal action={modal.action} item={modal.item} transactionCode={transactionCode} setTransactionCode={setTransactionCode} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal?.action === 'preorder' ? <StaffReservationPreorderModal item={modal.item} role={role} onClose={() => setModal(null)} onUpdated={load} /> : null}
         </div>,
