@@ -150,3 +150,41 @@
 .reservation-deposit-status-cell .reservation-deposit-mini{margin-top:0!important}
 .reservation-deposit-amount{margin-top:6px!important;color:#475569!important;font-weight:850}
 .reservation-deposit-empty{display:inline-block!important;margin-top:0!important;color:#94a3b8!important;font-weight:750}
+
+/* ===== Cashier reservation page polish ===== */
+.cashier-reservation-page .reservation-manage-table-wrap{overflow:auto;border-radius:0 0 17px 17px}
+.cashier-reservation-toolbar{display:grid;grid-template-columns:minmax(145px,1.05fr) minmax(145px,1.05fr) minmax(132px,.9fr) minmax(132px,.9fr) minmax(150px,1fr) minmax(230px,1.55fr) auto;align-items:end;gap:10px;padding:13px 14px 14px;flex-wrap:nowrap}
+.cashier-reservation-toolbar>.cashier-reservation-filter-field,.cashier-reservation-toolbar>.cashier-reservation-search{height:auto;min-width:0;padding:0;border:0;border-radius:0;background:transparent;display:block;color:#6b7686}
+.cashier-reservation-filter-field>span,.cashier-reservation-search>span{display:block;margin:0 0 6px 2px;color:#697586;font-size:8.5px;font-weight:900;line-height:1;white-space:nowrap}
+.cashier-reservation-filter-field>select,.cashier-reservation-filter-field>div,.cashier-reservation-search>div{width:100%;height:39px;border:1px solid #dce3ea;border-radius:10px;background:#fff;display:flex;align-items:center;gap:7px;padding:0 10px;color:#6b7686;box-sizing:border-box;transition:border-color .18s ease,box-shadow .18s ease}
+.cashier-reservation-filter-field>select{appearance:auto;color:#465365;font-size:9.5px;font-weight:800;outline:0}
+.cashier-reservation-filter-field>div:focus-within,.cashier-reservation-filter-field>select:focus,.cashier-reservation-search>div:focus-within{border-color:#f1a071;box-shadow:0 0 0 3px rgba(239,100,31,.08)}
+.cashier-reservation-filter-field>div input,.cashier-reservation-filter-field>div select{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#465365;font-size:9.5px;font-weight:800}
+.cashier-reservation-date-filter>div input{padding:0}
+.cashier-reservation-search{margin-left:0!important}
+.cashier-reservation-search>div{padding-right:4px}
+.cashier-reservation-search>div input{min-width:0;width:100%!important;border:0;outline:0;background:transparent;color:#465365;font-size:9.5px;font-weight:750}
+.cashier-reservation-search>div button{height:31px;flex:0 0 auto;padding:0 11px;border:0;border-radius:8px;background:#2d394a;color:#fff;font-size:9px;font-weight:900;cursor:pointer}
+.cashier-reservation-toolbar-actions{height:39px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.cashier-reservation-toolbar-actions .reservation-refresh,.cashier-reservation-toolbar-actions .reservation-reset{height:39px;margin:0;flex:0 0 auto}
+.cashier-reservation-page .reservation-booking-status-cell,.cashier-reservation-page .reservation-deposit-status-cell{min-width:150px}
+.cashier-reservation-page .reservation-deposit-status-cell .reservation-deposit-mini{width:max-content;max-width:100%;white-space:nowrap}
+.cashier-reservation-page .reservation-deposit-amount{display:block;margin-top:7px!important;color:#263445!important;font-size:9px!important;font-weight:900!important}
+.cashier-reservation-page .reservation-deposit-zero{display:block;margin-top:7px;color:#a0a9b5;font-size:9px;font-weight:850}
+.cashier-reservation-page .reservation-manage-table th:nth-last-child(3),.cashier-reservation-page .reservation-manage-table th:nth-last-child(2){white-space:nowrap}
+.cashier-reservation-page .reservation-row-actions{min-width:120px}
+
+@media(max-width:1500px){
+  .cashier-reservation-toolbar{grid-template-columns:repeat(5,minmax(125px,1fr));align-items:end}
+  .cashier-reservation-search{grid-column:span 3}.cashier-reservation-toolbar-actions{grid-column:span 2;justify-content:flex-end}
+}
+@media(max-width:1100px){
+  .cashier-reservation-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cashier-reservation-search{grid-column:1/-1}.cashier-reservation-toolbar-actions{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:760px){
+  .cashier-reservation-toolbar{grid-template-columns:1fr;padding:12px}
+  .cashier-reservation-search,.cashier-reservation-toolbar-actions{grid-column:auto}
+  .cashier-reservation-toolbar-actions{height:auto;display:grid;grid-template-columns:1fr 1fr}
+  .cashier-reservation-toolbar-actions .reservation-refresh,.cashier-reservation-toolbar-actions .reservation-reset{width:100%;justify-content:center}
+}

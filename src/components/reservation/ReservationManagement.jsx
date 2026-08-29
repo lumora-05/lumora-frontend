@@ -69,6 +69,16 @@ const DEPOSIT_STATUS_OPTIONS = [
   ['DA_HUY', 'Cọc đã hủy'],
 ];
 
+const CASHIER_DEPOSIT_STATUS_LABELS = {
+  CHO_THANH_TOAN: 'Chờ thanh toán',
+  DA_THANH_TOAN: 'Đã thanh toán',
+  CHO_HOAN: 'Chờ hoàn',
+  DA_HOAN: 'Đã hoàn',
+  MAT_COC: 'Mất cọc',
+  DA_KHAU_TRU: 'Đã khấu trừ',
+  DA_HUY: 'Cọc đã hủy',
+};
+
 function ActionButton({ children, tone = '', ...props }) {
   return <button type="button" className={`reservation-action-button ${tone}`} {...props}>{children}</button>;
 }
@@ -315,14 +325,22 @@ export default function ReservationManagement({ role = 'admin' }) {
     return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', close); };
   }, [busy, detail, modal]);
 
-  const stats = useMemo(() => ({
-    total: totalElements,
-    pending: rows.filter((item) => canManageReservation
-      ? reservationNeedsCashierAttention(item)
-      : reservationStatus(item) === 'CHO_XAC_NHAN').length,
-    upcoming: rows.filter((item) => reservationStatus(item) === 'DA_XAC_NHAN').length,
-    arrived: rows.filter((item) => ['KHACH_DA_DEN', 'DA_XEP_BAN'].includes(reservationStatus(item))).length,
-  }), [canManageReservation, rows, totalElements]);
+  const stats = useMemo(() => {
+    const now = Number(clockTick) || Date.now();
+    const upcomingLimit = now + (60 * 60 * 1000);
+    return {
+      total: totalElements,
+      pending: rows.filter((item) => canManageReservation
+        ? reservationNeedsCashierAttention(item) || canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, now)
+        : reservationStatus(item) === 'CHO_XAC_NHAN').length,
+      upcoming: rows.filter((item) => {
+        if (reservationStatus(item) !== 'DA_XAC_NHAN') return false;
+        const arrival = new Date(item?.ngayGioDen).getTime();
+        return Number.isFinite(arrival) && arrival >= now && arrival <= upcomingLimit;
+      }).length,
+      arrived: rows.filter((item) => ['KHACH_DA_DEN', 'DA_XEP_BAN'].includes(reservationStatus(item))).length,
+    };
+  }, [canManageReservation, clockTick, reservationPolicy.noShowGraceMinutes, rows, totalElements]);
 
   const range = pageDisplayRange(page, size, numberOfElements, totalElements);
   const pageItems = paginationItems(page, totalPages);
@@ -397,24 +415,62 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   return (
-    <section className="reservation-manage-page">
+    <section className={`reservation-manage-page ${role === 'cashier' ? 'cashier-reservation-page' : ''}`}>
       <div className="reservation-manage-stats">
         <article><span className="orange"><CalendarCheck2 size={22} /></span><p>Tổng lịch theo bộ lọc<strong>{stats.total}</strong></p></article>
         <article><span className="warning"><Clock3 size={22} /></span><p>{canManageReservation ? 'Cần xử lý trên trang' : 'Chờ xác nhận trên trang'}<strong>{stats.pending}</strong></p></article>
-        <article><span className="blue"><CalendarClock size={22} /></span><p>Sắp đến trên trang<strong>{stats.upcoming}</strong></p></article>
+        <article><span className="blue"><CalendarClock size={22} /></span><p>{role === 'cashier' ? 'Sắp đến trong 60 phút' : 'Sắp đến trên trang'}<strong>{stats.upcoming}</strong></p></article>
         <article><span className="green"><UserCheck size={22} /></span><p>Đã đến/xếp bàn<strong>{stats.arrived}</strong></p></article>
       </div>
 
       <div className="reservation-manage-card">
-        <div className="reservation-manage-toolbar">
-          <select value={status} aria-label="Trạng thái đặt bàn" onChange={(e) => { setStatus(e.target.value); setPage(0); }}>{STATUS_OPTIONS.map(([value, label], index) => <option key={value || 'all'} value={value}>{index === 0 && role === 'cashier' ? 'Tất cả trạng thái đặt bàn' : label}</option>)}</select>
-          {role === 'cashier' ? <select value={depositStatusFilter} aria-label="Trạng thái cọc" onChange={(e) => { setDepositStatusFilter(e.target.value); setPage(0); }}>{DEPOSIT_STATUS_OPTIONS.map(([value, label]) => <option key={value || 'all-deposit'} value={value}>{label}</option>)}</select> : null}
-          <label><CalendarDays size={16} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
-          <label><CalendarDays size={16} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
-          {canManageReservation ? <label><MapPin size={16} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></label> : null}
-          <form onSubmit={(event) => { event.preventDefault(); setKeyword(keywordInput.trim()); setPage(0); }}><Search size={17} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, số điện thoại..." /><button type="submit">Tìm</button></form>
-          <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
-          <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
+        <div className={`reservation-manage-toolbar ${role === 'cashier' ? 'cashier-reservation-toolbar' : ''}`}>
+          {role === 'cashier' ? (
+            <>
+              <label className="cashier-reservation-filter-field">
+                <span>Trạng thái đặt bàn</span>
+                <select value={status} aria-label="Trạng thái đặt bàn" onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
+                  {STATUS_OPTIONS.map(([value, label], index) => <option key={value || 'all'} value={value}>{index === 0 ? 'Tất cả' : label}</option>)}
+                </select>
+              </label>
+              <label className="cashier-reservation-filter-field">
+                <span>Trạng thái cọc</span>
+                <select value={depositStatusFilter} aria-label="Trạng thái cọc" onChange={(e) => { setDepositStatusFilter(e.target.value); setPage(0); }}>
+                  {DEPOSIT_STATUS_OPTIONS.map(([value, label], index) => <option key={value || 'all-deposit'} value={value}>{index === 0 ? 'Tất cả' : label}</option>)}
+                </select>
+              </label>
+              <label className="cashier-reservation-filter-field cashier-reservation-date-filter">
+                <span>Từ ngày</span>
+                <div><CalendarDays size={15} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></div>
+              </label>
+              <label className="cashier-reservation-filter-field cashier-reservation-date-filter">
+                <span>Đến ngày</span>
+                <div><CalendarDays size={15} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></div>
+              </label>
+              <label className="cashier-reservation-filter-field">
+                <span>Khu vực</span>
+                <div><MapPin size={15} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+              </label>
+              <form className="cashier-reservation-search" onSubmit={(event) => { event.preventDefault(); setKeyword(keywordInput.trim()); setPage(0); }}>
+                <span>Tìm kiếm</span>
+                <div><Search size={16} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, SĐT..." /><button type="submit">Tìm</button></div>
+              </form>
+              <div className="cashier-reservation-toolbar-actions">
+                <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
+                <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <select value={status} aria-label="Trạng thái đặt bàn" onChange={(e) => { setStatus(e.target.value); setPage(0); }}>{STATUS_OPTIONS.map(([value, label]) => <option key={value || 'all'} value={value}>{label}</option>)}</select>
+              <label><CalendarDays size={16} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
+              <label><CalendarDays size={16} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
+              {canManageReservation ? <label><MapPin size={16} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></label> : null}
+              <form onSubmit={(event) => { event.preventDefault(); setKeyword(keywordInput.trim()); setPage(0); }}><Search size={17} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, số điện thoại..." /><button type="submit">Tìm</button></form>
+              <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
+              <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
+            </>
+          )}
         </div>
 
         <div className="reservation-manage-table-wrap">
@@ -453,8 +509,8 @@ export default function ReservationManagement({ role = 'admin' }) {
                             {item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}
                           </td>
                           <td className="reservation-deposit-status-cell">
-                            {depositStatus ? <span className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label}</span> : <span className="reservation-deposit-empty">Chưa có thông tin cọc</span>}
-                            {depositStatus ? <small className="reservation-deposit-amount">{formatReservationMoney(item?.tienCoc)}</small> : null}
+                            {depositStatus ? <span className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {CASHIER_DEPOSIT_STATUS_LABELS[depositStatus] || depositMeta.label}</span> : <span className="reservation-deposit-empty">Chưa có thông tin cọc</span>}
+                            {depositStatus && Number(item?.tienCoc || 0) > 0 ? <small className="reservation-deposit-amount">{formatReservationMoney(item?.tienCoc)}</small> : depositStatus ? <small className="reservation-deposit-zero">—</small> : null}
                           </td>
                         </>
                       ) : (
