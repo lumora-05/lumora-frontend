@@ -124,10 +124,12 @@ function DetailModal({ item, onClose, defaultDurationMinutes = 120 }) {
 }
 
 function TableSelectModal({ action, item, tables, loadingTables, selectedTable, setSelectedTable, note, setNote, busy, onSubmit, onClose }) {
-  const isConfirm = action === 'confirm';
+  const isCombinedDepositConfirm = action === 'deposit-confirm-reservation';
+  const isConfirm = action === 'confirm' || isCombinedDepositConfirm;
   return (
     <section className="reservation-manage-modal reservation-table-modal" role="dialog" aria-modal="true">
       <header><div><span>{isConfirm ? 'XÁC NHẬN ĐẶT BÀN' : item?.maBanDuKien ? 'CHỌN BÀN KHÁC' : 'XẾP BÀN THỰC TẾ'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{item?.soLuongKhach} khách · {reservationDateTime(item?.ngayGioDen)}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
+      {isCombinedDepositConfirm ? <div className="reservation-combined-confirm-alert"><CreditCard size={19} /><p>Chỉ tiếp tục sau khi đã kiểm tra <b>{formatReservationMoney(item?.tienCoc)}</b> thực sự vào tài khoản nhà hàng. Chọn bàn dự kiến bên dưới rồi xác nhận một lần để đồng thời ghi nhận cọc và giữ bàn cho khách.</p></div> : null}
       <div className="reservation-table-intro"><Table2 size={20} /><p>{isConfirm ? 'Chọn bàn hoặc nhóm bàn ghép dự kiến phù hợp. Bàn sẽ được giữ cho lịch này và tự chuyển sang sử dụng khi khách check-in nếu vẫn sẵn sàng.' : item?.maBanDuKien ? `Bàn dự kiến ${item?.tenBanDuKien || `Bàn ${item.maBanDuKien}`} không thể tự nhận khi check-in. Hãy chọn một bàn khác đang trống để phục vụ khách.` : 'Chọn bàn hoặc nhóm bàn ghép đang trống để bắt đầu phiên phục vụ cho khách.'}</p></div>
       <div className="reservation-table-list">
         {loadingTables ? <div className="reservation-modal-loading"><LoaderCircle className="spin" size={22} /> Đang kiểm tra bàn khả dụng...</div>
@@ -143,7 +145,7 @@ function TableSelectModal({ action, item, tables, loadingTables, selectedTable, 
           }) : <div className="reservation-modal-empty">Không có bàn hoặc nhóm bàn phù hợp trong khung giờ này. Với đoàn đông, hãy ghép các bàn phù hợp trước khi xác nhận.</div>}
       </div>
       {isConfirm ? <label className="reservation-modal-field">Ghi chú xác nhận<textarea rows="3" maxLength="500" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Không bắt buộc" /></label> : null}
-      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || !selectedTable}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />}{isConfirm ? 'Xác nhận đặt bàn' : 'Xác nhận bàn'}</button></footer>
+      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || !selectedTable}>{busy ? <LoaderCircle className="spin" size={17} /> : <CheckCircle2 size={17} />}{isCombinedDepositConfirm ? 'Xác nhận cọc & đặt bàn' : isConfirm ? 'Xác nhận đặt bàn' : 'Xác nhận bàn'}</button></footer>
     </section>
   );
 }
@@ -382,7 +384,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     setNote('');
     setReason('');
     setModal({ action, item });
-    if (['confirm', 'assign'].includes(action)) loadAvailableTables(item);
+    if (['confirm', 'deposit-confirm-reservation', 'assign'].includes(action)) loadAvailableTables(item);
   }
 
   async function submitAction() {
@@ -393,6 +395,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       setBusy(true);
       let response;
       if (action === 'deposit-confirm') response = await reservationApi.confirmDeposit(id);
+      if (action === 'deposit-confirm-reservation') response = await reservationApi.confirmDepositAndReservation(id, { maBanDuKien: Number(selectedTable), ghiChu: note.trim() || null });
       if (action === 'deposit-refund') response = await reservationApi.refundDeposit(id, reason.trim());
       if (action === 'confirm') response = await reservationApi.confirm(id, { maBanDuKien: Number(selectedTable), ghiChu: note.trim() || null });
       if (action === 'assign') response = await reservationApi.assignTable(id, Number(selectedTable));
@@ -531,8 +534,8 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
                         {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone={canManageReservation && preorderNeedsReview ? 'preorder-attention' : 'preorder'} onClick={() => openAction('preorder', item)}><ChefHat size={15} /> {canManageReservation && preorderChangedAfterApproval ? 'Duyệt lại món' : canManageReservation && preorderNeedsReview ? 'Duyệt món' : 'Món đặt trước'}</ActionButton> : null}
-                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' && depositStatus === 'CHO_THANH_TOAN' ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm', item)}><CreditCard size={15} /> Xác nhận cọc</ActionButton> : null}
-                        {canManageReservation && expiredByDepositTimeout ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm', item)}><CreditCard size={15} /> Xác nhận cọc trễ</ActionButton> : null}
+                        {canManageReservation && statusValue === 'CHO_XAC_NHAN' && depositStatus === 'CHO_THANH_TOAN' ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm-reservation', item)}><CreditCard size={15} /> Xác nhận cọc & đặt bàn</ActionButton> : null}
+                        {canManageReservation && expiredByDepositTimeout ? <ActionButton tone="deposit" onClick={() => openAction('deposit-confirm-reservation', item)}><CreditCard size={15} /> Xác nhận cọc trễ & đặt bàn</ActionButton> : null}
                         {canManageReservation && statusValue === 'CHO_XAC_NHAN' && depositStatus === 'DA_THANH_TOAN' ? <ActionButton tone="primary" onClick={() => openAction('confirm', item)}><CheckCircle2 size={15} /> Xác nhận</ActionButton> : null}
                         {canManageReservation && statusValue === 'CHO_XAC_NHAN' ? <ActionButton tone="danger" onClick={() => openAction('reject', item)}><XCircle size={15} /> Từ chối</ActionButton> : null}
                         {canManageReservation && depositStatus === 'CHO_HOAN' ? <ActionButton tone="refund" onClick={() => openAction('deposit-refund', item)}><ReceiptText size={15} /> Hoàn cọc</ActionButton> : null}
@@ -564,7 +567,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       {(modal || detail) ? createPortal(
         <div className="reservation-manage-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && (setModal(null), setDetail(null))}>
           {detail ? <DetailModal item={detail} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onClose={() => setDetail(null)} /> : null}
-          {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
+          {modal && ['confirm', 'deposit-confirm-reservation', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['deposit-confirm', 'deposit-refund'].includes(modal.action) ? <DepositActionModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}

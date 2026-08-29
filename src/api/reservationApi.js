@@ -17,6 +17,7 @@ export const reservationApi = {
   list: (params = {}) => axiosClient.get('/reservations', { params }),
   detail: (id) => axiosClient.get(`/reservations/${id}`),
   confirmDeposit: (id) => axiosClient.post(`/reservations/${id}/deposit/confirm`),
+  confirmDepositAndReservation: (id, data) => axiosClient.post(`/reservations/${id}/deposit/confirm-and-reservation`, data),
   refundDeposit: (id, reason) => axiosClient.post(`/reservations/${id}/deposit/refund`, { reason }),
   availableTables: (params = {}) => axiosClient.get('/reservations/availability/tables', { params }),
   confirm: (id, data) => axiosClient.post(`/reservations/${id}/confirm`, data),

@@ -200,3 +200,8 @@
   .cashier-reservation-toolbar-actions{height:auto;display:grid;grid-template-columns:1fr 1fr}
   .cashier-reservation-toolbar-actions .reservation-refresh,.cashier-reservation-toolbar-actions .reservation-reset{width:100%;justify-content:center}
 }
+
+/* Combined cashier flow: verify deposit + choose provisional table + confirm reservation in one action. */
+.reservation-combined-confirm-alert{margin:15px 18px 0;padding:11px 12px;border:1px solid #f3d0b4;border-radius:11px;background:#fff7ef;color:#765039;display:flex;align-items:flex-start;gap:9px;font-size:10px;line-height:1.5}
+.reservation-combined-confirm-alert>svg{flex:0 0 auto;margin-top:1px;color:#e9601c}.reservation-combined-confirm-alert p{margin:0}.reservation-combined-confirm-alert b{color:#d95d1d}
+@media(max-width:640px){.reservation-combined-confirm-alert{margin-left:16px;margin-right:16px}}
