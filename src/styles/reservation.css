@@ -144,3 +144,9 @@
 @media(max-width:760px){
   .reservation-deposit-confirm-modal>.reservation-deposit-confirm-header{padding:18px 16px 15px}.reservation-deposit-confirm-header h2{font-size:19px}.reservation-deposit-confirm-header h3{font-size:15px}.reservation-deposit-confirm-modal>.reservation-deposit-action-alert.confirm{margin:14px 16px 0}.reservation-deposit-confirm-summary{margin:14px 16px 18px;grid-template-columns:1fr}.reservation-deposit-confirm-summary article+article{border-left:0;border-top:1px solid #edf0f3}.reservation-deposit-confirm-modal>footer{padding:13px 16px 16px;flex-direction:column-reverse}.reservation-deposit-confirm-modal>footer button{width:100%}
 }
+
+/* Cashier reservation view: separate booking and deposit status for faster scanning. */
+.reservation-manage-table:has(.reservation-deposit-status-cell){min-width:1180px}
+.reservation-deposit-status-cell .reservation-deposit-mini{margin-top:0!important}
+.reservation-deposit-amount{margin-top:6px!important;color:#475569!important;font-weight:850}
+.reservation-deposit-empty{display:inline-block!important;margin-top:0!important;color:#94a3b8!important;font-weight:750}

@@ -58,6 +58,17 @@ const STATUS_OPTIONS = [
   ['HET_HAN', 'Hết hạn'],
 ];
 
+const DEPOSIT_STATUS_OPTIONS = [
+  ['', 'Tất cả trạng thái cọc'],
+  ['CHO_THANH_TOAN', 'Chờ thanh toán cọc'],
+  ['DA_THANH_TOAN', 'Đã thanh toán cọc'],
+  ['CHO_HOAN', 'Chờ hoàn cọc'],
+  ['DA_HOAN', 'Đã hoàn cọc'],
+  ['MAT_COC', 'Mất cọc'],
+  ['DA_KHAU_TRU', 'Đã khấu trừ cọc'],
+  ['DA_HUY', 'Cọc đã hủy'],
+];
+
 function ActionButton({ children, tone = '', ...props }) {
   return <button type="button" className={`reservation-action-button ${tone}`} {...props}>{children}</button>;
 }
@@ -216,6 +227,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     checkInEarlyMinutes: 30,
   });
   const [status, setStatus] = useState('');
+  const [depositStatusFilter, setDepositStatusFilter] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [area, setArea] = useState('');
@@ -267,6 +279,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       setLoading(true);
       const response = await reservationApi.list({
         status: status || undefined,
+        depositStatus: role === 'cashier' ? depositStatusFilter || undefined : undefined,
         from: from || undefined,
         to: to || undefined,
         keyword: keyword || undefined,
@@ -288,7 +301,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     } finally {
       setLoading(false);
     }
-  }, [area, canManageReservation, from, keyword, page, size, status, to, toast]);
+  }, [area, canManageReservation, depositStatusFilter, from, keyword, page, role, size, status, to, toast]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (socketEvent?.topic?.includes('reservations')) load(); }, [load, socketEvent]);
@@ -380,7 +393,7 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   function resetFilters() {
-    setStatus(''); setArea(''); setFrom(''); setTo(''); setKeywordInput(''); setKeyword(''); setPage(0);
+    setStatus(''); setDepositStatusFilter(''); setArea(''); setFrom(''); setTo(''); setKeywordInput(''); setKeyword(''); setPage(0);
   }
 
   return (
@@ -394,7 +407,8 @@ export default function ReservationManagement({ role = 'admin' }) {
 
       <div className="reservation-manage-card">
         <div className="reservation-manage-toolbar">
-          <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}>{STATUS_OPTIONS.map(([value, label]) => <option key={value || 'all'} value={value}>{label}</option>)}</select>
+          <select value={status} aria-label="Trạng thái đặt bàn" onChange={(e) => { setStatus(e.target.value); setPage(0); }}>{STATUS_OPTIONS.map(([value, label], index) => <option key={value || 'all'} value={value}>{index === 0 && role === 'cashier' ? 'Tất cả trạng thái đặt bàn' : label}</option>)}</select>
+          {role === 'cashier' ? <select value={depositStatusFilter} aria-label="Trạng thái cọc" onChange={(e) => { setDepositStatusFilter(e.target.value); setPage(0); }}>{DEPOSIT_STATUS_OPTIONS.map(([value, label]) => <option key={value || 'all-deposit'} value={value}>{label}</option>)}</select> : null}
           <label><CalendarDays size={16} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></label>
           <label><CalendarDays size={16} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></label>
           {canManageReservation ? <label><MapPin size={16} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></label> : null}
@@ -405,9 +419,9 @@ export default function ReservationManagement({ role = 'admin' }) {
 
         <div className="reservation-manage-table-wrap">
           <table className="reservation-manage-table">
-            <thead><tr><th>Thời gian</th><th>Khách hàng</th><th>Số khách</th><th>Khu vực/Bàn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <thead><tr><th>Thời gian</th><th>Khách hàng</th><th>Số khách</th><th>Khu vực/Bàn</th>{role === 'cashier' ? <><th>Trạng thái đặt bàn</th><th>Trạng thái cọc</th></> : <th>Trạng thái</th>}<th>Thao tác</th></tr></thead>
             <tbody>
-              {loading && !rows.length ? <tr><td colSpan="6" className="reservation-manage-empty"><LoaderCircle className="spin" size={22} /> Đang tải lịch đặt bàn...</td></tr>
+              {loading && !rows.length ? <tr><td colSpan={role === 'cashier' ? 7 : 6} className="reservation-manage-empty"><LoaderCircle className="spin" size={22} /> Đang tải lịch đặt bàn...</td></tr>
                 : rows.length ? rows.map((item) => {
                   const statusValue = reservationStatus(item);
                   const meta = reservationStatusMeta(statusValue);
@@ -424,19 +438,40 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
-                      <td>
-                        <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
-                        {depositStatus ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label} · {formatReservationMoney(item?.tienCoc)}</small> : null}
-                        {preorderChangedAfterApproval ? (
-                          <>
-                            <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
-                            {item?.thoiGianThayDoiDatMonTruoc ? <small className="reservation-preorder-change-time">Thay đổi lúc {reservationDateTime(item.thoiGianThayDoiDatMonTruoc, { hideYear: true })}</small> : null}
-                          </>
-                        ) : preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? (
-                          <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small>
-                        ) : null}
-                        {item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}
-                      </td>
+                      {role === 'cashier' ? (
+                        <>
+                          <td className="reservation-booking-status-cell">
+                            <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
+                            {preorderChangedAfterApproval ? (
+                              <>
+                                <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
+                                {item?.thoiGianThayDoiDatMonTruoc ? <small className="reservation-preorder-change-time">Thay đổi lúc {reservationDateTime(item.thoiGianThayDoiDatMonTruoc, { hideYear: true })}</small> : null}
+                              </>
+                            ) : preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? (
+                              <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small>
+                            ) : null}
+                            {item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}
+                          </td>
+                          <td className="reservation-deposit-status-cell">
+                            {depositStatus ? <span className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label}</span> : <span className="reservation-deposit-empty">Chưa có thông tin cọc</span>}
+                            {depositStatus ? <small className="reservation-deposit-amount">{formatReservationMoney(item?.tienCoc)}</small> : null}
+                          </td>
+                        </>
+                      ) : (
+                        <td>
+                          <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
+                          {depositStatus ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label} · {formatReservationMoney(item?.tienCoc)}</small> : null}
+                          {preorderChangedAfterApproval ? (
+                            <>
+                              <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
+                              {item?.thoiGianThayDoiDatMonTruoc ? <small className="reservation-preorder-change-time">Thay đổi lúc {reservationDateTime(item.thoiGianThayDoiDatMonTruoc, { hideYear: true })}</small> : null}
+                            </>
+                          ) : preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? (
+                            <small className={`reservation-preorder-mini ${preorderStatusMeta(item?.trangThaiDatMonTruoc).tone}`}><ChefHat size={12} /> {preorderStatusMeta(item?.trangThaiDatMonTruoc).label}</small>
+                          ) : null}
+                          {item?.lyDoHuyTuChoi ? <small className="reservation-end-reason">{item.lyDoHuyTuChoi}</small> : null}
+                        </td>
+                      )}
                       <td><div className="reservation-row-actions">
                         <ActionButton onClick={() => openDetail(item)}><Eye size={15} /> Xem</ActionButton>
                         {Number(item?.soMonDatTruoc || 0) > 0 || preorderStatus(item?.trangThaiDatMonTruoc) !== 'CHUA_DAT' ? <ActionButton tone={canManageReservation && preorderNeedsReview ? 'preorder-attention' : 'preorder'} onClick={() => openAction('preorder', item)}><ChefHat size={15} /> {canManageReservation && preorderChangedAfterApproval ? 'Duyệt lại món' : canManageReservation && preorderNeedsReview ? 'Duyệt món' : 'Món đặt trước'}</ActionButton> : null}
@@ -458,7 +493,7 @@ export default function ReservationManagement({ role = 'admin' }) {
                       </div></td>
                     </tr>
                   );
-                }) : <tr><td colSpan="6" className="reservation-manage-empty">Không có lịch đặt bàn phù hợp.</td></tr>}
+                }) : <tr><td colSpan={role === 'cashier' ? 7 : 6} className="reservation-manage-empty">Không có lịch đặt bàn phù hợp.</td></tr>}
             </tbody>
           </table>
         </div>
