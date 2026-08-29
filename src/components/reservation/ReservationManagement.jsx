@@ -148,12 +148,7 @@ function DepositActionModal({ action, item, reason, setReason, busy, onSubmit, o
         <>
           <header className="reservation-deposit-confirm-header">
             <div>
-              <h2>Xác nhận tiền cọc</h2>
-              <h3>{item?.maTraCuu} · {item?.hoTenKhach}</h3>
-              <div className="reservation-deposit-confirm-badges">
-                <b><CreditCard size={15} />{formatReservationMoney(item?.tienCoc)}</b>
-                <em><Clock3 size={15} />{meta.label}</em>
-              </div>
+              <h2>Xác nhận đặt bàn</h2>
             </div>
             <button type="button" onClick={onClose} disabled={busy} aria-label="Đóng"><X size={20} /></button>
           </header>
