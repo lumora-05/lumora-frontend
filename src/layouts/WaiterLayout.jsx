@@ -4,12 +4,14 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import WaiterHeader from '../components/common/WaiterHeader';
 import { orderApi } from '../api/orderApi';
+import { reservationApi } from '../api/reservationApi';
 import { serviceRequestApi } from '../api/serviceRequestApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { imageUrl } from '../utils/imageUrl';
 import { serviceRequestStatus, unwrapServiceRequestList } from '../utils/serviceRequests';
 import { isActiveOrder, orderGroup, pendingReadyCount, unwrapList } from '../utils/waiterData';
+import { canCheckIn, currentLocalDate, reservationData, reservationStatus } from '../utils/reservations';
 
 const pageMeta = {
   '/waiter/order-entry': ['Gọi món tại bàn', 'Ghi nhận món khách gọi tại bàn'],
@@ -37,7 +39,8 @@ export default function WaiterLayout() {
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
   const [orderAttentionCount, setOrderAttentionCount] = useState(0);
   const [serviceAttentionCount, setServiceAttentionCount] = useState(0);
-  const waiterEvent = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests']);
+  const [reservationAttentionCount, setReservationAttentionCount] = useState(0);
+  const waiterEvent = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests', '/topic/reservations']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -57,12 +60,21 @@ export default function WaiterLayout() {
 
   const loadAttentionCounts = useCallback(async () => {
     try {
-      const [orderResponse, serviceResponse] = await Promise.all([
+      const today = currentLocalDate();
+      const [orderResponse, serviceResponse, reservationResponse] = await Promise.all([
         orderApi.getAll(),
         serviceRequestApi.list('ACTIVE'),
+        reservationApi.list({ from: today, to: today, page: 0, size: 100 }),
       ]);
       const orders = unwrapList(orderResponse).filter(isActiveOrder);
       const serviceRequests = unwrapServiceRequestList(serviceResponse);
+      const reservationPayload = reservationData(reservationResponse);
+      const reservations = Array.isArray(reservationPayload)
+        ? reservationPayload
+        : Array.isArray(reservationPayload?.content) ? reservationPayload.content : [];
+      const now = Date.now();
+      const checkInEarlyMinutes = Math.max(Number(brandSettings?.reservationCheckInEarlyMinutes) || 30, 0);
+      const noShowGraceMinutes = Math.max(Number(brandSettings?.reservationNoShowGraceMinutes) || 15, 0);
 
       setOrderAttentionCount(orders.filter((order) => (
         ['READY', 'PAYMENT'].includes(orderGroup(order)) || pendingReadyCount(order) > 0
@@ -70,14 +82,18 @@ export default function WaiterLayout() {
       setServiceAttentionCount(serviceRequests.filter((item) => (
         ['MOI', 'DA_TIEP_NHAN'].includes(serviceRequestStatus(item))
       )).length);
+      setReservationAttentionCount(reservations.filter((item) => (
+        canCheckIn(item, checkInEarlyMinutes, noShowGraceMinutes, now)
+        || reservationStatus(item) === 'KHACH_DA_DEN'
+      )).length);
     } catch {
       // Badge là thông tin hỗ trợ; các trang nghiệp vụ vẫn tự hiển thị lỗi nếu tải dữ liệu thất bại.
     }
-  }, []);
+  }, [brandSettings?.reservationCheckInEarlyMinutes, brandSettings?.reservationNoShowGraceMinutes]);
 
   useEffect(() => { loadAttentionCounts(); }, [loadAttentionCounts]);
   useEffect(() => {
-    if (['/topic/orders', '/topic/kitchen', '/topic/service-requests'].includes(waiterEvent?.topic)) {
+    if (['/topic/orders', '/topic/kitchen', '/topic/service-requests', '/topic/reservations'].includes(waiterEvent?.topic)) {
       loadAttentionCounts();
     }
   }, [loadAttentionCounts, waiterEvent]);
@@ -85,8 +101,9 @@ export default function WaiterLayout() {
   const navigationItems = useMemo(() => items.map((item) => {
     if (item.to === '/waiter/orders') return { ...item, badge: orderAttentionCount };
     if (item.to === '/waiter/requests') return { ...item, badge: serviceAttentionCount };
+    if (item.to === '/waiter/reservations') return { ...item, badge: reservationAttentionCount };
     return item;
-  }), [orderAttentionCount, serviceAttentionCount]);
+  }), [orderAttentionCount, reservationAttentionCount, serviceAttentionCount]);
 
   const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
   const readOnly = detail && new URLSearchParams(location.search).get('readonly') === '1';
@@ -123,7 +140,15 @@ export default function WaiterLayout() {
       </aside>
 
       <main className="waiter-main">
-        <WaiterHeader title={title} subtitle={subtitle} onOpenMenu={() => setMenuOpen(true)} />
+        <WaiterHeader
+          title={title}
+          subtitle={subtitle}
+          onOpenMenu={() => setMenuOpen(true)}
+          reservationPolicy={{
+            checkInEarlyMinutes: Math.max(Number(brandSettings?.reservationCheckInEarlyMinutes) || 30, 0),
+            noShowGraceMinutes: Math.max(Number(brandSettings?.reservationNoShowGraceMinutes) || 15, 0),
+          }}
+        />
         <Outlet />
       </main>
     </div>

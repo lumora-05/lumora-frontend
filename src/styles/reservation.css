@@ -207,3 +207,35 @@
 @media(max-width:640px){.reservation-combined-confirm-alert{margin-left:16px;margin-right:16px}}
 
 @media(max-width:760px){.reservation-detail-modal{width:100%}.reservation-detail-title-row{align-items:flex-start;flex-direction:column;gap:7px}.reservation-detail-title-row h2{margin:5px 0 0!important}.reservation-detail-body{padding:12px}.reservation-detail-items{grid-template-columns:1fr}.reservation-detail-item,.reservation-detail-item:nth-child(odd){border-right:0}.reservation-detail-item:nth-last-child(-n+2){border-bottom:1px solid #edf0f4}.reservation-detail-item:last-child{border-bottom:0}.reservation-detail-items>.reservation-detail-item:last-child:nth-child(odd){grid-column:auto}.reservation-detail-deposit-head{align-items:flex-start;flex-direction:column}.reservation-detail-deposit-amount{font-size:18px}}
+
+/* ===== Waiter reservation page: operational filters and concise deposit context ===== */
+.waiter-reservation-toolbar{display:grid;grid-template-columns:minmax(155px,1fr) minmax(132px,.85fr) minmax(132px,.85fr) minmax(155px,1fr) minmax(250px,1.6fr) auto;align-items:end;gap:10px;padding:13px 14px 14px;flex-wrap:nowrap}
+.waiter-reservation-toolbar>.waiter-reservation-filter-field,.waiter-reservation-toolbar>.waiter-reservation-search{height:auto;min-width:0;padding:0;border:0;border-radius:0;background:transparent;display:block;color:#6b7686}
+.waiter-reservation-filter-field>span,.waiter-reservation-search>span{display:block;margin:0 0 6px 2px;color:#697586;font-size:8.5px;font-weight:900;line-height:1;white-space:nowrap}
+.waiter-reservation-filter-field>select,.waiter-reservation-filter-field>div,.waiter-reservation-search>div{width:100%;height:39px;border:1px solid #dce3ea;border-radius:10px;background:#fff;display:flex;align-items:center;gap:7px;padding:0 10px;color:#6b7686;box-sizing:border-box;transition:border-color .18s ease,box-shadow .18s ease}
+.waiter-reservation-filter-field>select{appearance:auto;color:#465365;font-size:9.5px;font-weight:800;outline:0}
+.waiter-reservation-filter-field>div:focus-within,.waiter-reservation-filter-field>select:focus,.waiter-reservation-search>div:focus-within{border-color:#f1a071;box-shadow:0 0 0 3px rgba(239,100,31,.08)}
+.waiter-reservation-filter-field>div input,.waiter-reservation-filter-field>div select{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#465365;font-size:9.5px;font-weight:800}
+.waiter-reservation-date-filter>div input{padding:0}
+.waiter-reservation-search{margin-left:0!important}
+.waiter-reservation-search>div{padding-right:4px}
+.waiter-reservation-search>div input{min-width:0;width:100%!important;border:0;outline:0;background:transparent;color:#465365;font-size:9.5px;font-weight:750}
+.waiter-reservation-search>div button{height:31px;flex:0 0 auto;padding:0 11px;border:0;border-radius:8px;background:#2d394a;color:#fff;font-size:9px;font-weight:900;cursor:pointer}
+.waiter-reservation-toolbar-actions{height:39px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.waiter-reservation-toolbar-actions .reservation-refresh,.waiter-reservation-toolbar-actions .reservation-reset{height:39px;margin:0;flex:0 0 auto}
+.waiter-reservation-page .reservation-deposit-mini{font-size:8px!important}
+
+@media(max-width:1400px){
+  .waiter-reservation-toolbar{grid-template-columns:repeat(4,minmax(125px,1fr))}
+  .waiter-reservation-search{grid-column:span 3}.waiter-reservation-toolbar-actions{grid-column:span 1;justify-content:flex-end}
+}
+@media(max-width:1000px){
+  .waiter-reservation-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .waiter-reservation-search{grid-column:1/-1}.waiter-reservation-toolbar-actions{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:760px){
+  .waiter-reservation-toolbar{grid-template-columns:1fr;padding:12px}
+  .waiter-reservation-search,.waiter-reservation-toolbar-actions{grid-column:auto}
+  .waiter-reservation-toolbar-actions{height:auto;display:grid;grid-template-columns:1fr 1fr}
+  .waiter-reservation-toolbar-actions .reservation-refresh,.waiter-reservation-toolbar-actions .reservation-reset{width:100%;justify-content:center}
+}

@@ -1,10 +1,12 @@
 import {
   Bell,
+  CalendarCheck2,
   CheckCircle2,
   ChevronDown,
   Clock3,
   CreditCard,
   HandPlatter,
+  Table2,
   LogOut,
   Menu,
   ReceiptText,
@@ -13,6 +15,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
+import { reservationApi } from '../../api/reservationApi';
 import { serviceRequestApi } from '../../api/serviceRequestApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
@@ -28,6 +31,13 @@ import {
   serviceRequestWaitLabel,
   unwrapServiceRequestList,
 } from '../../utils/serviceRequests';
+import {
+  canCheckIn,
+  currentLocalDate,
+  reservationData,
+  reservationStatus,
+  reservationTime,
+} from '../../utils/reservations';
 import {
   orderCreatedAt,
   orderGroup,
@@ -62,6 +72,7 @@ const NOTIFICATION_TABS = [
   ['ALL', 'Tất cả'],
   ['ORDER', 'Đơn hàng'],
   ['REQUEST', 'Yêu cầu tại bàn'],
+  ['RESERVATION', 'Đặt bàn'],
 ];
 
 function orderNotificationTime(order) {
@@ -84,18 +95,29 @@ function orderNotificationGroup(order) {
   return orderGroup(order);
 }
 
+function reservationArrivalLabel(value) {
+  if (!value) return 'Chưa rõ giờ đến';
+  const arrival = new Date(value).getTime();
+  if (!Number.isFinite(arrival)) return 'Chưa rõ giờ đến';
+  const diffMinutes = Math.round((arrival - Date.now()) / 60000);
+  if (diffMinutes > 0) return diffMinutes < 60 ? `Còn ${diffMinutes} phút` : `Lúc ${reservationTime(value)}`;
+  if (diffMinutes >= -15) return `Đến lúc ${reservationTime(value)}`;
+  return `Hẹn ${reservationTime(value)}`;
+}
+
 function realtimeOrderData(event) {
   return event?.body?.data || event?.body || {};
 }
 
-export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
+export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationPolicy = {} }) {
   const { user, logout } = useAuth();
   const toast = useToast();
   const location = useLocation();
-  const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests']);
+  const event = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests', '/topic/reservations']);
   useStaffOperationalAlerts('WAITER', event);
   const [orders, setOrders] = useState([]);
   const [serviceRequests, setServiceRequests] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationTab, setNotificationTab] = useState('ALL');
   const [notificationLoading, setNotificationLoading] = useState(true);
@@ -110,12 +132,18 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
     try {
       if (!silent) setNotificationLoading(true);
       setNotificationError('');
-      const [orderResponse, serviceResponse] = await Promise.all([
+      const today = currentLocalDate();
+      const [orderResponse, serviceResponse, reservationResponse] = await Promise.all([
         orderApi.getAll(),
         serviceRequestApi.list('ACTIVE'),
+        reservationApi.list({ from: today, to: today, page: 0, size: 100 }),
       ]);
+      const reservationPayload = reservationData(reservationResponse);
       setOrders(unwrapList(orderResponse));
       setServiceRequests(unwrapServiceRequestList(serviceResponse));
+      setReservations(Array.isArray(reservationPayload)
+        ? reservationPayload
+        : Array.isArray(reservationPayload?.content) ? reservationPayload.content : []);
     } catch {
       setNotificationError('Không thể tải thông báo.');
     } finally {
@@ -125,7 +153,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
 
   useEffect(() => { loadNotifications(); }, [loadNotifications]);
   useEffect(() => {
-    if (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen' || event?.topic === '/topic/service-requests') {
+    if (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen' || event?.topic === '/topic/service-requests' || event?.topic === '/topic/reservations') {
       loadNotifications({ silent: true });
     }
 
@@ -215,10 +243,39 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
         to: '/waiter/requests',
       }));
 
-    return [...orderNotifications, ...requestNotifications]
+    const now = Date.now();
+    const upcomingLimit = now + (60 * 60 * 1000);
+    const checkInEarlyMinutes = Math.max(Number(reservationPolicy?.checkInEarlyMinutes) || 30, 0);
+    const noShowGraceMinutes = Math.max(Number(reservationPolicy?.noShowGraceMinutes) || 15, 0);
+    const reservationNotifications = reservations
+      .map((item) => {
+        const status = reservationStatus(item);
+        const arrival = new Date(item?.ngayGioDen).getTime();
+        const canCheckInNow = canCheckIn(item, checkInEarlyMinutes, noShowGraceMinutes, now);
+        const needsTable = status === 'KHACH_DA_DEN';
+        const isUpcoming = status === 'DA_XAC_NHAN' && Number.isFinite(arrival) && arrival >= now && arrival <= upcomingLimit;
+        if (!canCheckInNow && !needsTable && !isUpcoming) return null;
+        const code = item?.maTraCuu || `#${item?.maDatBan || ''}`;
+        const guest = item?.hoTenKhach || 'Khách đặt bàn';
+        const provisionalTable = item?.tenBanDuKien || 'chưa có bàn dự kiến';
+        return {
+          id: `reservation-${item?.maDatBan || code}`,
+          type: 'RESERVATION',
+          tone: needsTable ? 'purple' : canCheckInNow ? 'green' : 'blue',
+          icon: needsTable ? Table2 : CalendarCheck2,
+          title: needsTable ? `Cần xếp bàn · ${guest}` : canCheckInNow ? `Khách có thể check-in · ${guest}` : `Khách đặt bàn sắp đến · ${guest}`,
+          description: `${code} · ${provisionalTable}.`,
+          time: item?.ngayGioDen,
+          timeLabel: reservationArrivalLabel(item?.ngayGioDen),
+          to: '/waiter/reservations',
+        };
+      })
+      .filter(Boolean);
+
+    return [...orderNotifications, ...requestNotifications, ...reservationNotifications]
       .filter((item) => notificationTab === 'ALL' || item.type === notificationTab)
       .sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
-  }, [notificationTab, orders, serviceRequests]);
+  }, [notificationTab, orders, reservationPolicy?.checkInEarlyMinutes, reservationPolicy?.noShowGraceMinutes, reservations, serviceRequests]);
 
   const orderCount = useMemo(
     () => orders.filter((order) => ORDER_NOTIFICATION_META[orderNotificationGroup(order)]).length,
@@ -232,7 +289,16 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
     () => serviceRequests.filter((item) => ['MOI', 'DA_TIEP_NHAN'].includes(serviceRequestStatus(item))).length,
     [serviceRequests],
   );
-  const totalBadgeCount = orderCount + newServiceCount;
+  const reservationActionCount = useMemo(() => {
+    const now = Date.now();
+    const checkInEarlyMinutes = Math.max(Number(reservationPolicy?.checkInEarlyMinutes) || 30, 0);
+    const noShowGraceMinutes = Math.max(Number(reservationPolicy?.noShowGraceMinutes) || 15, 0);
+    return reservations.filter((item) => (
+      canCheckIn(item, checkInEarlyMinutes, noShowGraceMinutes, now)
+      || reservationStatus(item) === 'KHACH_DA_DEN'
+    )).length;
+  }, [reservationPolicy?.checkInEarlyMinutes, reservationPolicy?.noShowGraceMinutes, reservations]);
+  const totalBadgeCount = orderCount + newServiceCount + reservationActionCount;
   const badge = totalBadgeCount > 99 ? '99+' : String(totalBadgeCount);
 
   function toggleNotifications() {
@@ -273,7 +339,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
               <div className="waiter-notification-panel-head">
                 <div>
                   <strong>Thông báo phục vụ</strong>
-                  <small>{orderCount} việc từ đơn hàng · {activeServiceCount} yêu cầu tại bàn</small>
+                  <small>{orderCount} việc từ đơn hàng · {activeServiceCount} yêu cầu tại bàn · {reservationActionCount} việc đặt bàn</small>
                 </div>
                 <button type="button" onClick={() => loadNotifications()} disabled={notificationLoading}>Làm mới</button>
               </div>
@@ -318,6 +384,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu }) {
               <div className="waiter-notification-panel-footer">
                 <Link to="/waiter/orders" onClick={() => setNotificationOpen(false)}>Xem đơn đang phục vụ</Link>
                 <Link to="/waiter/requests" onClick={() => setNotificationOpen(false)}>Xem yêu cầu tại bàn</Link>
+                <Link to="/waiter/reservations" onClick={() => setNotificationOpen(false)}>Xem khách đặt bàn</Link>
               </div>
             </section>
           ) : null}

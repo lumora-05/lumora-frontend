@@ -79,6 +79,11 @@ const CASHIER_DEPOSIT_STATUS_LABELS = {
   DA_HUY: 'Cọc đã hủy',
 };
 
+const WAITER_DEPOSIT_STATUS_LABELS = {
+  DA_THANH_TOAN: 'Đã cọc',
+  DA_KHAU_TRU: 'Đã khấu trừ',
+};
+
 function ActionButton({ children, tone = '', ...props }) {
   return <button type="button" className={`reservation-action-button ${tone}`} {...props}>{children}</button>;
 }
@@ -289,6 +294,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       : ['/topic/reservations'];
   const canManageReservation = role === 'admin' || role === 'cashier';
   const canHandleArrival = role === 'admin' || role === 'waiter';
+  const canFilterArea = canManageReservation || role === 'waiter';
   const socketEvent = useWebSocket(topics);
   const [rows, setRows] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -354,7 +360,7 @@ export default function ReservationManagement({ role = 'admin' }) {
         from: from || undefined,
         to: to || undefined,
         keyword: keyword || undefined,
-        area: canManageReservation ? area || undefined : undefined,
+        area: canFilterArea ? area || undefined : undefined,
         page,
         size,
       });
@@ -372,7 +378,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     } finally {
       setLoading(false);
     }
-  }, [area, canManageReservation, depositStatusFilter, from, keyword, page, role, size, status, to, toast]);
+  }, [area, canFilterArea, depositStatusFilter, from, keyword, page, role, size, status, to, toast]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (socketEvent?.topic?.includes('reservations')) load(); }, [load, socketEvent]);
@@ -391,9 +397,15 @@ export default function ReservationManagement({ role = 'admin' }) {
     const upcomingLimit = now + (60 * 60 * 1000);
     return {
       total: totalElements,
-      pending: rows.filter((item) => canManageReservation
-        ? reservationNeedsCashierAttention(item) || canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, now)
-        : reservationStatus(item) === 'CHO_XAC_NHAN').length,
+      pending: rows.filter((item) => {
+        if (canManageReservation) {
+          return reservationNeedsCashierAttention(item) || canMarkNoShow(item, reservationPolicy.noShowGraceMinutes, now);
+        }
+        if (role === 'waiter') {
+          return canCheckIn(item, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, now);
+        }
+        return reservationStatus(item) === 'CHO_XAC_NHAN';
+      }).length,
       upcoming: rows.filter((item) => {
         if (reservationStatus(item) !== 'DA_XAC_NHAN') return false;
         const arrival = new Date(item?.ngayGioDen).getTime();
@@ -401,7 +413,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       }).length,
       arrived: rows.filter((item) => ['KHACH_DA_DEN', 'DA_XEP_BAN'].includes(reservationStatus(item))).length,
     };
-  }, [canManageReservation, clockTick, reservationPolicy.noShowGraceMinutes, rows, totalElements]);
+  }, [canManageReservation, clockTick, reservationPolicy.checkInEarlyMinutes, reservationPolicy.noShowGraceMinutes, role, rows, totalElements]);
 
   const range = pageDisplayRange(page, size, numberOfElements, totalElements);
   const pageItems = paginationItems(page, totalPages);
@@ -477,16 +489,16 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   return (
-    <section className={`reservation-manage-page ${role === 'cashier' ? 'cashier-reservation-page' : ''}`}>
+    <section className={`reservation-manage-page ${role === 'cashier' ? 'cashier-reservation-page' : role === 'waiter' ? 'waiter-reservation-page' : ''}`}>
       <div className="reservation-manage-stats">
         <article><span className="orange"><CalendarCheck2 size={22} /></span><p>Tổng lịch theo bộ lọc<strong>{stats.total}</strong></p></article>
-        <article><span className="warning"><Clock3 size={22} /></span><p>{canManageReservation ? 'Cần xử lý trên trang' : 'Chờ xác nhận trên trang'}<strong>{stats.pending}</strong></p></article>
-        <article><span className="blue"><CalendarClock size={22} /></span><p>{role === 'cashier' ? 'Sắp đến trong 60 phút' : 'Sắp đến trên trang'}<strong>{stats.upcoming}</strong></p></article>
+        <article><span className="warning"><Clock3 size={22} /></span><p>{canManageReservation ? 'Cần xử lý trên trang' : role === 'waiter' ? 'Cần check-in' : 'Chờ xác nhận trên trang'}<strong>{stats.pending}</strong></p></article>
+        <article><span className="blue"><CalendarClock size={22} /></span><p>{['cashier', 'waiter'].includes(role) ? 'Sắp đến trong 60 phút' : 'Sắp đến trên trang'}<strong>{stats.upcoming}</strong></p></article>
         <article><span className="green"><UserCheck size={22} /></span><p>Đã đến/xếp bàn<strong>{stats.arrived}</strong></p></article>
       </div>
 
       <div className="reservation-manage-card">
-        <div className={`reservation-manage-toolbar ${role === 'cashier' ? 'cashier-reservation-toolbar' : ''}`}>
+        <div className={`reservation-manage-toolbar ${role === 'cashier' ? 'cashier-reservation-toolbar' : role === 'waiter' ? 'waiter-reservation-toolbar' : ''}`}>
           {role === 'cashier' ? (
             <>
               <label className="cashier-reservation-filter-field">
@@ -518,6 +530,35 @@ export default function ReservationManagement({ role = 'admin' }) {
                 <div><Search size={16} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, SĐT..." /><button type="submit">Tìm</button></div>
               </form>
               <div className="cashier-reservation-toolbar-actions">
+                <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
+                <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
+              </div>
+            </>
+          ) : role === 'waiter' ? (
+            <>
+              <label className="waiter-reservation-filter-field">
+                <span>Trạng thái đặt bàn</span>
+                <select value={status} aria-label="Trạng thái đặt bàn" onChange={(e) => { setStatus(e.target.value); setPage(0); }}>
+                  {STATUS_OPTIONS.map(([value, label], index) => <option key={value || 'all'} value={value}>{index === 0 ? 'Tất cả' : label}</option>)}
+                </select>
+              </label>
+              <label className="waiter-reservation-filter-field waiter-reservation-date-filter">
+                <span>Từ ngày</span>
+                <div><CalendarDays size={15} /><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></div>
+              </label>
+              <label className="waiter-reservation-filter-field waiter-reservation-date-filter">
+                <span>Đến ngày</span>
+                <div><CalendarDays size={15} /><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></div>
+              </label>
+              <label className="waiter-reservation-filter-field">
+                <span>Khu vực</span>
+                <div><MapPin size={15} /><select value={area} onChange={(e) => { setArea(e.target.value); setPage(0); }}><option value="">Tất cả khu vực</option>{areas.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+              </label>
+              <form className="waiter-reservation-search" onSubmit={(event) => { event.preventDefault(); setKeyword(keywordInput.trim()); setPage(0); }}>
+                <span>Tìm kiếm</span>
+                <div><Search size={16} /><input value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} placeholder="Mã, tên khách, SĐT..." /><button type="submit">Tìm</button></div>
+              </form>
+              <div className="waiter-reservation-toolbar-actions">
                 <button type="button" className="reservation-refresh" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={17} /> Tải lại</button>
                 <button type="button" className="reservation-reset" onClick={resetFilters}>Đặt lại</button>
               </div>
@@ -578,7 +619,11 @@ export default function ReservationManagement({ role = 'admin' }) {
                       ) : (
                         <td>
                           <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
-                          {depositStatus ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label} · {formatReservationMoney(item?.tienCoc)}</small> : null}
+                          {role === 'waiter' && WAITER_DEPOSIT_STATUS_LABELS[depositStatus]
+                            ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {WAITER_DEPOSIT_STATUS_LABELS[depositStatus]}</small>
+                            : role !== 'waiter' && depositStatus
+                              ? <small className={`reservation-deposit-mini ${depositMeta.tone}`}><CreditCard size={12} /> {depositMeta.label} · {formatReservationMoney(item?.tienCoc)}</small>
+                              : null}
                           {preorderChangedAfterApproval ? (
                             <>
                               <small className="reservation-preorder-reapproval"><AlertTriangle size={12} /> Khách vừa thay đổi món · cần duyệt lại</small>
