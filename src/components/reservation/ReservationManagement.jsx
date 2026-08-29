@@ -139,19 +139,17 @@ function ReasonModal({ action, item, reason, setReason, busy, onSubmit, onClose 
   );
 }
 
-function DepositActionModal({ action, item, transactionCode, setTransactionCode, reason, setReason, busy, onSubmit, onClose }) {
+function DepositActionModal({ action, item, reason, setReason, busy, onSubmit, onClose }) {
   const confirming = action === 'deposit-confirm';
   const meta = reservationDepositStatusMeta(item);
   return (
     <section className="reservation-manage-modal reservation-deposit-modal" role="dialog" aria-modal="true">
       <header><div><span>{confirming ? 'XÁC NHẬN TIỀN CỌC' : 'GHI NHẬN HOÀN CỌC'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{formatReservationMoney(item?.tienCoc)} · {meta.label}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
       <div className={`reservation-deposit-action-alert ${confirming ? 'confirm' : 'refund'}`}><CreditCard size={21} /><p>{confirming ? 'Chỉ xác nhận sau khi đã kiểm tra tiền thực sự vào tài khoản nhà hàng. Sau bước này mới được xác nhận và giữ bàn cho khách.' : 'Chỉ ghi nhận hoàn cọc sau khi nhà hàng đã thực sự chuyển tiền lại cho khách.'}</p></div>
-      {confirming ? (
-        <label className="reservation-modal-field">Mã giao dịch ngân hàng<input autoFocus maxLength="100" value={transactionCode} onChange={(e) => setTransactionCode(e.target.value)} placeholder="Ví dụ: FT260828123456" /></label>
-      ) : (
+      {!confirming ? (
         <label className="reservation-modal-field">Ghi chú hoàn cọc<textarea autoFocus rows="4" maxLength="500" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: Đã hoàn cọc qua chuyển khoản" /></label>
-      )}
-      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || (confirming ? transactionCode.trim().length < 4 : !reason.trim())}>{busy ? <LoaderCircle className="spin" size={17} /> : confirming ? <CheckCircle2 size={17} /> : <ReceiptText size={17} />}{confirming ? 'Xác nhận đã nhận cọc' : 'Xác nhận đã hoàn cọc'}</button></footer>
+      ) : null}
+      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || (!confirming && !reason.trim())}>{busy ? <LoaderCircle className="spin" size={17} /> : confirming ? <CheckCircle2 size={17} /> : <ReceiptText size={17} />}{confirming ? 'Xác nhận đã nhận cọc' : 'Xác nhận đã hoàn cọc'}</button></footer>
     </section>
   );
 }
@@ -207,7 +205,6 @@ export default function ReservationManagement({ role = 'admin' }) {
   const [selectedTable, setSelectedTable] = useState('');
   const [note, setNote] = useState('');
   const [reason, setReason] = useState('');
-  const [transactionCode, setTransactionCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [clockTick, setClockTick] = useState(Date.now());
 
@@ -324,7 +321,6 @@ export default function ReservationManagement({ role = 'admin' }) {
     setSelectedTable(action === 'confirm' ? item?.maBanDuKien || '' : action === 'assign' ? '' : item?.maBanThucTe || item?.maBanDuKien || '');
     setNote('');
     setReason('');
-    setTransactionCode('');
     setModal({ action, item });
     if (['confirm', 'assign'].includes(action)) loadAvailableTables(item);
   }
@@ -336,7 +332,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     try {
       setBusy(true);
       let response;
-      if (action === 'deposit-confirm') response = await reservationApi.confirmDeposit(id, transactionCode.trim());
+      if (action === 'deposit-confirm') response = await reservationApi.confirmDeposit(id);
       if (action === 'deposit-refund') response = await reservationApi.refundDeposit(id, reason.trim());
       if (action === 'confirm') response = await reservationApi.confirm(id, { maBanDuKien: Number(selectedTable), ghiChu: note.trim() || null });
       if (action === 'assign') response = await reservationApi.assignTable(id, Number(selectedTable));
@@ -450,7 +446,7 @@ export default function ReservationManagement({ role = 'admin' }) {
           {detail ? <DetailModal item={detail} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onClose={() => setDetail(null)} /> : null}
           {modal && ['confirm', 'assign'].includes(modal.action) ? <TableSelectModal action={modal.action} item={modal.item} tables={tables} loadingTables={loadingTables} selectedTable={selectedTable} setSelectedTable={setSelectedTable} note={note} setNote={setNote} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['reject', 'cancel'].includes(modal.action) ? <ReasonModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
-          {modal && ['deposit-confirm', 'deposit-refund'].includes(modal.action) ? <DepositActionModal action={modal.action} item={modal.item} transactionCode={transactionCode} setTransactionCode={setTransactionCode} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
+          {modal && ['deposit-confirm', 'deposit-refund'].includes(modal.action) ? <DepositActionModal action={modal.action} item={modal.item} reason={reason} setReason={setReason} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal && ['check-in', 'no-show'].includes(modal.action) ? <SimpleConfirmModal action={modal.action} item={modal.item} busy={busy} onSubmit={submitAction} onClose={() => setModal(null)} /> : null}
           {modal?.action === 'preorder' ? <StaffReservationPreorderModal item={modal.item} role={role} onClose={() => setModal(null)} onUpdated={load} /> : null}
         </div>,
