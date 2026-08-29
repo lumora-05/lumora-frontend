@@ -24,14 +24,27 @@ const items = [
 ];
 
 const pageMeta = {
-  '/cashier/delivery-orders': ['Đơn hàng trực tuyến', 'Tiếp nhận và theo dõi các đơn hàng đặt trực tuyến.'],
-  '/cashier/reservations': ['Đặt bàn', 'Tiếp nhận, xác nhận và quản lý yêu cầu đặt bàn trực tuyến.'],
-  '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu các giao dịch và thanh toán đã phát sinh.'],
-  '/cashier/reports': ['Báo cáo', 'Theo dõi số liệu và kết quả hoạt động.'],
-  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi thanh toán, đơn hàng trực tuyến và đặt bàn cần xử lý.'],
-  '/cashier/account': ['Tài khoản', 'Quản lý thông tin tài khoản cá nhân.'],
-  '/cashier': ['Thanh toán', 'Theo dõi và xử lý các yêu cầu thanh toán của khách.'],
+  payment: ['Thanh toán', 'Theo dõi và xử lý các yêu cầu thanh toán của khách.'],
+  delivery: ['Đơn hàng trực tuyến', 'Tiếp nhận và theo dõi các đơn hàng đặt trực tuyến.'],
+  reservations: ['Đặt bàn', 'Tiếp nhận, xác nhận và quản lý yêu cầu đặt bàn trực tuyến.'],
+  history: ['Lịch sử giao dịch', 'Tra cứu các giao dịch và thanh toán đã phát sinh.'],
+  reports: ['Báo cáo', 'Theo dõi số liệu và kết quả hoạt động.'],
+  notifications: ['Thông báo thu ngân', 'Theo dõi thanh toán, đơn hàng trực tuyến và đặt bàn cần xử lý.'],
+  account: ['Tài khoản', 'Quản lý thông tin tài khoản cá nhân.'],
 };
+
+function cashierPageMeta(pathname) {
+  const path = String(pathname || '').replace(/\/+$/, '') || '/cashier';
+
+  // Match từng route cụ thể trước. Route gốc /cashier chỉ dùng cho trang Thanh toán.
+  if (path === '/cashier/delivery-orders' || path.startsWith('/cashier/delivery-orders/')) return pageMeta.delivery;
+  if (path === '/cashier/reservations' || path.startsWith('/cashier/reservations/')) return pageMeta.reservations;
+  if (path === '/cashier/history' || path.startsWith('/cashier/history/')) return pageMeta.history;
+  if (path === '/cashier/reports' || path.startsWith('/cashier/reports/')) return pageMeta.reports;
+  if (path === '/cashier/notifications' || path.startsWith('/cashier/notifications/')) return pageMeta.notifications;
+  if (path === '/cashier/account' || path.startsWith('/cashier/account/')) return pageMeta.account;
+  return pageMeta.payment;
+}
 
 function isDeliveryRealtimeEvent(event) {
   const type = String(event?.body?.type || '').toUpperCase();
@@ -133,8 +146,7 @@ export default function CashierLayout() {
       subtitle = 'Kiểm tra món ăn và tổng tiền của bàn';
     }
   } else {
-    const key = Object.keys(pageMeta).find((path) => path !== '/cashier' && location.pathname.startsWith(path)) || '/cashier';
-    [title, subtitle] = pageMeta[key];
+    [title, subtitle] = cashierPageMeta(location.pathname);
   }
 
   return (
