@@ -295,7 +295,7 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
 }
 
 
-function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, onCopy, onClose }) {
+function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, onCopy, onClose, embedded = false }) {
   const [now, setNow] = useState(Date.now());
   const depositStatus = reservationDepositStatus(item);
   const pending = depositStatus === 'CHO_THANH_TOAN';
@@ -319,65 +319,66 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, on
       ? 'Đã hết thời hạn thanh toán'
       : `Còn ${String(Math.floor(remainingMs / 60000)).padStart(2, '0')}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')} để thanh toán`;
 
-  return (
-    <div className="reservation-deposit-payment-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="reservation-deposit-payment-modal" role="dialog" aria-modal="true" aria-label="Thanh toán cọc giữ bàn">
-        <button type="button" className="reservation-deposit-payment-close" onClick={onClose} aria-label="Đóng"><X size={20} /></button>
+  const modal = (
+    <section className="reservation-deposit-payment-modal" role="dialog" aria-modal="true" aria-label="Thanh toán cọc giữ bàn">
+      <button type="button" className="reservation-deposit-payment-close" onClick={onClose} aria-label="Đóng"><X size={20} /></button>
 
-        {paid ? (
-          <div className="reservation-deposit-payment-success">
-            <span><Check size={28} /></span>
-            <h3>Đã xác nhận tiền cọc</h3>
-            <p>Nhà hàng đã ghi nhận khoản cọc <b>{formatReservationMoney(item?.tienCoc)}</b>. Lịch đặt bàn đang tiếp tục được xử lý.</p>
-            <button type="button" onClick={onClose}>Xem chi tiết lịch</button>
+      {paid ? (
+        <div className="reservation-deposit-payment-success">
+          <span><Check size={28} /></span>
+          <h3>Đã xác nhận tiền cọc</h3>
+          <p>Nhà hàng đã ghi nhận khoản cọc <b>{formatReservationMoney(item?.tienCoc)}</b>. Lịch đặt bàn đang tiếp tục được xử lý.</p>
+          <button type="button" onClick={onClose}>Xem chi tiết lịch</button>
+        </div>
+      ) : (
+        <>
+          <header>
+            <span><QrCode size={22} /></span>
+            <div><h3>Thanh toán cọc giữ bàn</h3><p>Lịch <b>{item?.maTraCuu}</b> chỉ được nhà hàng xác nhận sau khi nhận được tiền cọc.</p></div>
+          </header>
+
+          <div className="reservation-deposit-payment-amount">
+            <span>Số tiền cần cọc</span>
+            <strong>{formatReservationMoney(item?.tienCoc)}</strong>
+            {countdown ? <em className={remainingMs === 0 ? 'expired' : ''}><Clock3 size={15} /> {countdown}</em> : null}
           </div>
-        ) : (
-          <>
-            <header>
-              <span><QrCode size={22} /></span>
-              <div><h3>Thanh toán cọc giữ bàn</h3><p>Lịch <b>{item?.maTraCuu}</b> chỉ được nhà hàng xác nhận sau khi nhận được tiền cọc.</p></div>
-            </header>
 
-            <div className="reservation-deposit-payment-amount">
-              <span>Số tiền cần cọc</span>
-              <strong>{formatReservationMoney(item?.tienCoc)}</strong>
-              {countdown ? <em className={remainingMs === 0 ? 'expired' : ''}><Clock3 size={15} /> {countdown}</em> : null}
+          {pending && qr ? (
+            <div className="reservation-deposit-payment-content">
+              <div className="reservation-deposit-payment-qr"><img src={qr.qrUrl} alt={`VietQR cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
+              <div className="reservation-deposit-payment-bank">
+                <p><span>Ngân hàng</span><strong>{qr.bankName || qr.bankId || '—'}</strong></p>
+                <p><span>Số tài khoản</span><strong>{qr.accountNo || '—'}</strong>{qr.accountNo ? <button type="button" onClick={() => onCopy(qr.accountNo, 'số tài khoản')}><Copy size={14} /> Sao chép</button> : null}</p>
+                <p><span>Chủ tài khoản</span><strong>{qr.accountName || '—'}</strong></p>
+                <p className="wide"><span>Nội dung chuyển khoản</span><strong>{qr.addInfo || '—'}</strong>{qr.addInfo ? <button type="button" onClick={() => onCopy(qr.addInfo, 'nội dung chuyển khoản')}><Copy size={14} /> Sao chép</button> : null}</p>
+                <p className="wide amount"><span>Số tiền</span><strong>{formatReservationMoney(qr.amount ?? item?.tienCoc)}</strong></p>
+              </div>
             </div>
+          ) : pending ? (
+            <div className="reservation-deposit-payment-loading">
+              {loading ? <LoaderCircle className="spin" size={28} /> : <QrCode size={30} />}
+              <div><strong>{loading ? 'Đang tải mã VietQR...' : 'Chưa thể hiển thị VietQR'}</strong><p>{error || 'Vui lòng thử tải lại mã thanh toán.'}</p></div>
+              {!loading ? <button type="button" onClick={onLoadQr}><RefreshCw size={16} /> Tải lại VietQR</button> : null}
+            </div>
+          ) : (
+            <div className="reservation-deposit-payment-loading">
+              <ShieldCheck size={30} />
+              <div><strong>Trạng thái cọc đã thay đổi</strong><p>Vui lòng kiểm tra chi tiết lịch đặt bàn.</p></div>
+            </div>
+          )}
 
-            {pending && qr ? (
-              <div className="reservation-deposit-payment-content">
-                <div className="reservation-deposit-payment-qr"><img src={qr.qrUrl} alt={`VietQR cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
-                <div className="reservation-deposit-payment-bank">
-                  <p><span>Ngân hàng</span><strong>{qr.bankName || qr.bankId || '—'}</strong></p>
-                  <p><span>Số tài khoản</span><strong>{qr.accountNo || '—'}</strong>{qr.accountNo ? <button type="button" onClick={() => onCopy(qr.accountNo, 'số tài khoản')}><Copy size={14} /> Sao chép</button> : null}</p>
-                  <p><span>Chủ tài khoản</span><strong>{qr.accountName || '—'}</strong></p>
-                  <p className="wide"><span>Nội dung chuyển khoản</span><strong>{qr.addInfo || '—'}</strong>{qr.addInfo ? <button type="button" onClick={() => onCopy(qr.addInfo, 'nội dung chuyển khoản')}><Copy size={14} /> Sao chép</button> : null}</p>
-                  <p className="wide amount"><span>Số tiền</span><strong>{formatReservationMoney(qr.amount ?? item?.tienCoc)}</strong></p>
-                </div>
-              </div>
-            ) : pending ? (
-              <div className="reservation-deposit-payment-loading">
-                {loading ? <LoaderCircle className="spin" size={28} /> : <QrCode size={30} />}
-                <div><strong>{loading ? 'Đang tải mã VietQR...' : 'Chưa thể hiển thị VietQR'}</strong><p>{error || 'Vui lòng thử tải lại mã thanh toán.'}</p></div>
-                {!loading ? <button type="button" onClick={onLoadQr}><RefreshCw size={16} /> Tải lại VietQR</button> : null}
-              </div>
-            ) : (
-              <div className="reservation-deposit-payment-loading">
-                <ShieldCheck size={30} />
-                <div><strong>Trạng thái cọc đã thay đổi</strong><p>Vui lòng kiểm tra chi tiết lịch đặt bàn.</p></div>
-              </div>
-            )}
-
-            <div className="reservation-deposit-payment-note"><ShieldCheck size={17} /><p>Chuyển khoản đúng <b>số tiền</b> và <b>nội dung</b> hiển thị. Sau khi chuyển, bấm “Kiểm tra thanh toán”. Khách không thể tự đánh dấu đã thanh toán.</p></div>
-            <footer>
-              <button type="button" className="secondary" onClick={onClose}>Xem chi tiết lịch</button>
-              <button type="button" className="primary" onClick={onRefresh} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={16} /> Kiểm tra thanh toán</button>
-            </footer>
-          </>
-        )}
-      </section>
-    </div>
+          <div className="reservation-deposit-payment-note"><ShieldCheck size={17} /><p>Chuyển khoản đúng <b>số tiền</b> và <b>nội dung</b> hiển thị. Sau khi chuyển, bấm “Kiểm tra thanh toán”. Khách không thể tự đánh dấu đã thanh toán.</p></div>
+          <footer>
+            <button type="button" className="secondary" onClick={onClose}>Xem chi tiết lịch</button>
+            <button type="button" className="primary" onClick={onRefresh} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={16} /> Kiểm tra thanh toán</button>
+          </footer>
+        </>
+      )}
+    </section>
   );
+
+  if (embedded) return modal;
+  return <div className="reservation-deposit-payment-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>{modal}</div>;
 }
 
 function ReservationDepositPrompt({ item, onPay }) {
@@ -466,6 +467,7 @@ export default function PublicReservation() {
   const [draftPreorder, setDraftPreorder] = useState(null);
   const [preorderDraftOpen, setPreorderDraftOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewStep, setReviewStep] = useState('review');
   const [depositQr, setDepositQr] = useState(null);
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositError, setDepositError] = useState('');
@@ -698,10 +700,14 @@ export default function PublicReservation() {
       setLookup({ query: code, code, phone });
       setLookupResults(data ? [data] : []);
       setEditing(false);
-      setReviewOpen(false);
       setMode('lookup');
       if (!editing && reservationDepositStatus(data) === 'CHO_THANH_TOAN') {
-        setDepositPaymentOpen(true);
+        setReviewStep('payment');
+        setReviewOpen(true);
+        setDepositPaymentOpen(false);
+      } else {
+        setReviewOpen(false);
+        setReviewStep('review');
       }
 
       if (preorderError) {
@@ -731,6 +737,7 @@ export default function PublicReservation() {
         setPreorderDraftOpen(true);
         return;
       }
+      setReviewStep('review');
       setReviewOpen(true);
       return;
     }
@@ -947,29 +954,51 @@ export default function PublicReservation() {
       ) : null}
 
       {reviewOpen ? (
-        <div className="reservation-cancel-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !submitting && setReviewOpen(false)}>
-          <section className="reservation-public-review-modal" role="dialog" aria-modal="true">
-            <header><span><CalendarCheck2 size={22} /></span><div><h3>Xác nhận đặt bàn</h3><p>Kiểm tra thông tin trước khi gửi cho nhà hàng.</p></div></header>
-            <div className="reservation-public-review-grid">
-              <p><span>Khách hàng</span><strong>{form.hoTenKhach}</strong></p>
-              <p><span>Số điện thoại</span><strong>{form.soDienThoai}</strong></p>
-              <p><span>Ngày giờ đến</span><strong>{reservationDateTime(form.ngayGioDen)}</strong></p>
-              <p><span>Số khách</span><strong>{form.soLuongKhach} người</strong></p>
-              <p><span>Khu vực</span><strong>{form.khuVucMongMuon || 'Nhà hàng tự sắp xếp'}</strong></p>
-              <p><span>Thời lượng</span><strong>{form.thoiLuongPhut} phút</strong></p>
-            </div>
-            {form.ghiChu ? <div className="reservation-public-review-note"><b>Ghi chú đặt bàn:</b> {form.ghiChu}</div> : null}
-            <div className="reservation-public-review-preorder">
-              <div><h4>Món đặt trước</h4><strong>{preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? formatMoney(draftPreorder.tongTienDuKien || 0) : 'Không đặt món trước'}</strong></div>
-              {preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? (
-                <div className="reservation-public-review-items">
-                  {draftPreorder.items.map((item) => <p key={item.maMonAn}><span>{item.tenMonAn} ×{item.soLuong}</span><b>{formatMoney(item.thanhTien || 0)}</b></p>)}
-                </div>
-              ) : <p className="reservation-public-review-empty">Bạn chỉ đặt bàn. Có thể chọn món trước sau trong phần tra cứu khi lịch vẫn còn cho phép.</p>}
-            </div>
-            <div className="reservation-public-review-deposit"><CreditCard size={18} /><div><span>Tiền cọc giữ bàn</span><strong>{formatReservationMoney(reservationPolicy.depositAmount)}</strong><p>Sau khi tạo lịch, vui lòng thanh toán trong {reservationPolicy.depositPaymentTimeoutMinutes} phút. Hủy trước giờ đến ít nhất {reservationPolicy.depositRefundAdvanceMinutes} phút sẽ đủ điều kiện chờ hoàn cọc; hủy sát giờ hoặc không đến sẽ mất cọc.</p></div></div>
-            <footer><button type="button" onClick={() => setReviewOpen(false)} disabled={submitting}>Quay lại</button><button type="button" className="primary" onClick={persistReservation} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={17} /> : <CalendarCheck2 size={17} />} Xác nhận &amp; thanh toán cọc</button></footer>
-          </section>
+        <div
+          className="reservation-cancel-backdrop reservation-booking-flow-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !submitting) {
+              setReviewOpen(false);
+              setReviewStep('review');
+            }
+          }}
+        >
+          {reviewStep === 'payment' && reservation ? (
+            <DepositPaymentModal
+              embedded
+              item={reservation}
+              qr={depositQr}
+              loading={depositLoading || searching}
+              error={depositError}
+              onLoadQr={() => loadDepositQr(false)}
+              onRefresh={() => refreshSelectedReservation(false)}
+              onCopy={copyDepositValue}
+              onClose={() => { setReviewOpen(false); setReviewStep('review'); }}
+            />
+          ) : (
+            <section className="reservation-public-review-modal" role="dialog" aria-modal="true">
+              <header><span><CalendarCheck2 size={22} /></span><div><h3>Xác nhận đặt bàn</h3><p>Kiểm tra thông tin trước khi gửi cho nhà hàng.</p></div></header>
+              <div className="reservation-public-review-grid">
+                <p><span>Khách hàng</span><strong>{form.hoTenKhach}</strong></p>
+                <p><span>Số điện thoại</span><strong>{form.soDienThoai}</strong></p>
+                <p><span>Ngày giờ đến</span><strong>{reservationDateTime(form.ngayGioDen)}</strong></p>
+                <p><span>Số khách</span><strong>{form.soLuongKhach} người</strong></p>
+                <p><span>Khu vực</span><strong>{form.khuVucMongMuon || 'Nhà hàng tự sắp xếp'}</strong></p>
+                <p><span>Thời lượng</span><strong>{form.thoiLuongPhut} phút</strong></p>
+              </div>
+              {form.ghiChu ? <div className="reservation-public-review-note"><b>Ghi chú đặt bàn:</b> {form.ghiChu}</div> : null}
+              <div className="reservation-public-review-preorder">
+                <div><h4>Món đặt trước</h4><strong>{preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? formatMoney(draftPreorder.tongTienDuKien || 0) : 'Không đặt món trước'}</strong></div>
+                {preorderChoice === 'PREORDER' && draftPreorder?.items?.length ? (
+                  <div className="reservation-public-review-items">
+                    {draftPreorder.items.map((item) => <p key={item.maMonAn}><span>{item.tenMonAn} ×{item.soLuong}</span><b>{formatMoney(item.thanhTien || 0)}</b></p>)}
+                  </div>
+                ) : <p className="reservation-public-review-empty">Bạn chỉ đặt bàn. Có thể chọn món trước sau trong phần tra cứu khi lịch vẫn còn cho phép.</p>}
+              </div>
+              <div className="reservation-public-review-deposit"><CreditCard size={18} /><div><span>Tiền cọc giữ bàn</span><strong>{formatReservationMoney(reservationPolicy.depositAmount)}</strong><p>Sau khi tạo lịch, vui lòng thanh toán trong {reservationPolicy.depositPaymentTimeoutMinutes} phút. Hủy trước giờ đến ít nhất {reservationPolicy.depositRefundAdvanceMinutes} phút sẽ đủ điều kiện chờ hoàn cọc; hủy sát giờ hoặc không đến sẽ mất cọc.</p></div></div>
+              <footer><button type="button" onClick={() => { setReviewOpen(false); setReviewStep('review'); }} disabled={submitting}>Quay lại</button><button type="button" className="primary" onClick={persistReservation} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={17} /> : <CalendarCheck2 size={17} />} {submitting ? 'Đang tạo lịch...' : 'Xác nhận & thanh toán cọc'}</button></footer>
+            </section>
+          )}
         </div>
       ) : null}
 
