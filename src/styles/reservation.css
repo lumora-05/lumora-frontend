@@ -174,6 +174,18 @@
 .cashier-reservation-page .reservation-manage-table th:nth-last-child(3),.cashier-reservation-page .reservation-manage-table th:nth-last-child(2){white-space:nowrap}
 .cashier-reservation-page .reservation-row-actions{min-width:120px}
 
+/* Slightly larger typography for cashier reservation table readability. */
+.cashier-reservation-page .reservation-manage-table th{font-size:10px;line-height:1.25}
+.cashier-reservation-page .reservation-manage-table td{font-size:11px;line-height:1.4}
+.cashier-reservation-page .reservation-manage-table td strong,.cashier-reservation-page .reservation-manage-table td b{font-size:12px;line-height:1.35}
+.cashier-reservation-page .reservation-manage-table td small{font-size:10px;line-height:1.35}
+.cashier-reservation-page .reservation-manage-table td em{font-size:9px;line-height:1.3}
+.cashier-reservation-page .reservation-status-badge{font-size:10px}
+.cashier-reservation-page .reservation-deposit-mini{font-size:8px!important}
+.cashier-reservation-page .reservation-preorder-mini{font-size:8px!important}
+.cashier-reservation-page .reservation-action-button{font-size:9px}
+.cashier-reservation-page .reservation-deposit-amount,.cashier-reservation-page .reservation-deposit-zero{font-size:10px!important}
+
 @media(max-width:1500px){
   .cashier-reservation-toolbar{grid-template-columns:repeat(5,minmax(125px,1fr));align-items:end}
   .cashier-reservation-search{grid-column:span 3}.cashier-reservation-toolbar-actions{grid-column:span 2;justify-content:flex-end}
