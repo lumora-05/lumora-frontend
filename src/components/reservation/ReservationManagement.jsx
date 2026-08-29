@@ -148,7 +148,6 @@ function DepositActionModal({ action, item, reason, setReason, busy, onSubmit, o
         <>
           <header className="reservation-deposit-confirm-header">
             <div>
-              <span>XÁC NHẬN TIỀN CỌC</span>
               <h2>Xác nhận tiền cọc</h2>
               <h3>{item?.maTraCuu} · {item?.hoTenKhach}</h3>
               <div className="reservation-deposit-confirm-badges">
