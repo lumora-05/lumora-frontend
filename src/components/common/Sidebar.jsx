@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { AlertTriangle, BarChart3, Bell, BellRing, Bike, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, Star, Table2, Tags, Users, Utensils } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bell, BellRing, Bike, Boxes, CalendarCheck2, ChefHat, ClipboardList, CreditCard, Gift, Grid2X2, History, Home, LogOut, Printer, QrCode, ReceiptText, Settings, ShoppingBag, Star, Table2, Tags, Users, Utensils } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const iconMap = {
@@ -28,6 +28,7 @@ const iconMap = {
   receipt: ReceiptText,
   reservation: CalendarCheck2,
   delivery: Bike,
+  onlineOrder: ShoppingBag,
 };
 
 export default function Sidebar({ title, items, logoUrl = '', restaurantName = 'LUMORA' }) {

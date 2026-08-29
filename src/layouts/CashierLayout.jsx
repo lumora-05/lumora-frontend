@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Bike, CalendarCheck2, History, ReceiptText, UserRound, X } from 'lucide-react';
+import { Bell, CalendarCheck2, History, ReceiptText, ShoppingBag, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import CashierHeader from '../components/common/CashierHeader';
@@ -16,7 +16,7 @@ import { currentLocalDate, reservationPreorderNeedsReview, reservationStatus } f
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
-  { to: '/cashier/delivery-orders', label: 'Đơn hàng trực tuyến', icon: 'delivery', mobileIcon: Bike },
+  { to: '/cashier/delivery-orders', label: 'Đơn hàng trực tuyến', icon: 'onlineOrder', mobileIcon: ShoppingBag },
   { to: '/cashier/reservations', label: 'Đặt bàn', icon: 'reservation', mobileIcon: CalendarCheck2 },
   { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },
   { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
