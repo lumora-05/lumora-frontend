@@ -85,39 +85,98 @@ function ActionButton({ children, tone = '', ...props }) {
 
 function DetailModal({ item, onClose, defaultDurationMinutes = 120 }) {
   const meta = reservationStatusMeta(item);
-  const lines = [
-    ['Mã tra cứu', item?.maTraCuu],
+  const depositMeta = reservationDepositStatusMeta(item);
+  const depositAmount = Number(item?.tienCoc || 0);
+  const preorderCount = Number(item?.soMonDatTruoc || 0);
+
+  const bookingItems = [
     ['Khách hàng', item?.hoTenKhach],
     ['Số điện thoại', item?.soDienThoai],
     ['Ngày giờ đến', reservationDateTime(item?.ngayGioDen)],
     ['Số lượng khách', `${item?.soLuongKhach || 0} người`],
-    ['Thời lượng', `${item?.thoiLuongPhut || defaultDurationMinutes} phút`],
     ['Khu vực mong muốn', item?.khuVucMongMuon || 'Không yêu cầu'],
+    ['Thời lượng', `${item?.thoiLuongPhut || defaultDurationMinutes} phút`],
+  ];
+
+  const tableItems = [
     ['Bàn dự kiến', item?.tenBanDuKien || 'Chưa chọn'],
     ['Bàn thực tế', item?.tenBanThucTe || 'Chưa xếp'],
-    ['Người xác nhận', item?.tenNguoiXacNhan || '—'],
-    ['Người check-in', item?.tenNguoiCheckIn || '—'],
-    ['Người xếp bàn', item?.tenNguoiXepBan || '—'],
-    ['Tiền cọc', formatReservationMoney(item?.tienCoc)],
-    ['Trạng thái cọc', reservationDepositStatusMeta(item).label],
-    ['Hạn thanh toán cọc', item?.thoiHanThanhToanCoc ? reservationDateTime(item.thoiHanThanhToanCoc) : '—'],
-    ['Thời gian nhận cọc', item?.thoiGianThanhToanCoc ? reservationDateTime(item.thoiGianThanhToanCoc) : '—'],
-    ['Cọc đã khấu trừ', Number(item?.tienCocDaKhauTru || 0) > 0 ? formatReservationMoney(item.tienCocDaKhauTru) : 'Chưa khấu trừ'],
-    ['Thời gian hoàn cọc', item?.thoiGianHoanCoc ? reservationDateTime(item.thoiGianHoanCoc) : '—'],
-    ['Xử lý cọc', item?.lyDoXuLyCoc || '—'],
-    ['Món đặt trước', Number(item?.soMonDatTruoc || 0) ? `${item.soMonDatTruoc} loại món` : 'Chưa đặt'],
-    ['Trạng thái món trước', preorderStatusMeta(item?.trangThaiDatMonTruoc).label],
-    ['Cần duyệt lại món', item?.canDuyetLaiDatMonTruoc ? 'Có - khách đã thay đổi sau lần duyệt' : 'Không'],
-    ['Khách thay đổi món lúc', item?.thoiGianThayDoiDatMonTruoc ? reservationDateTime(item.thoiGianThayDoiDatMonTruoc) : '—'],
-  ];
+    item?.tenNguoiXacNhan ? ['Người xác nhận', item.tenNguoiXacNhan] : null,
+    item?.tenNguoiCheckIn ? ['Người check-in', item.tenNguoiCheckIn] : null,
+    item?.tenNguoiXepBan ? ['Người xếp bàn', item.tenNguoiXepBan] : null,
+  ].filter(Boolean);
+
+  const depositItems = [
+    item?.thoiHanThanhToanCoc ? ['Hạn thanh toán', reservationDateTime(item.thoiHanThanhToanCoc)] : null,
+    item?.thoiGianThanhToanCoc ? ['Thời gian nhận cọc', reservationDateTime(item.thoiGianThanhToanCoc)] : null,
+    depositAmount > 0 ? ['Khấu trừ', Number(item?.tienCocDaKhauTru || 0) > 0 ? formatReservationMoney(item.tienCocDaKhauTru) : 'Chưa khấu trừ'] : null,
+    item?.thoiGianHoanCoc ? ['Thời gian hoàn cọc', reservationDateTime(item.thoiGianHoanCoc)] : null,
+    item?.lyDoXuLyCoc ? ['Xử lý cọc', item.lyDoXuLyCoc] : null,
+  ].filter(Boolean);
+
+  const preorderItems = preorderCount > 0 ? [
+    ['Món đặt trước', `${preorderCount} loại món`],
+    ['Trạng thái', preorderStatusMeta(item?.trangThaiDatMonTruoc).label],
+    ['Cần duyệt lại', item?.canDuyetLaiDatMonTruoc ? 'Có - khách đã thay đổi sau lần duyệt' : 'Không'],
+    item?.thoiGianThayDoiDatMonTruoc ? ['Khách thay đổi món lúc', reservationDateTime(item.thoiGianThayDoiDatMonTruoc)] : null,
+  ].filter(Boolean) : [];
+
+  const renderItems = (items) => items.map(([label, value]) => (
+    <div className="reservation-detail-item" key={label}>
+      <span>{label}</span>
+      <strong>{value || '—'}</strong>
+    </div>
+  ));
+
   return (
     <section className="reservation-manage-modal reservation-detail-modal" role="dialog" aria-modal="true">
-      <header><div><span>CHI TIẾT ĐẶT BÀN</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>Tạo lúc {reservationDateTime(item?.thoiGianTao)}</p></div><button type="button" onClick={onClose}><X size={20} /></button></header>
-      <div className="reservation-detail-status"><span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>{item?.maDonHang ? <b>Đã liên kết đơn #{item.maDonHang}</b> : null}</div>
+      <header className="reservation-detail-header">
+        <div>
+          <span>CHI TIẾT ĐẶT BÀN</span>
+          <div className="reservation-detail-title-row">
+            <h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2>
+            <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
+          </div>
+          <p>Tạo lúc {reservationDateTime(item?.thoiGianTao)}{item?.maDonHang ? ` · Đã liên kết đơn #${item.maDonHang}` : ''}</p>
+        </div>
+        <button type="button" onClick={onClose}><X size={20} /></button>
+      </header>
+
       {reservationPreorderChangedAfterApproval(item) ? <div className="reservation-preorder-reapproval-alert"><AlertTriangle size={19} /><p><b>Khách vừa thay đổi món đặt trước.</b> Thực đơn cần được kiểm tra và duyệt lại trước khi chuyển xuống bếp.</p></div> : null}
-      <div className="reservation-detail-grid">{lines.map(([label, value]) => <p key={label}><span>{label}</span><strong>{value || '—'}</strong></p>)}</div>
-      {item?.ghiChu ? <div className="reservation-detail-note"><b>Ghi chú:</b> {item.ghiChu}</div> : null}
-      {item?.lyDoHuyTuChoi ? <div className="reservation-detail-reason"><b>Lý do kết thúc:</b> {item.lyDoHuyTuChoi}</div> : null}
+
+      <div className="reservation-detail-body">
+        <section className="reservation-detail-section">
+          <h3><CalendarDays size={18} />Thông tin khách & lịch</h3>
+          <div className="reservation-detail-items">{renderItems(bookingItems)}</div>
+        </section>
+
+        <section className="reservation-detail-section">
+          <h3><Table2 size={18} />Sắp xếp bàn</h3>
+          <div className="reservation-detail-items">{renderItems(tableItems)}</div>
+        </section>
+
+        {depositAmount > 0 || reservationDepositStatus(item) ? (
+          <section className="reservation-detail-section reservation-detail-deposit-section">
+            <div className="reservation-detail-deposit-head">
+              <div><CreditCard size={19} /><span>Tiền cọc</span></div>
+              <span className={`reservation-deposit-badge ${depositMeta.tone}`}>{depositMeta.label}</span>
+            </div>
+            <strong className="reservation-detail-deposit-amount">{formatReservationMoney(item?.tienCoc)}</strong>
+            {depositItems.length ? <div className="reservation-detail-items compact">{renderItems(depositItems)}</div> : null}
+          </section>
+        ) : null}
+
+        <section className="reservation-detail-section">
+          <h3><ChefHat size={18} />Món đặt trước</h3>
+          {preorderCount > 0
+            ? <div className="reservation-detail-items">{renderItems(preorderItems)}</div>
+            : <div className="reservation-detail-empty-state">Không đặt món trước</div>}
+        </section>
+
+        {item?.ghiChu ? <div className="reservation-detail-note"><b>Ghi chú:</b> {item.ghiChu}</div> : null}
+        {item?.lyDoHuyTuChoi ? <div className="reservation-detail-reason"><b>Lý do kết thúc:</b> {item.lyDoHuyTuChoi}</div> : null}
+      </div>
+
       <footer><button type="button" onClick={onClose}>Đóng</button></footer>
     </section>
   );
