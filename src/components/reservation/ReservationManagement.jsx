@@ -143,13 +143,48 @@ function DepositActionModal({ action, item, reason, setReason, busy, onSubmit, o
   const confirming = action === 'deposit-confirm';
   const meta = reservationDepositStatusMeta(item);
   return (
-    <section className="reservation-manage-modal reservation-deposit-modal" role="dialog" aria-modal="true">
-      <header><div><span>{confirming ? 'XÁC NHẬN TIỀN CỌC' : 'GHI NHẬN HOÀN CỌC'}</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{formatReservationMoney(item?.tienCoc)} · {meta.label}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
-      <div className={`reservation-deposit-action-alert ${confirming ? 'confirm' : 'refund'}`}><CreditCard size={21} /><p>{confirming ? 'Chỉ xác nhận sau khi đã kiểm tra tiền thực sự vào tài khoản nhà hàng. Sau bước này mới được xác nhận và giữ bàn cho khách.' : 'Chỉ ghi nhận hoàn cọc sau khi nhà hàng đã thực sự chuyển tiền lại cho khách.'}</p></div>
-      {!confirming ? (
-        <label className="reservation-modal-field">Ghi chú hoàn cọc<textarea autoFocus rows="4" maxLength="500" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: Đã hoàn cọc qua chuyển khoản" /></label>
-      ) : null}
-      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className="primary" onClick={onSubmit} disabled={busy || (!confirming && !reason.trim())}>{busy ? <LoaderCircle className="spin" size={17} /> : confirming ? <CheckCircle2 size={17} /> : <ReceiptText size={17} />}{confirming ? 'Xác nhận đã nhận cọc' : 'Xác nhận đã hoàn cọc'}</button></footer>
+    <section className={`reservation-manage-modal reservation-deposit-modal ${confirming ? 'reservation-deposit-confirm-modal' : ''}`} role="dialog" aria-modal="true">
+      {confirming ? (
+        <>
+          <header className="reservation-deposit-confirm-header">
+            <div>
+              <span>XÁC NHẬN TIỀN CỌC</span>
+              <h2>Xác nhận tiền cọc</h2>
+              <h3>{item?.maTraCuu} · {item?.hoTenKhach}</h3>
+              <div className="reservation-deposit-confirm-badges">
+                <b><CreditCard size={15} />{formatReservationMoney(item?.tienCoc)}</b>
+                <em><Clock3 size={15} />{meta.label}</em>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} disabled={busy} aria-label="Đóng"><X size={20} /></button>
+          </header>
+          <div className="reservation-deposit-action-alert confirm">
+            <span><CreditCard size={22} /></span>
+            <p>Chỉ xác nhận sau khi đã kiểm tra tiền thực sự vào tài khoản nhà hàng. <b>Sau khi xác nhận tiền cọc, lịch đặt bàn mới đủ điều kiện để nhà hàng xác nhận và giữ chỗ cho khách.</b></p>
+          </div>
+          <div className="reservation-deposit-confirm-summary">
+            <article>
+              <span><CreditCard size={18} /></span>
+              <div><small>Tiền cọc</small><strong className="amount">{formatReservationMoney(item?.tienCoc)}</strong></div>
+            </article>
+            <article>
+              <span><ReceiptText size={18} /></span>
+              <div><small>Mã đặt bàn</small><strong>{item?.maTraCuu || '—'}</strong></div>
+            </article>
+            <article>
+              <span><UsersRound size={18} /></span>
+              <div><small>Khách hàng</small><strong>{item?.hoTenKhach || '—'}</strong></div>
+            </article>
+          </div>
+        </>
+      ) : (
+        <>
+          <header><div><span>GHI NHẬN HOÀN CỌC</span><h2>{item?.maTraCuu} · {item?.hoTenKhach}</h2><p>{formatReservationMoney(item?.tienCoc)} · {meta.label}</p></div><button type="button" onClick={onClose} disabled={busy}><X size={20} /></button></header>
+          <div className="reservation-deposit-action-alert refund"><CreditCard size={21} /><p>Chỉ ghi nhận hoàn cọc sau khi nhà hàng đã thực sự chuyển tiền lại cho khách.</p></div>
+          <label className="reservation-modal-field">Ghi chú hoàn cọc<textarea autoFocus rows="4" maxLength="500" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: Đã hoàn cọc qua chuyển khoản" /></label>
+        </>
+      )}
+      <footer><button type="button" onClick={onClose} disabled={busy}>Quay lại</button><button type="button" className={`primary ${confirming ? 'deposit-confirm-primary' : ''}`} onClick={onSubmit} disabled={busy || (!confirming && !reason.trim())}>{busy ? <LoaderCircle className="spin" size={17} /> : confirming ? <CheckCircle2 size={17} /> : <ReceiptText size={17} />}{confirming ? 'Xác nhận đã nhận cọc' : 'Xác nhận đã hoàn cọc'}</button></footer>
     </section>
   );
 }

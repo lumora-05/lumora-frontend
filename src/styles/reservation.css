@@ -114,3 +114,33 @@
   .reservation-public-timeline.deposit-flow{grid-template-columns:repeat(6,90px)}.reservation-public-timeline.legacy{grid-template-columns:repeat(5,90px)}
   .reservation-deposit-payment-modal>header{padding-left:15px}.reservation-deposit-payment-content,.reservation-deposit-payment-amount{padding-left:15px;padding-right:15px}.reservation-deposit-payment-note{margin-left:15px;margin-right:15px}.reservation-deposit-payment-modal>footer{padding-left:15px;padding-right:15px}
 }
+
+/* ===== Cashier deposit confirmation modal ===== */
+.reservation-deposit-confirm-modal{width:min(650px,100%)}
+.reservation-deposit-confirm-modal>.reservation-deposit-confirm-header{padding:22px 24px 18px;background:linear-gradient(180deg,#fff 0%,#fffdfb 100%)}
+.reservation-deposit-confirm-header>div{min-width:0;flex:1}
+.reservation-deposit-confirm-header>div>span{font-size:9px;letter-spacing:.1em}
+.reservation-deposit-confirm-header h2{margin:7px 0 0;font-size:22px;line-height:1.25;color:#202d40}
+.reservation-deposit-confirm-header h3{margin:12px 0 0;color:#2d394b;font-size:17px;line-height:1.3;font-weight:900}
+.reservation-deposit-confirm-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.reservation-deposit-confirm-badges b,.reservation-deposit-confirm-badges em{height:32px;padding:0 10px;border:1px solid #e5e9ee;border-radius:9px;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-style:normal;font-weight:900}
+.reservation-deposit-confirm-badges b{background:#fff;color:#354255}.reservation-deposit-confirm-badges b svg{color:#e9601c}
+.reservation-deposit-confirm-badges em{border-color:#f3d0b4;background:#fff6ee;color:#c65c18}.reservation-deposit-confirm-badges em svg{color:#e9601c}
+.reservation-deposit-confirm-modal>.reservation-deposit-action-alert.confirm{margin:18px 24px 0;padding:14px 15px;border-color:#f2c9a7;border-radius:13px;background:linear-gradient(135deg,#fff8f1,#fffaf6);color:#6e4b31;gap:12px;align-items:center;font-size:10px;line-height:1.6}
+.reservation-deposit-action-alert.confirm>span{width:38px;height:38px;border-radius:11px;background:#ffead9;color:#e85e18;display:grid;place-items:center;flex:0 0 auto}
+.reservation-deposit-action-alert.confirm p b{color:#563923;font-weight:850}
+.reservation-deposit-confirm-summary{margin:16px 24px 22px;border:1px solid #e8edf2;border-radius:14px;background:#fff;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));box-shadow:0 8px 24px rgba(15,23,42,.035);overflow:hidden}
+.reservation-deposit-confirm-summary article{min-width:0;padding:15px 14px;display:flex;align-items:center;gap:10px;position:relative}
+.reservation-deposit-confirm-summary article+article{border-left:1px solid #edf0f3}
+.reservation-deposit-confirm-summary article>span{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;background:#fff0e6;color:#e8611c}
+.reservation-deposit-confirm-summary article:nth-child(2)>span{background:#f2efff;color:#6555c7}
+.reservation-deposit-confirm-summary article:nth-child(3)>span{background:#edf8f0;color:#2b8a54}
+.reservation-deposit-confirm-summary article>div{min-width:0}.reservation-deposit-confirm-summary small{display:block;color:#8994a3;font-size:8px;font-weight:800}.reservation-deposit-confirm-summary strong{display:block;margin-top:4px;color:#2e3a4c;font-size:10px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.reservation-deposit-confirm-summary strong.amount{color:#e35e1b;font-size:13px}
+.reservation-deposit-confirm-modal>footer{padding:15px 24px 18px;background:#fff}
+.reservation-deposit-confirm-modal>footer button{height:42px;padding:0 16px;border-radius:10px}
+.reservation-deposit-confirm-modal>footer button.deposit-confirm-primary{border:0;background:linear-gradient(135deg,#ff7600,#f15612);color:#fff;box-shadow:0 9px 20px rgba(239,91,16,.2)}
+.reservation-deposit-confirm-modal>footer button.deposit-confirm-primary:hover:not(:disabled){filter:brightness(.98);transform:translateY(-1px)}
+
+@media(max-width:760px){
+  .reservation-deposit-confirm-modal>.reservation-deposit-confirm-header{padding:18px 16px 15px}.reservation-deposit-confirm-header h2{font-size:19px}.reservation-deposit-confirm-header h3{font-size:15px}.reservation-deposit-confirm-modal>.reservation-deposit-action-alert.confirm{margin:14px 16px 0}.reservation-deposit-confirm-summary{margin:14px 16px 18px;grid-template-columns:1fr}.reservation-deposit-confirm-summary article+article{border-left:0;border-top:1px solid #edf0f3}.reservation-deposit-confirm-modal>footer{padding:13px 16px 16px;flex-direction:column-reverse}.reservation-deposit-confirm-modal>footer button{width:100%}
+}
