@@ -16,19 +16,21 @@ import { currentLocalDate, reservationPreorderNeedsReview, reservationStatus } f
 
 const items = [
   { to: '/cashier', label: 'Thanh toán', icon: 'cashier', mobileIcon: ReceiptText },
-  { to: '/cashier/delivery-orders', label: 'Đơn đặt online', icon: 'delivery', mobileIcon: Bike },
+  { to: '/cashier/delivery-orders', label: 'Đơn hàng trực tuyến', icon: 'delivery', mobileIcon: Bike },
   { to: '/cashier/reservations', label: 'Đặt bàn', icon: 'reservation', mobileIcon: CalendarCheck2 },
-  { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },  { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
+  { to: '/cashier/history', label: 'Lịch sử giao dịch', icon: 'history', mobileIcon: History },
+  { to: '/cashier/reports', label: 'Báo cáo', icon: 'report', mobileIcon: ReceiptText },
   { to: '/cashier/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
 ];
 
 const pageMeta = {
-  '/cashier/delivery-orders': ['Đơn đặt online', 'Tiếp nhận và xử lý các đơn đặt online của khách hàng'],
-  '/cashier/reservations': ['Đặt bàn', 'Tiếp nhận, xác nhận và quản lý yêu cầu đặt bàn trực tuyến'],
-  '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu hóa đơn đã thanh toán hoặc đã hủy'],
-  '/cashier/reports': ['Báo cáo giao dịch', 'Theo dõi doanh thu và số hóa đơn đã ghi nhận'],  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi thanh toán, đơn online và đặt bàn cần xử lý'],
-  '/cashier/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
-  '/cashier': ['Thanh toán', 'Ưu tiên các bàn đã yêu cầu thanh toán lâu nhất'],
+  '/cashier/delivery-orders': ['Đơn hàng trực tuyến', 'Tiếp nhận và theo dõi các đơn hàng đặt trực tuyến.'],
+  '/cashier/reservations': ['Đặt bàn', 'Tiếp nhận, xác nhận và quản lý yêu cầu đặt bàn trực tuyến.'],
+  '/cashier/history': ['Lịch sử giao dịch', 'Tra cứu các giao dịch và thanh toán đã phát sinh.'],
+  '/cashier/reports': ['Báo cáo', 'Theo dõi số liệu và kết quả hoạt động.'],
+  '/cashier/notifications': ['Thông báo thu ngân', 'Theo dõi thanh toán, đơn hàng trực tuyến và đặt bàn cần xử lý.'],
+  '/cashier/account': ['Tài khoản', 'Quản lý thông tin tài khoản cá nhân.'],
+  '/cashier': ['Thanh toán', 'Theo dõi và xử lý các yêu cầu thanh toán của khách.'],
 };
 
 function isDeliveryRealtimeEvent(event) {
