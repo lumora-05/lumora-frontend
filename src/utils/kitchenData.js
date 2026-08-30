@@ -33,7 +33,21 @@ export function kitchenOrderId(orderOrItem) {
 }
 
 export function kitchenTableName(orderOrItem) {
-  return orderOrItem?.banAn?.tenBan || orderOrItem?.tenBan || orderOrItem?.donHang?.banAn?.tenBan || `Bàn ${orderOrItem?.maBan || '—'}`;
+  const tableName = orderOrItem?.banAn?.tenBan || orderOrItem?.tenBan || orderOrItem?.donHang?.banAn?.tenBan;
+  if (tableName) return tableName;
+
+  const orderType = String(orderOrItem?.loaiDon || orderOrItem?.donHang?.loaiDon || '').toUpperCase();
+  if (orderType === 'GIAO_HANG') {
+    const receiveMethod = String(
+      orderOrItem?.giaoHang?.phuongThucNhanHang
+      || orderOrItem?.donHang?.giaoHang?.phuongThucNhanHang
+      || orderOrItem?.phuongThucNhanHang
+      || 'GIAO_TAN_NOI'
+    ).toUpperCase();
+    return receiveMethod === 'TU_DEN_LAY' ? 'Đơn online · Đến lấy' : 'Đơn online · Giao hàng';
+  }
+
+  return `Bàn ${orderOrItem?.maBan || '—'}`;
 }
 
 export function kitchenOrderedAt(orderOrItem) {
@@ -125,6 +139,8 @@ export function flattenKitchenOrders(orders, { includeClosed = false } = {}) {
         thoiGianDat: item?.thoiGianThem || order?.thoiGianDat || order?.createdAt,
         trangThaiDon: order?.trangThai,
         ghiChuDon: order?.ghiChu,
+        loaiDon: order?.loaiDon,
+        giaoHang: order?.giaoHang,
       })));
 }
 
