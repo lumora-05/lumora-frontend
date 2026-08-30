@@ -131,23 +131,20 @@ export default function CashierLayout() {
     return item;
   }), [deliveryAttentionCount, paymentAttentionCount, reservationAttentionCount]);
 
-  const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
-  let title;
-  let subtitle;
-  if (detailMatch) {
-    if (location.pathname.includes('/payment/')) {
-      title = 'Thanh toán hóa đơn';
-      subtitle = 'Kiểm tra phương thức và xác nhận giao dịch';
-    } else if (location.pathname.includes('/print/')) {
-      title = 'In hóa đơn';
-      subtitle = 'Kiểm tra bản in trước khi gửi đến máy in';
-    } else {
-      title = 'Chi tiết hóa đơn';
-      subtitle = 'Kiểm tra món ăn và tổng tiền của bàn';
+  const headerMeta = useMemo(() => {
+    const detailMatch = location.pathname.match(/^\/cashier\/(?:invoices|payment|print)\/[^/]+$/);
+    if (detailMatch) {
+      if (location.pathname.includes('/payment/')) {
+        return ['Thanh toán hóa đơn', 'Kiểm tra phương thức và xác nhận giao dịch'];
+      }
+      if (location.pathname.includes('/print/')) {
+        return ['In hóa đơn', 'Kiểm tra bản in trước khi gửi đến máy in'];
+      }
+      return ['Chi tiết hóa đơn', 'Kiểm tra món ăn và tổng tiền của bàn'];
     }
-  } else {
-    [title, subtitle] = cashierPageMeta(location.pathname);
-  }
+    return cashierPageMeta(location.pathname);
+  }, [location.pathname, location.search]);
+  const [title, subtitle] = headerMeta;
 
   return (
     <div className="app-shell cashier-shell">
@@ -178,7 +175,12 @@ export default function CashierLayout() {
       </aside>
 
       <main className="cashier-main">
-        <CashierHeader title={title} subtitle={subtitle} onOpenMenu={() => setMenuOpen(true)} />
+        <CashierHeader
+          key={`${location.key}:${location.pathname}:${location.search}`}
+          title={title}
+          subtitle={subtitle}
+          onOpenMenu={() => setMenuOpen(true)}
+        />
         <Outlet />
       </main>
     </div>

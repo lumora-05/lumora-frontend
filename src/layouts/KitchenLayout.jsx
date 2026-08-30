@@ -74,15 +74,20 @@ export default function KitchenLayout() {
     item.to === '/kitchen' ? { ...item, badge: kitchenAttentionCount } : item
   )), [kitchenAttentionCount]);
 
-  const key = Object.keys(pageMeta)
-    .filter((path) => path !== '/kitchen')
-    .find((path) => location.pathname.startsWith(path));
-  const readOnlyDetail = location.pathname.match(/^\/kitchen\/orders\/[^/]+$/) && new URLSearchParams(location.search).get('readonly') === '1';
-  const [title, subtitle] = location.pathname.match(/^\/kitchen\/orders\/[^/]+$/)
-    ? readOnlyDetail
-      ? ['Chi tiết lịch sử', 'Thông tin phiếu bếp đã hoàn thành — chỉ xem']
-      : ['Cập nhật chế biến', 'Xử lý trạng thái theo từng món hoặc toàn bộ phiếu']
-    : pageMeta[key || '/kitchen'];
+  const headerMeta = useMemo(() => {
+    const pageKey = Object.keys(pageMeta)
+      .filter((path) => path !== '/kitchen')
+      .find((path) => location.pathname.startsWith(path));
+    const isOrderDetail = /^\/kitchen\/orders\/[^/]+$/.test(location.pathname);
+    if (isOrderDetail) {
+      const readOnly = new URLSearchParams(location.search).get('readonly') === '1';
+      return readOnly
+        ? ['Chi tiết lịch sử', 'Thông tin phiếu bếp đã hoàn thành — chỉ xem']
+        : ['Cập nhật chế biến', 'Xử lý trạng thái theo từng món hoặc toàn bộ phiếu'];
+    }
+    return pageMeta[pageKey || '/kitchen'];
+  }, [location.pathname, location.search]);
+  const [title, subtitle] = headerMeta;
 
   return (
     <div className="app-shell kitchen-shell">
@@ -113,7 +118,12 @@ export default function KitchenLayout() {
       </aside>
 
       <main className="kitchen-main">
-        <KitchenHeader title={title} subtitle={subtitle} onOpenMenu={() => setMenuOpen(true)} />
+        <KitchenHeader
+          key={`${location.key}:${location.pathname}:${location.search}`}
+          title={title}
+          subtitle={subtitle}
+          onOpenMenu={() => setMenuOpen(true)}
+        />
         <Outlet />
       </main>
     </div>
