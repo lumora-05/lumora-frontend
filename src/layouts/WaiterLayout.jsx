@@ -110,13 +110,17 @@ export default function WaiterLayout() {
     return item;
   }), [orderAttentionCount, reservationAttentionCount, serviceAttentionCount]);
 
-  const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
-  const readOnly = detail && new URLSearchParams(location.search).get('readonly') === '1';
-  const [title, subtitle] = detail
-    ? readOnly
-      ? ['Chi tiết lịch sử', 'Thông tin đơn đã kết thúc — chỉ xem']
-      : ['Chi tiết phục vụ', 'Theo dõi và cập nhật trạng thái từng món']
-    : waiterPageMeta(location.pathname);
+  const headerMeta = useMemo(() => {
+    const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
+    if (detail) {
+      const readOnly = new URLSearchParams(location.search).get('readonly') === '1';
+      return readOnly
+        ? ['Chi tiết lịch sử', 'Thông tin đơn đã kết thúc — chỉ xem']
+        : ['Chi tiết phục vụ', 'Theo dõi và cập nhật trạng thái từng món'];
+    }
+    return waiterPageMeta(location.pathname);
+  }, [location.pathname, location.search]);
+  const [title, subtitle] = headerMeta;
 
   return (
     <div className="app-shell waiter-shell">
@@ -145,6 +149,7 @@ export default function WaiterLayout() {
 
       <main className="waiter-main">
         <WaiterHeader
+          key={`${location.key}:${location.pathname}:${location.search}`}
           title={title}
           subtitle={subtitle}
           onOpenMenu={() => setMenuOpen(true)}
