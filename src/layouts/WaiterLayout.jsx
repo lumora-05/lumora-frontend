@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BellRing, CalendarCheck2, ClipboardList, History, PlusCircle, Table2, UserRound, X } from 'lucide-react';
+import { CalendarCheck2, ClipboardList, History, PlusCircle, Table2, UserRound, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
 import WaiterHeader from '../components/common/WaiterHeader';
@@ -27,7 +27,6 @@ const items = [
   { to: '/waiter/orders', label: 'Đơn cần xử lý', icon: 'orders', mobileIcon: ClipboardList },
   { to: '/waiter/tables', label: 'Sơ đồ bàn', icon: 'table', mobileIcon: Table2 },
   { to: '/waiter/order-entry', label: 'Gọi món tại bàn', icon: 'menu', mobileIcon: PlusCircle },
-  { to: '/waiter/requests', label: 'Yêu cầu tại bàn', icon: 'service', mobileIcon: BellRing },
   { to: '/waiter/reservations', label: 'Đặt bàn', icon: 'reservation', mobileIcon: CalendarCheck2 },
   { to: '/waiter/history', label: 'Lịch sử', icon: 'history', mobileIcon: History },
   { to: '/waiter/account', label: 'Tài khoản', icon: 'account', mobileIcon: UserRound },
