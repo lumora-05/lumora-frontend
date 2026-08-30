@@ -14,14 +14,20 @@ import { isActiveOrder, orderGroup, pendingReadyCount, unwrapList } from '../uti
 import { canCheckIn, currentLocalDate, reservationData, reservationStatus } from '../utils/reservations';
 
 const pageMeta = {
-  '/waiter/order-entry': ['Gọi món tại bàn', 'Ghi nhận món khách gọi tại bàn'],
-  '/waiter/tables': ['Sơ đồ bàn ăn', 'Theo dõi nhanh bàn đang phục vụ và bàn chờ thanh toán'],
-  '/waiter/history': ['Lịch sử phục vụ', 'Tra cứu các đơn đã thanh toán hoặc đã hủy'],
-  '/waiter/requests': ['Yêu cầu tại bàn', 'Tiếp nhận và hoàn thành yêu cầu hỗ trợ của khách'],
-  '/waiter/reservations': ['Đặt bàn', 'Check-in khách đã xác nhận và xử lý đổi bàn khi cần'],
-  '/waiter/account': ['Tài khoản của tôi', 'Quản lý thông tin cá nhân và bảo mật tài khoản'],
   '/waiter/orders': ['Đơn cần xử lý', 'Theo dõi đơn đã chuyển bếp, món sẵn sàng và yêu cầu thanh toán'],
+  '/waiter/tables': ['Sơ đồ bàn', 'Theo dõi trạng thái bàn và thao tác chuyển, ghép hoặc tách bàn'],
+  '/waiter/order-entry': ['Gọi món tại bàn', 'Tạo đơn và gửi món trực tiếp xuống bếp cho bàn đang phục vụ'],
+  '/waiter/reservations': ['Đặt bàn', 'Theo dõi khách sắp đến, check-in và xếp bàn thực tế'],
+  '/waiter/history': ['Lịch sử', 'Tra cứu các đơn và hoạt động đã hoàn tất'],
+  '/waiter/requests': ['Yêu cầu tại bàn', 'Tiếp nhận và hoàn thành yêu cầu hỗ trợ của khách'],
+  '/waiter/account': ['Tài khoản', 'Quản lý thông tin tài khoản cá nhân'],
 };
+
+function waiterPageMeta(pathname) {
+  const normalized = String(pathname || '').replace(/\/+$/, '') || '/waiter';
+  if (/^\/waiter\/orders\/[^/]+$/.test(normalized)) return null;
+  return pageMeta[normalized] || pageMeta['/waiter/orders'];
+}
 
 const items = [
   { to: '/waiter/orders', label: 'Đơn cần xử lý', icon: 'orders', mobileIcon: ClipboardList },
@@ -106,12 +112,11 @@ export default function WaiterLayout() {
 
   const detail = location.pathname.match(/^\/waiter\/orders\/[^/]+$/);
   const readOnly = detail && new URLSearchParams(location.search).get('readonly') === '1';
-  const key = Object.keys(pageMeta).find((path) => location.pathname.startsWith(path)) || '/waiter/orders';
   const [title, subtitle] = detail
     ? readOnly
       ? ['Chi tiết lịch sử', 'Thông tin đơn đã kết thúc — chỉ xem']
       : ['Chi tiết phục vụ', 'Theo dõi và cập nhật trạng thái từng món']
-    : pageMeta[key];
+    : waiterPageMeta(location.pathname);
 
   return (
     <div className="app-shell waiter-shell">
