@@ -628,6 +628,12 @@ Object.assign(EN_TEXT, {
   'Lịch sử đơn hàng': 'Order history',
   'Các đơn được đặt khi bạn đăng nhập': 'Orders placed while signed in',
   'Bạn chưa có đơn hàng nào được liên kết với tài khoản này.': 'No orders are linked to this account yet.',
+  'Khách hàng Lumora': 'Lumora customer',
+  'Đơn hoàn thành': 'Completed orders',
+  'Đơn hàng của tôi': 'My orders',
+  'Theo dõi và xem lại các đơn đã đặt khi đăng nhập': 'Track and review orders placed while signed in',
+  'Không có đơn hàng phù hợp với bộ lọc này.': 'No orders match this filter.',
+  'Theo dõi đơn': 'Track order',
 
   // Khách hàng đặt món online - thực đơn và chi tiết món
   'Thực đơn trực tuyến · Giao tận nơi': 'Online menu · Delivery',

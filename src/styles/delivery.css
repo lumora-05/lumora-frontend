@@ -771,3 +771,52 @@
 .delivery-account-pagination button.active{border-color:#e85b17;color:#fff;background:#e85b17}
 .delivery-account-pagination button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:680px){.delivery-account-pagination{align-items:flex-start;flex-direction:column}.delivery-account-pagination>div{max-width:100%;overflow:auto;padding-bottom:2px}}
+
+/* Customer account dashboard refresh */
+.delivery-account-dashboard{max-width:1000px;padding-top:34px}
+.delivery-account-profile-card{padding:24px 26px;border:1px solid #e6eaee;border-radius:20px;display:flex;align-items:center;justify-content:space-between;gap:24px;background:#fff;box-shadow:0 12px 34px rgba(31,41,55,.035)}
+.delivery-account-profile-main{display:flex;align-items:center;gap:15px;min-width:0}
+.delivery-account-avatar{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;flex:0 0 auto;color:#e85b17;background:#fff1e7}
+.delivery-account-profile-main small{display:block;color:#e85b17;font-size:9px;font-weight:950;letter-spacing:.12em}
+.delivery-account-profile-main h1{margin:4px 0 2px;color:#2f363d;font-size:24px;line-height:1.12}
+.delivery-account-profile-main p{margin:0;color:#7f8994;font-size:11px}
+.delivery-account-member-badge{display:inline-flex;margin-top:8px;padding:5px 8px;border-radius:999px;color:#9b4a1e;background:#fff4ec;font-size:9px;font-weight:850}
+.delivery-account-logout{min-height:40px;padding:0 13px;border:1px solid #e1e6eb;border-radius:11px;display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;color:#64707c;background:#fff;font-size:11px;font-weight:850;cursor:pointer}
+.delivery-account-logout:hover{border-color:#efcbb7;color:#d94f10;background:#fffaf7}
+.delivery-account-stats-dashboard{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.delivery-account-stats-dashboard article{padding:16px 18px;display:flex;align-items:center;gap:12px}
+.delivery-account-stats-dashboard article>div{min-width:0}
+.delivery-account-stat-icon{width:39px;height:39px;border-radius:12px;display:grid!important;place-items:center;flex:0 0 auto;color:#e85b17!important;background:#fff1e7}
+.delivery-account-stats-dashboard article span:not(.delivery-account-stat-icon){margin:0 0 3px;color:#7b8691;font-size:10px}
+.delivery-account-stats-dashboard article strong{display:block;color:#2f363d;font-size:22px;line-height:1}
+.delivery-account-orders-dashboard{padding:23px}
+.delivery-account-section-title-dashboard{align-items:flex-start}
+.delivery-account-section-title-dashboard>a{background:#e85b17}
+.delivery-account-section-title-dashboard>a:hover{background:#d94f10}
+.delivery-account-order-filters{margin-top:18px;padding-bottom:14px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;gap:7px;overflow:auto}
+.delivery-account-order-filters button{min-height:34px;padding:0 12px;border:1px solid #e4e8ec;border-radius:999px;color:#6f7a85;background:#fff;font-size:10px;font-weight:850;white-space:nowrap;cursor:pointer}
+.delivery-account-order-filters button:hover{border-color:#efcbb7;color:#e85b17;background:#fff9f5}
+.delivery-account-order-filters button.active{border-color:#e85b17;color:#fff;background:#e85b17}
+.delivery-account-order-list-dashboard{margin-top:14px;gap:8px}
+.delivery-account-order-list-dashboard>a{padding:15px 16px;border-radius:14px}
+.delivery-account-order-main{min-width:0}
+.delivery-account-order-heading{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.delivery-account-order-heading>strong{font-size:13px}
+.delivery-account-order-heading>span{padding:4px 7px;border-radius:999px;color:#bc5a20;background:#fff2e9;font-size:9px;font-weight:850}
+.delivery-account-order-meta{display:flex!important;flex-direction:row!important;align-items:center;gap:12px!important;flex-wrap:wrap}
+.delivery-account-order-meta small{position:relative;color:#929ba5;font-size:9px}
+.delivery-account-order-meta small+small:before{content:'•';margin-right:12px;color:#c8ced4}
+.delivery-account-order-side{align-items:flex-end!important;gap:6px!important;flex:0 0 auto}
+.delivery-account-order-side>strong{color:#2f363d;font-size:13px!important}
+.delivery-account-order-side>span{display:inline-flex;align-items:center;gap:5px;color:#e85b17;font-size:9px!important;font-weight:850}
+.delivery-account-order-side svg{color:currentColor}
+@media(max-width:760px){
+  .delivery-account-dashboard{padding-top:22px}
+  .delivery-account-profile-card{padding:20px;align-items:flex-start;flex-direction:column}
+  .delivery-account-logout{width:100%;justify-content:center}
+  .delivery-account-stats-dashboard{grid-template-columns:1fr}
+  .delivery-account-section-title-dashboard{align-items:flex-start;flex-direction:column}
+  .delivery-account-section-title-dashboard>a{align-self:flex-start}
+  .delivery-account-order-list-dashboard>a{gap:12px}
+  .delivery-account-order-side{width:100%;align-items:flex-start!important;text-align:left!important}
+}
