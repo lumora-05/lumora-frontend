@@ -263,9 +263,6 @@ function FeaturedMenu({ restaurantName }) {
       <div className="v0-section-head">
         <span className="v0-eyebrow">Thực đơn</span>
         <h2 className="v0-serif">Những món ăn bán chạy nhất</h2>
-        <p>
-          Những món được thực khách lựa chọn nhiều nhất tại {restaurantName}.
-        </p>
       </div>
 
       <div className="v0-dish-grid">

@@ -301,10 +301,10 @@ export default function DeliveryTracking() {
 
             {order.maVanChuyen ? (
               <section className="delivery-info-card">
-                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>Đối tác vận chuyển được điều phối theo thời điểm món dự kiến sẵn sàng; chỉ nhận hàng khi toàn bộ món hoàn tất</p></div></div>
+                <div className="delivery-info-title"><PackageCheck size={20} /><div><h2>Thông tin vận chuyển</h2><p>Grab (Demo) được điều phối theo thời điểm món dự kiến sẵn sàng; chỉ nhận hàng khi toàn bộ món hoàn tất</p></div></div>
                 <div className="delivery-recipient-grid">
                   <p><PackageCheck size={17} /><span><small>Mã vận đơn</small><strong><button type="button" onClick={() => copyText(order.maVanChuyen, 'Đã sao chép mã vận đơn.')}>{order.maVanChuyen} <Copy size={14} /></button></strong></span></p>
-                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'Đối tác vận chuyển đang điều phối'}</strong></span></p>
+                  <p><Truck size={17} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'Grab (Demo) đang điều phối'}</strong></span></p>
                   {order.tenNguoiGiao ? <p><UserRound size={17} /><span><small>Tài xế</small><strong>{order.tenNguoiGiao}</strong></span></p> : null}
                   {order.soDienThoaiNguoiGiaoChe ? <p><Phone size={17} /><span><small>Liên hệ tài xế</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></p> : null}
                 </div>

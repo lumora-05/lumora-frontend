@@ -107,6 +107,7 @@
 .v0-hero-meta svg { color: var(--v0-primary); }
 
 .v0-section { padding-top: 112px; padding-bottom: 112px; }
+.v0-menu-section { padding-top: 52px; }
 .v0-section-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .v0-eyebrow { color: var(--v0-accent); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .v0-section-head h2, .v0-about-title { margin: 12px 0 0; color: var(--v0-foreground); font-size: 36px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
@@ -268,6 +269,7 @@
   .v0-hero-content h1 { font-size: 36px; }
   .v0-hero-content > p { font-size: 16px; }
   .v0-section { padding-top: 80px; padding-bottom: 80px; }
+  .v0-menu-section { padding-top: 44px; }
   .v0-section-head h2, .v0-about-title { font-size: 30px; }
   .v0-dish-grid { grid-template-columns: 1fr; }
   .v0-step-grid { grid-template-columns: 1fr; }
