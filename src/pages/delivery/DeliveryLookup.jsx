@@ -42,7 +42,7 @@ export default function DeliveryLookup() {
 
   return (
     <main className="delivery-public-page">
-      <DeliveryPublicHeader compact />
+      <DeliveryPublicHeader homeStyle />
       <section className="delivery-public-container delivery-lookup-page">
         <Link to="/menu"><ArrowLeft size={18} /> Quay lại thực đơn</Link>
         <div className="delivery-lookup-card large">
