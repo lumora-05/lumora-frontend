@@ -689,6 +689,11 @@ Object.assign(EN_TEXT, {
   // Khách hàng đặt món online - tra cứu/theo dõi
   'THEO DÕI GIAO HÀNG': 'DELIVERY TRACKING',
   'Tra cứu đơn đã đặt': 'Track an order',
+  'Mã đơn hàng': 'Order code',
+  'Nhập mã đơn hàng được cấp sau khi đặt món để xem trạng thái đơn.': 'Enter the order code provided after ordering to view its status.',
+  'Tra cứu đơn': 'Track order',
+  'Vui lòng nhập mã đơn hàng.': 'Please enter the order code.',
+  'Không tìm thấy đơn hàng.': 'Order not found.',
   'Mã tra cứu bí mật': 'Private tracking code',
   'Nhập mã tra cứu bí mật được cấp sau khi đặt món. Không chia sẻ mã này cho người khác.': 'Enter the private tracking code provided after ordering. Do not share this code with others.',
   'Tra cứu đơn khác': 'Track another order',

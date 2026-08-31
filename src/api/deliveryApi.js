@@ -29,6 +29,10 @@ export const deliveryApi = {
     `/customer/delivery/orders/${encodeURIComponent(trackingToken)}`,
     publicConfig,
   ),
+  lookup: (orderCode) => axiosClient.get(
+    '/customer/delivery/orders/lookup',
+    { ...publicConfig, params: { orderCode } },
+  ),
   createVietQr: (trackingToken) => axiosClient.get(
     `/customer/delivery/orders/${encodeURIComponent(trackingToken)}/vietqr`,
     publicConfig,

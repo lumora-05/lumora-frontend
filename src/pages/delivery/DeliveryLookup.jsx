@@ -6,42 +6,35 @@ import { deliveryApi } from '../../api/deliveryApi';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { unwrapDeliveryResponse } from '../../utils/delivery';
 
-function normalizeToken(value) {
-  const text = String(value || '').trim();
-  if (!text) return '';
-  try {
-    const url = new URL(text);
-    const parts = url.pathname.split('/').filter(Boolean);
-    return decodeURIComponent(parts.at(-1) || '').trim();
-  } catch {
-    return text;
-  }
+function normalizeOrderCode(value) {
+  return String(value || '').trim().toUpperCase();
 }
+
 
 export default function DeliveryLookup() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [trackingToken, setTrackingToken] = useState(
-    () => sessionStorage.getItem('lumora_delivery_last_token') || '',
-  );
+  const [orderCode, setOrderCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
-    const token = normalizeToken(trackingToken);
-    if (!token) {
-      toast.error('Vui lòng nhập mã tra cứu bí mật.');
+    const normalizedOrderCode = normalizeOrderCode(orderCode);
+    if (!normalizedOrderCode) {
+      toast.error('Vui lòng nhập mã đơn hàng.');
       return;
     }
     setLoading(true);
     try {
-      const response = await deliveryApi.track(token);
+      const response = await deliveryApi.lookup(normalizedOrderCode);
       const order = unwrapDeliveryResponse(response);
-      sessionStorage.setItem('lumora_delivery_last_token', token);
-      sessionStorage.setItem(`lumora_delivery_order_${token}`, JSON.stringify(order));
-      navigate(`/menu/orders/${encodeURIComponent(token)}`, { state: { order } });
+      const trackingToken = order?.trackingToken;
+      if (!trackingToken) throw new Error('Backend không trả về mã theo dõi đơn hàng.');
+      sessionStorage.setItem('lumora_delivery_last_token', trackingToken);
+      sessionStorage.setItem(`lumora_delivery_order_${trackingToken}`, JSON.stringify(order));
+      navigate(`/menu/orders/${encodeURIComponent(trackingToken)}`, { state: { order } });
     } catch (error) {
-      toast.error(errorMessageOf(error, 'Không tìm thấy đơn hàng theo mã tra cứu.'));
+      toast.error(errorMessageOf(error, 'Không tìm thấy đơn hàng.'));
     } finally {
       setLoading(false);
     }
@@ -56,10 +49,10 @@ export default function DeliveryLookup() {
           <span><KeyRound size={36} /></span>
           <small>THEO DÕI GIAO HÀNG</small>
           <h1>Tra cứu đơn đã đặt</h1>
-          <p>Nhập mã tra cứu bí mật được cấp sau khi đặt món. Không chia sẻ mã này cho người khác.</p>
+          <p>Nhập mã đơn hàng được cấp sau khi đặt món để xem trạng thái đơn.</p>
           <form onSubmit={submit}>
-            <label><span>Mã tra cứu bí mật</span><div><Search size={19} /><input value={trackingToken} onChange={(event) => setTrackingToken(event.target.value)} placeholder="Dán mã tra cứu hoặc đường dẫn theo dõi" autoComplete="off" /></div></label>
-            <button type="submit" disabled={loading}>{loading ? <LoaderCircle className="spin" size={19} /> : <Search size={19} />}{loading ? 'Đang tra cứu...' : 'Tra cứu trạng thái'}</button>
+            <label><span>Mã đơn hàng</span><div><Search size={19} /><input value={orderCode} onChange={(event) => setOrderCode(event.target.value)} placeholder="Ví dụ: DH0000191" autoComplete="off" /></div></label>
+            <button type="submit" disabled={loading}>{loading ? <LoaderCircle className="spin" size={19} /> : <Search size={19} />}{loading ? 'Đang tra cứu...' : 'Tra cứu đơn'}</button>
           </form>
         </div>
       </section>
