@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
 import { customerAccountApi } from '../../api/customerAccountApi';
+import { useAuth } from '../../context/AuthContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
-import { clearCustomerSession, getCustomerToken, getCustomerUser, saveCustomerSession } from '../../utils/customerSession';
+import { getCustomerToken, getCustomerUser, saveCustomerSession } from '../../utils/customerSession';
 import { deliveryStatusLabel, displayOrderCode, unwrapDeliveryResponse } from '../../utils/delivery';
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
@@ -40,6 +41,7 @@ function receiveMethodLabel(order) {
 export default function CustomerAccount() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { logout: authLogout } = useAuth();
   const [user, setUser] = useState(getCustomerUser());
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,11 @@ export default function CustomerAccount() {
   const [profileForm, setProfileForm] = useState({ hoTen: '', soDienThoai: '' });
 
   useEffect(() => {
-    if (!getCustomerToken()) { navigate('/login?next=/menu/account', { replace: true }); return; }
+    if (!getCustomerToken()) {
+      authLogout();
+      navigate('/login?next=/menu/account', { replace: true });
+      return;
+    }
     Promise.all([customerAccountApi.me(), customerAccountApi.orders()])
       .then(([meResponse, ordersResponse]) => {
         const me = unwrapDeliveryResponse(meResponse);
@@ -62,12 +68,12 @@ export default function CustomerAccount() {
         if (token && me) saveCustomerSession({ token, ...me });
       })
       .catch((error) => {
-        clearCustomerSession();
+        authLogout();
         toast.error(errorMessageOf(error, 'Phiên đăng nhập đã hết hạn.'));
         navigate('/login?next=/menu/account', { replace: true });
       })
       .finally(() => setLoading(false));
-  }, [navigate, toast]);
+  }, [authLogout, navigate, toast]);
 
   const filteredOrders = useMemo(() => orders.filter((order) => matchesFilter(order, orderFilter)), [orders, orderFilter]);
   const completedOrders = useMemo(() => orders.filter(isCompleted).length, [orders]);
@@ -81,7 +87,7 @@ export default function CustomerAccount() {
   }
 
   function logout() {
-    clearCustomerSession();
+    authLogout();
     toast.success('Đã đăng xuất tài khoản khách hàng.');
     navigate('/menu', { replace: true });
   }

@@ -13,6 +13,7 @@ import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi'
 import { imageUrl } from '../../utils/imageUrl';
 import { useAuth } from '../../context/AuthContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
+import { getCustomerToken } from '../../utils/customerSession';
 import '../../styles/login.css';
 
 const getHomePath = (role = '') => {
@@ -74,6 +75,7 @@ export default function Login() {
   useEffect(() => {
     if (!user?.role) return;
     const normalizedRole = String(user.role).replace('ROLE_', '');
+    if (normalizedRole === 'CUSTOMER' && !getCustomerToken()) return;
     navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(user.role), { replace: true });
   }, [customerNext, navigate, user]);
 
