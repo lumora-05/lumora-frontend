@@ -727,3 +727,7 @@
   .delivery-food-detail-total{justify-items:start}
   .delivery-food-detail-quantity{grid-template-columns:44px 54px 44px}
 }
+
+/* Phân trang danh sách đơn hàng trực tuyến. */
+.delivery-manage-pagination{padding:13px 16px;border-top:1px solid #edf0f3;display:flex;align-items:center;justify-content:space-between;gap:14px;color:#7a8591;background:#fff;font-size:11px}.delivery-manage-pagination-controls{display:flex;align-items:center;gap:6px}.delivery-manage-pagination-controls button{min-width:34px;height:34px;padding:0 10px;border:1px solid #dfe4e9;border-radius:9px;color:#56626f;background:#fff;font:inherit;font-weight:850;cursor:pointer;transition:.15s ease}.delivery-manage-pagination-controls button:hover:not(:disabled){border-color:#f1ad85;color:#e85d18;background:#fff8f3}.delivery-manage-pagination-controls button.active{border-color:#f0691e;color:#fff;background:#f0691e}.delivery-manage-pagination-controls button:disabled{opacity:.4;cursor:not-allowed}.delivery-manage-page-item{display:flex;align-items:center;gap:6px}.delivery-manage-page-item i{min-width:14px;color:#9aa2aa;text-align:center;font-style:normal}
+@media(max-width:680px){.delivery-manage-pagination{align-items:stretch;flex-direction:column}.delivery-manage-pagination-controls{overflow-x:auto;padding-bottom:2px}.delivery-manage-pagination-controls button{flex:none}}

@@ -109,6 +109,8 @@ const CASHIER_ACTION_STATUSES = new Set([
   'GIAO_THAT_BAI',
 ]);
 
+const DELIVERY_PAGE_SIZE = 10;
+
 function orderPlacedAt(order) {
   const value = new Date(order?.thoiGianDat || 0).getTime();
   return Number.isFinite(value) ? value : 0;
@@ -149,6 +151,7 @@ export default function DeliveryOrderManage() {
   const [error, setError] = useState('');
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -212,6 +215,29 @@ export default function DeliveryOrderManage() {
     });
     return [...matched].sort(compareCashierOrders);
   }, [keyword, visibleOrders]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / DELIVERY_PAGE_SIZE));
+  const pagedOrders = useMemo(() => {
+    const start = (currentPage - 1) * DELIVERY_PAGE_SIZE;
+    return filteredOrders.slice(start, start + DELIVERY_PAGE_SIZE);
+  }, [currentPage, filteredOrders]);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+    return [...pages]
+      .filter((page) => page >= 1 && page <= totalPages)
+      .sort((a, b) => a - b);
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [keyword, status]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const counters = useMemo(() => ({
     total: visibleOrders.length,
@@ -288,12 +314,13 @@ export default function DeliveryOrderManage() {
         {loading ? <div className="delivery-manage-state"><LoaderCircle className="spin" size={31} /><strong>Đang tải đơn đặt online...</strong></div> : null}
         {!loading && error ? <div className="delivery-manage-state error"><AlertTriangle size={31} /><strong>{error}</strong><button type="button" onClick={() => loadOrders()}>Thử lại</button></div> : null}
         {!loading && !error ? (
+          <>
           <div className="delivery-manage-table-wrap">
             <table className="delivery-manage-table">
               <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Địa chỉ</th><th>Thanh toán</th><th>Tổng tiền</th><th>Trạng thái</th><th>Mã vận đơn</th><th></th></tr></thead>
               <tbody>
                 {!filteredOrders.length ? <tr><td colSpan="8"><div className="delivery-table-empty">Không có đơn đặt online phù hợp.</div></td></tr> : null}
-                {filteredOrders.map((order) => {
+                {pagedOrders.map((order) => {
                   const delivery = deliveryData(order);
                   const deliveryStatus = delivery.trangThaiGiaoHang;
                   return (
@@ -312,6 +339,34 @@ export default function DeliveryOrderManage() {
               </tbody>
             </table>
           </div>
+          {filteredOrders.length ? (
+            <div className="delivery-manage-pagination">
+              <span>
+                Hiển thị {(currentPage - 1) * DELIVERY_PAGE_SIZE + 1}–{Math.min(currentPage * DELIVERY_PAGE_SIZE, filteredOrders.length)} / {filteredOrders.length} đơn
+              </span>
+              <div className="delivery-manage-pagination-controls">
+                <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1}>‹ Trước</button>
+                {paginationPages.map((page, index) => {
+                  const previousPage = paginationPages[index - 1];
+                  return (
+                    <span key={page} className="delivery-manage-page-item">
+                      {previousPage && page - previousPage > 1 ? <i>…</i> : null}
+                      <button
+                        type="button"
+                        className={page === currentPage ? 'active' : ''}
+                        onClick={() => setCurrentPage(page)}
+                        aria-current={page === currentPage ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                    </span>
+                  );
+                })}
+                <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages}>Sau ›</button>
+              </div>
+            </div>
+          ) : null}
+          </>
         ) : null}
       </div>
 
