@@ -339,7 +339,7 @@ export default function TableManage() {
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const initialTab = ['tables', 'qr', 'reservations'].includes(requestedTab) ? requestedTab : 'tables';
+  const initialTab = ['tables', 'reservations'].includes(requestedTab) ? requestedTab : 'tables';
   const [rows, setRows] = useState([]);
   const [reservationHolds, setReservationHolds] = useState(() => new Map());
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -385,7 +385,7 @@ export default function TableManage() {
   }, [tableEvent]);
 
   useEffect(() => {
-    const nextTab = ['tables', 'qr', 'reservations'].includes(requestedTab) ? requestedTab : 'tables';
+    const nextTab = ['tables', 'reservations'].includes(requestedTab) ? requestedTab : 'tables';
     setActiveTab((currentTab) => currentTab === nextTab ? currentTab : nextTab);
   }, [requestedTab]);
 
@@ -584,7 +584,6 @@ export default function TableManage() {
     <section className="table-qr-page">
       <div className="table-qr-tabs" role="tablist" aria-label="Bàn và đặt chỗ">
         <button className={activeTab === 'tables' ? 'active' : ''} onClick={() => changeTab('tables')}>Quản lý bàn</button>
-        <button className={activeTab === 'qr' ? 'active' : ''} onClick={() => changeTab('qr')}>Mã QR</button>
         <button className={activeTab === 'reservations' ? 'active' : ''} onClick={() => changeTab('reservations')}>Đặt chỗ</button>
       </div>
 
@@ -680,7 +679,7 @@ export default function TableManage() {
                     {!isGrouped(selected) ? <button disabled={!canMerge(selected) || Boolean(reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG')} title={reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG' ? `Bàn đã được giữ lúc ${reservationHoldTime(reservationHolds.get(String(tableId(selected))))}` : !canMerge(selected) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={17} /> Ghép bàn</button> : null}
                     {isGrouped(selected) ? <button disabled={!canUnmerge(selected)} title={!canUnmerge(selected) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
                     <button onClick={() => openEdit(selected)}><Pencil size={17} /> Chỉnh sửa</button>
-                    {!qrSrc(selected) && <button className="primary" onClick={() => generateQr(selected)}><QrCode size={17} /> Tạo QR</button>}
+                    <button className="primary" onClick={() => generateQr(selected)}><QrCode size={17} /> {qrSrc(selected) ? 'Tạo lại QR' : 'Tạo QR'}</button>
                     <button className="danger" onClick={() => askRemove(selected)}><Trash2 size={17} /> Xóa bàn</button>
                   </div>
                 </div>
