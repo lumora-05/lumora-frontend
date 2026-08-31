@@ -22,13 +22,58 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 const STATUS_LABEL = {
   CHO_XAC_NHAN: 'Đang chuyển xuống bếp',
   DA_XAC_NHAN: 'Đã chuyển xuống bếp',
+  CHO_THANH_TOAN: 'Chờ thanh toán',
+  CHO_DEN_GIO: 'Chờ đến giờ',
   DANG_CHE_BIEN: 'Đang chuẩn bị',
+  DANG_CHUAN_BI: 'Đang chuẩn bị',
   DA_PHUC_VU: 'Đang phục vụ',
   SAN_SANG_THANH_TOAN: 'Đang phục vụ',
   DANG_THANH_TOAN: 'Đang thanh toán',
+  CHO_TAI_XE_NHAN: 'Chờ tài xế đến nhận',
+  CHO_BAN_GIAO: 'Chờ bàn giao',
+  CHO_KHACH_NHAN: 'Chờ khách nhận',
+  DANG_GIAO: 'Đang giao',
+  CHO_DOI_SOAT: 'Chờ đối soát COD',
+  GIAO_THAT_BAI: 'Giao thất bại',
+  HOAN_THANH: 'Hoàn thành',
   DA_THANH_TOAN: 'Hoàn thành',
   DA_HUY: 'Đã hủy',
 };
+
+const DASHBOARD_STATUS_GROUP = {
+  CHO_XAC_NHAN: 'Chờ xử lý',
+  CHO_THANH_TOAN: 'Chờ xử lý',
+  CHO_DEN_GIO: 'Chờ xử lý',
+  DA_XAC_NHAN: 'Đang chuẩn bị',
+  DANG_CHE_BIEN: 'Đang chuẩn bị',
+  DANG_CHUAN_BI: 'Đang chuẩn bị',
+  DA_PHUC_VU: 'Đang phục vụ',
+  SAN_SANG_THANH_TOAN: 'Đang phục vụ',
+  DANG_THANH_TOAN: 'Đang thanh toán',
+  CHO_TAI_XE_NHAN: 'Chờ giao',
+  CHO_BAN_GIAO: 'Chờ giao',
+  CHO_KHACH_NHAN: 'Chờ nhận',
+  DANG_GIAO: 'Đang giao',
+  CHO_DOI_SOAT: 'Chờ đối soát',
+  GIAO_THAT_BAI: 'Giao thất bại',
+  DA_THANH_TOAN: 'Hoàn thành',
+  HOAN_THANH: 'Hoàn thành',
+  DA_HUY: 'Đã hủy',
+};
+
+const DASHBOARD_STATUS_ORDER = [
+  'Chờ xử lý',
+  'Đang chuẩn bị',
+  'Đang phục vụ',
+  'Đang thanh toán',
+  'Chờ giao',
+  'Chờ nhận',
+  'Đang giao',
+  'Chờ đối soát',
+  'Giao thất bại',
+  'Hoàn thành',
+  'Đã hủy',
+];
 
 const ACTIVITY_VIEW = {
   NEW_ORDER: { tone: 'green', icon: ShoppingCart },
@@ -185,16 +230,34 @@ export default function Dashboard() {
   const normalizedStatus = useMemo(() => {
     if (!Array.isArray(orderStatus) || orderStatus.length === 0) return [];
 
-    return orderStatus.map((item) => ({
-      name: normalizeStatus(item?.trangThai || item?.name),
-      value: Number(item?.soLuong ?? item?.value ?? 0),
-    }));
+    const grouped = new Map();
+
+    orderStatus.forEach((item) => {
+      const rawStatus = String(item?.trangThai || item?.name || '').trim().toUpperCase();
+      const name = DASHBOARD_STATUS_GROUP[rawStatus] || normalizeStatus(rawStatus);
+      const value = Number(item?.soLuong ?? item?.value ?? 0);
+      grouped.set(name, (grouped.get(name) || 0) + value);
+    });
+
+    return Array.from(grouped, ([name, value]) => ({ name, value }))
+      .filter((item) => item.value > 0)
+      .sort((left, right) => {
+        const leftIndex = DASHBOARD_STATUS_ORDER.indexOf(left.name);
+        const rightIndex = DASHBOARD_STATUS_ORDER.indexOf(right.name);
+        const safeLeft = leftIndex === -1 ? DASHBOARD_STATUS_ORDER.length : leftIndex;
+        const safeRight = rightIndex === -1 ? DASHBOARD_STATUS_ORDER.length : rightIndex;
+        return safeLeft - safeRight;
+      });
   }, [orderStatus]);
 
   const pendingOrders = useMemo(() => {
-    const item = normalizedStatus.find((row) => row.name === 'Đã chuyển xuống bếp');
-    return item?.value ?? summary?.donChoXacNhan ?? 0;
-  }, [normalizedStatus, summary]);
+    if (!Array.isArray(orderStatus)) return summary?.donChoXacNhan ?? 0;
+
+    const item = orderStatus.find((row) =>
+      String(row?.trangThai || row?.name || '').trim().toUpperCase() === 'DA_XAC_NHAN'
+    );
+    return Number(item?.soLuong ?? item?.value ?? summary?.donChoXacNhan ?? 0);
+  }, [orderStatus, summary]);
 
   const visibleActivities = activityExpanded ? activities : activities.slice(0, 5);
 

@@ -293,6 +293,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       ? ['/topic/cashier/reservations', '/topic/reservations']
       : ['/topic/reservations'];
   const canManageReservation = role === 'admin' || role === 'cashier';
+  const useCashierLayout = role === 'admin' || role === 'cashier';
   const canHandleArrival = role === 'admin' || role === 'waiter';
   const canFilterArea = canManageReservation || role === 'waiter';
   const socketEvent = useWebSocket(topics);
@@ -356,7 +357,7 @@ export default function ReservationManagement({ role = 'admin' }) {
       setLoading(true);
       const response = await reservationApi.list({
         status: status || undefined,
-        depositStatus: role === 'cashier' ? depositStatusFilter || undefined : undefined,
+        depositStatus: useCashierLayout ? depositStatusFilter || undefined : undefined,
         from: from || undefined,
         to: to || undefined,
         keyword: keyword || undefined,
@@ -378,7 +379,7 @@ export default function ReservationManagement({ role = 'admin' }) {
     } finally {
       setLoading(false);
     }
-  }, [area, canFilterArea, depositStatusFilter, from, keyword, page, role, size, status, to, toast]);
+  }, [area, canFilterArea, depositStatusFilter, from, keyword, page, role, size, status, to, toast, useCashierLayout]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (socketEvent?.topic?.includes('reservations')) load(); }, [load, socketEvent]);
@@ -489,17 +490,17 @@ export default function ReservationManagement({ role = 'admin' }) {
   }
 
   return (
-    <section className={`reservation-manage-page ${role === 'cashier' ? 'cashier-reservation-page' : role === 'waiter' ? 'waiter-reservation-page' : ''}`}>
+    <section className={`reservation-manage-page ${useCashierLayout ? 'cashier-reservation-page' : role === 'waiter' ? 'waiter-reservation-page' : ''}`}>
       <div className="reservation-manage-stats">
         <article><span className="orange"><CalendarCheck2 size={22} /></span><p>Tổng lịch theo bộ lọc<strong>{stats.total}</strong></p></article>
         <article><span className="warning"><Clock3 size={22} /></span><p>{canManageReservation ? 'Cần xử lý trên trang' : role === 'waiter' ? 'Cần check-in' : 'Chờ xác nhận trên trang'}<strong>{stats.pending}</strong></p></article>
-        <article><span className="blue"><CalendarClock size={22} /></span><p>{['cashier', 'waiter'].includes(role) ? 'Sắp đến trong 60 phút' : 'Sắp đến trên trang'}<strong>{stats.upcoming}</strong></p></article>
+        <article><span className="blue"><CalendarClock size={22} /></span><p>{useCashierLayout || role === 'waiter' ? 'Sắp đến trong 60 phút' : 'Sắp đến trên trang'}<strong>{stats.upcoming}</strong></p></article>
         <article><span className="green"><UserCheck size={22} /></span><p>Đã đến/xếp bàn<strong>{stats.arrived}</strong></p></article>
       </div>
 
       <div className="reservation-manage-card">
-        <div className={`reservation-manage-toolbar ${role === 'cashier' ? 'cashier-reservation-toolbar' : role === 'waiter' ? 'waiter-reservation-toolbar' : ''}`}>
-          {role === 'cashier' ? (
+        <div className={`reservation-manage-toolbar ${useCashierLayout ? 'cashier-reservation-toolbar' : role === 'waiter' ? 'waiter-reservation-toolbar' : ''}`}>
+          {useCashierLayout ? (
             <>
               <label className="cashier-reservation-filter-field">
                 <span>Trạng thái đặt bàn</span>
@@ -578,9 +579,9 @@ export default function ReservationManagement({ role = 'admin' }) {
 
         <div className="reservation-manage-table-wrap">
           <table className="reservation-manage-table">
-            <thead><tr><th>Thời gian</th><th>Khách hàng</th><th>Số khách</th><th>Khu vực/Bàn</th>{role === 'cashier' ? <><th>Trạng thái đặt bàn</th><th>Trạng thái cọc</th></> : <th>Trạng thái</th>}<th>Thao tác</th></tr></thead>
+            <thead><tr><th>Thời gian</th><th>Khách hàng</th><th>Số khách</th><th>Khu vực/Bàn</th>{useCashierLayout ? <><th>Trạng thái đặt bàn</th><th>Trạng thái cọc</th></> : <th>Trạng thái</th>}<th>Thao tác</th></tr></thead>
             <tbody>
-              {loading && !rows.length ? <tr><td colSpan={role === 'cashier' ? 7 : 6} className="reservation-manage-empty"><LoaderCircle className="spin" size={22} /> Đang tải lịch đặt bàn...</td></tr>
+              {loading && !rows.length ? <tr><td colSpan={useCashierLayout ? 7 : 6} className="reservation-manage-empty"><LoaderCircle className="spin" size={22} /> Đang tải lịch đặt bàn...</td></tr>
                 : rows.length ? rows.map((item) => {
                   const statusValue = reservationStatus(item);
                   const meta = reservationStatusMeta(statusValue);
@@ -597,7 +598,7 @@ export default function ReservationManagement({ role = 'admin' }) {
                       <td><b>{item?.hoTenKhach}</b><small>{item?.soDienThoai}</small><em>{item?.maTraCuu}</em></td>
                       <td><span className="reservation-party"><UsersRound size={15} /> {item?.soLuongKhach}</span></td>
                       <td><strong>{item?.khuVucMongMuon || 'Không yêu cầu'}</strong><small>Dự kiến: {item?.tenBanDuKien || 'Chưa chọn'}</small><small>Thực tế: {item?.tenBanThucTe || 'Chưa xếp'}</small></td>
-                      {role === 'cashier' ? (
+                      {useCashierLayout ? (
                         <>
                           <td className="reservation-booking-status-cell">
                             <span className={`reservation-status-badge ${meta.tone}`}>{meta.label}</span>
@@ -656,7 +657,7 @@ export default function ReservationManagement({ role = 'admin' }) {
                       </div></td>
                     </tr>
                   );
-                }) : <tr><td colSpan={role === 'cashier' ? 7 : 6} className="reservation-manage-empty">Không có lịch đặt bàn phù hợp.</td></tr>}
+                }) : <tr><td colSpan={useCashierLayout ? 7 : 6} className="reservation-manage-empty">Không có lịch đặt bàn phù hợp.</td></tr>}
             </tbody>
           </table>
         </div>
