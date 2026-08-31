@@ -214,7 +214,7 @@ export default function DeliveryTracking() {
   if (!order) {
     return (
       <main className="delivery-public-page">
-        <DeliveryPublicHeader compact />
+        <DeliveryPublicHeader homeStyle />
         <section className="delivery-public-container delivery-lookup-single">
           <Link to="/menu/lookup"><ArrowLeft size={18} /> Tra cứu đơn khác</Link>
           <div className="delivery-lookup-card">
@@ -240,7 +240,7 @@ export default function DeliveryTracking() {
 
   return (
     <main className="delivery-public-page">
-      <DeliveryPublicHeader compact />
+      <DeliveryPublicHeader homeStyle />
       <section className="delivery-public-container delivery-tracking-page">
         <div className="delivery-tracking-top">
           <div>
