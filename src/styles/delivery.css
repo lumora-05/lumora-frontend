@@ -222,7 +222,24 @@
   box-shadow:none;
 }
 .delivery-home-menu .delivery-menu-toolbar input{color:var(--lumora-home-text);font-size:14px}
-.delivery-home-menu .delivery-category-tabs{margin:30px 0 38px;gap:10px}
+.delivery-home-menu .delivery-category-tabs{margin:30px 0 20px;gap:10px}
+.delivery-home-menu .delivery-menu-order-lookup{
+  min-height:46px;
+  margin:0 0 38px;
+  padding:0 16px;
+  border:1px solid var(--lumora-home-border);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  color:var(--lumora-home-muted);
+  background:#fffaf5;
+  font-size:13px;
+}
+.delivery-home-menu .delivery-menu-order-lookup>span{font-weight:600;color:var(--lumora-home-text)}
+.delivery-home-menu .delivery-menu-order-lookup>a{display:inline-flex;align-items:center;gap:7px;color:var(--lumora-home-orange);font-weight:700;text-decoration:none;white-space:nowrap}
+.delivery-home-menu .delivery-menu-order-lookup>a:hover{text-decoration:underline}
 .delivery-home-menu .delivery-category-tabs button{
   min-height:38px;
   padding:0 16px;
@@ -312,6 +329,7 @@
   .delivery-home-menu .delivery-menu-section{padding:72px 0 90px}
   .delivery-home-menu .delivery-menu-toolbar{align-items:stretch;flex-direction:column}
   .delivery-home-menu .delivery-menu-toolbar h2{font-size:30px}
+  .delivery-home-menu .delivery-menu-order-lookup{padding:11px 14px;align-items:flex-start;flex-direction:column;gap:5px}
   .delivery-home-menu .delivery-food-grid{grid-template-columns:1fr}
   .delivery-home-menu .delivery-food-image{height:auto;aspect-ratio:1.15}
 }

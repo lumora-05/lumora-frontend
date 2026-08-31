@@ -44,6 +44,7 @@ export const EN_TEXT = {
   'Đánh giá': 'Reviews',
   'Tài khoản': 'Account',
   'Tra cứu đơn': 'Track order',
+  'Đã có đơn hàng?': 'Already placed an order?',
   'Thực đơn giao hàng': 'Delivery menu',
   'Giao món tận nơi': 'Food delivery',
   'Thực đơn trực tuyến': 'Online menu',

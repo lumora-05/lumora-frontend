@@ -1,4 +1,4 @@
-import { ArrowLeft, Bike, Search, ShoppingBag, UserRound } from 'lucide-react';
+import { ArrowLeft, Bike, ShoppingBag, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -82,7 +82,6 @@ export default function DeliveryPublicHeader({ compact = false, homeStyle = fals
 
         <nav className="delivery-public-nav" aria-label="Điều hướng đặt món giao tận nơi">
           <NavLink to="/menu" end><Bike size={17} /> Thực đơn giao hàng</NavLink>
-          <NavLink to="/menu/lookup"><Search size={17} /> Tra cứu đơn</NavLink>
         </nav>
 
         <div className="delivery-header-actions">

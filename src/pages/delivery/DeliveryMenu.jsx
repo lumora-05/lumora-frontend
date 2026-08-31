@@ -243,6 +243,11 @@ export default function DeliveryMenu() {
           ))}
         </div>
 
+        <div className="delivery-menu-order-lookup">
+          <span>Đã có đơn hàng?</span>
+          <Link to="/menu/lookup"><span>Tra cứu đơn</span><span aria-hidden="true">→</span></Link>
+        </div>
+
         {loading ? (
           <div className="delivery-state-card"><LoaderCircle className="spin" size={34} /><strong>Đang tải thực đơn...</strong></div>
         ) : error ? (
