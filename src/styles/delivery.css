@@ -198,7 +198,7 @@
 .delivery-home-menu .delivery-hero-card>b{color:var(--lumora-home-orange);font-family:'Playfair Display',Georgia,serif}
 .delivery-home-menu .delivery-hero-card>a{min-height:40px;border-radius:999px;background:#403934;font-size:13px;font-weight:600}
 
-.delivery-home-menu .delivery-menu-section{padding:96px 0 112px}
+.delivery-home-menu .delivery-menu-section{padding:52px 0 112px}
 .delivery-home-menu .delivery-menu-toolbar{align-items:end}
 .delivery-home-menu .delivery-menu-toolbar>div>span{
   color:var(--lumora-home-orange);
@@ -333,7 +333,7 @@
   .delivery-home-menu .delivery-home-hero{padding:72px 0}.delivery-home-menu .delivery-home-hero-bg img{object-position:68% center}.delivery-home-menu .delivery-eyebrow{font-size:30px}.delivery-home-menu .delivery-hero h1{font-size:42px}.delivery-home-menu .delivery-hero p{font-size:15px}
   .delivery-home-menu .delivery-hero h1{font-size:38px}
   .delivery-home-menu .delivery-hero-card{max-width:none;width:100%;box-sizing:border-box}
-  .delivery-home-menu .delivery-menu-section{padding:72px 0 90px}
+  .delivery-home-menu .delivery-menu-section{padding:44px 0 90px}
   .delivery-home-menu .delivery-menu-toolbar{align-items:stretch;flex-direction:column}
   .delivery-home-menu .delivery-menu-toolbar h2{font-size:30px}
   .delivery-home-menu .delivery-menu-search-area{width:100%;align-items:flex-start}
