@@ -2,7 +2,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 const COLORS = ['#ff4d00', '#2f80ed', '#31b957', '#9b5de5', '#b8c0cc'];
 
-export default function OrderStatusChart({ data = [], normalized = false }) {
+export default function OrderStatusChart({ data = [], normalized = false, period = '7days' }) {
   const rows = (Array.isArray(data)
     ? (normalized
       ? data
@@ -18,7 +18,7 @@ export default function OrderStatusChart({ data = [], normalized = false }) {
   return (
     <article className="dashboard-card dashboard-order-status-card">
       <div className="dashboard-card-head plain">
-        <h3>Đơn hàng theo trạng thái</h3>
+        <h3>{period === '30days' ? 'Đơn hàng theo trạng thái · 30 ngày qua' : 'Đơn hàng theo trạng thái · 7 ngày qua'}</h3>
       </div>
 
       {rows.length === 0 ? (

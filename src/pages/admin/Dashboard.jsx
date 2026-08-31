@@ -166,7 +166,7 @@ export default function Dashboard() {
     const results = await Promise.allSettled([
       dashboardApi.summary(),
       dashboardApi.revenueChart(revenueRange(revenuePeriod)),
-      dashboardApi.orderStatusChart(),
+      dashboardApi.orderStatusChart(revenueRange(revenuePeriod)),
       dashboardApi.topFoods(5),
       dashboardApi.recentOrders(5),
       dashboardApi.recentActivities(50),
@@ -315,7 +315,7 @@ export default function Dashboard() {
           period={revenuePeriod}
           onPeriodChange={setRevenuePeriod}
         />
-        <OrderStatusChart data={normalizedStatus} normalized />
+        <OrderStatusChart data={normalizedStatus} normalized period={revenuePeriod} />
       </div>
 
       <div className="dashboard-bottom-row">
