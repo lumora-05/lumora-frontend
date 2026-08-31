@@ -1,4 +1,4 @@
-import { CheckCircle2, History, LogOut, PackageSearch, ShoppingBag, Star, UserRound } from 'lucide-react';
+import { CheckCircle2, History, LogOut, PackageSearch, Pencil, Phone, Save, ShoppingBag, Star, UserRound, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
@@ -45,6 +45,10 @@ export default function CustomerAccount() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [orderFilter, setOrderFilter] = useState('ALL');
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileForm, setProfileForm] = useState({ hoTen: '', soDienThoai: '' });
 
   useEffect(() => {
     if (!getCustomerToken()) { navigate('/login?next=/menu/account', { replace: true }); return; }
@@ -82,6 +86,66 @@ export default function CustomerAccount() {
     navigate('/menu', { replace: true });
   }
 
+  function openProfileEditor() {
+    setProfileForm({
+      hoTen: user?.hoTen || '',
+      soDienThoai: user?.soDienThoai || '',
+    });
+    setProfileError('');
+    setEditingProfile(true);
+  }
+
+  function closeProfileEditor() {
+    if (savingProfile) return;
+    setEditingProfile(false);
+    setProfileError('');
+  }
+
+  function normalizedPhone(value) {
+    let phone = String(value || '').trim().replace(/[\s().-]/g, '');
+    if (phone.startsWith('+84')) phone = `0${phone.slice(3)}`;
+    else if (phone.startsWith('84') && phone.length >= 11) phone = `0${phone.slice(2)}`;
+    return phone;
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    const hoTen = profileForm.hoTen.trim();
+    const soDienThoai = normalizedPhone(profileForm.soDienThoai);
+
+    if (!hoTen) {
+      setProfileError('Vui lòng nhập họ tên.');
+      return;
+    }
+    if (!/^0[0-9]{8,10}$/.test(soDienThoai)) {
+      setProfileError('Số điện thoại không hợp lệ.');
+      return;
+    }
+
+    setProfileError('');
+    setSavingProfile(true);
+    try {
+      const response = await customerAccountApi.updateMe({ hoTen, soDienThoai });
+      const auth = unwrapDeliveryResponse(response);
+      if (!auth?.token) throw new Error('Không nhận được phiên đăng nhập mới sau khi cập nhật.');
+      saveCustomerSession(auth);
+      setUser({
+        maKhachHang: auth.maKhachHang,
+        hoTen: auth.hoTen || hoTen,
+        soDienThoai: auth.soDienThoai || soDienThoai,
+        diemTichLuy: Number(auth.diemTichLuy || 0),
+      });
+      setEditingProfile(false);
+      toast.success('Cập nhật thông tin thành công.');
+    } catch (error) {
+      const message = errorMessageOf(error, 'Không thể cập nhật thông tin tài khoản.');
+      setProfileError(message);
+      toast.error(message);
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
   return <main className="delivery-public-page">
     <DeliveryPublicHeader homeStyle />
     <section className="delivery-public-container delivery-account-page delivery-account-dashboard">
@@ -95,7 +159,10 @@ export default function CustomerAccount() {
             <span className="delivery-account-member-badge">Khách hàng Lumora</span>
           </div>
         </div>
-        <button className="delivery-account-logout" type="button" onClick={logout}><LogOut size={17}/> Đăng xuất</button>
+        <div className="delivery-account-profile-actions">
+          <button className="delivery-account-edit-profile" type="button" onClick={openProfileEditor}><Pencil size={16}/> Chỉnh sửa thông tin</button>
+          <button className="delivery-account-logout" type="button" onClick={logout}><LogOut size={17}/> Đăng xuất</button>
+        </div>
       </section>
 
       <section className="delivery-account-stats delivery-account-stats-dashboard">
@@ -152,5 +219,31 @@ export default function CustomerAccount() {
         </div> : null}
       </section>
     </section>
+
+    {editingProfile ? <div className="delivery-account-profile-backdrop" onMouseDown={(event) => event.target === event.currentTarget && closeProfileEditor()}>
+      <section className="delivery-account-profile-modal" role="dialog" aria-modal="true" aria-labelledby="delivery-account-profile-title" onMouseDown={(event) => event.stopPropagation()}>
+        <button className="delivery-account-profile-close" type="button" onClick={closeProfileEditor} aria-label="Đóng" disabled={savingProfile}><X size={18}/></button>
+        <span className="delivery-account-profile-modal-icon"><Pencil size={22}/></span>
+        <small>THÔNG TIN CÁ NHÂN</small>
+        <h2 id="delivery-account-profile-title">Chỉnh sửa thông tin</h2>
+        <p>Cập nhật họ tên và số điện thoại dùng cho tài khoản khách hàng Lumora.</p>
+
+        <form onSubmit={saveProfile}>
+          <label>
+            <span>Họ và tên</span>
+            <div><UserRound size={17}/><input value={profileForm.hoTen} onChange={(event) => setProfileForm((current) => ({ ...current, hoTen: event.target.value }))} placeholder="Nhập họ và tên" autoComplete="name" disabled={savingProfile}/></div>
+          </label>
+          <label>
+            <span>Số điện thoại</span>
+            <div><Phone size={17}/><input value={profileForm.soDienThoai} onChange={(event) => setProfileForm((current) => ({ ...current, soDienThoai: event.target.value }))} placeholder="Ví dụ: 0979792909" inputMode="tel" autoComplete="tel" disabled={savingProfile}/></div>
+          </label>
+          {profileError ? <p className="delivery-account-profile-error" role="alert">{profileError}</p> : null}
+          <div className="delivery-account-profile-modal-actions">
+            <button type="button" className="secondary" onClick={closeProfileEditor} disabled={savingProfile}>Hủy</button>
+            <button type="submit" className="primary" disabled={savingProfile}><Save size={17}/>{savingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}</button>
+          </div>
+        </form>
+      </section>
+    </div> : null}
   </main>;
 }

@@ -15,5 +15,6 @@ export const customerAccountApi = {
   register: (data) => axiosClient.post('/customer/account/register', data, publicConfig),
   login: (data) => axiosClient.post('/customer/account/login', data, publicConfig),
   me: () => axiosClient.get('/customer/account/me', customerConfig()),
+  updateMe: (data) => axiosClient.put('/customer/account/me', data, customerConfig()),
   orders: () => axiosClient.get('/customer/account/orders', customerConfig()),
 };
