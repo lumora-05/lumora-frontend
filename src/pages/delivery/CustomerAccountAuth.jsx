@@ -6,7 +6,6 @@ import {
   LoaderCircle,
   LockKeyhole,
   Phone,
-  ShieldCheck,
   ShoppingBag,
   Sparkles,
   TicketPercent,
@@ -287,10 +286,6 @@ export default function CustomerAccountAuth() {
               </button>
             </div>
 
-            <div className="lumora-login-security">
-              <ShieldCheck size={15} />
-              <span>Không bắt buộc tài khoản. Khách vãng lai vẫn có thể đặt món bình thường.</span>
-            </div>
           </div>
 
           <p className="lumora-login-copyright">© 2026 LUMORA · Đặt món trực tuyến</p>
