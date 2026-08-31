@@ -212,14 +212,20 @@ export default function DeliveryMenu() {
             <span>Thực đơn trực tuyến</span>
             <h2 className="delivery-home-serif">Chọn món bạn yêu thích</h2>
           </div>
-          <label>
-            <Search size={20} />
-            <input
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              placeholder="Tìm kiếm món ăn..."
-            />
-          </label>
+          <div className="delivery-menu-search-area">
+            <label>
+              <Search size={20} />
+              <input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="Tìm kiếm món ăn..."
+              />
+            </label>
+            <Link className="delivery-menu-order-lookup-link" to="/menu/lookup">
+              {language === 'en' ? 'Already ordered? Track your order' : 'Đã có đơn? Tra cứu đơn'}
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
 
         <div className="delivery-category-tabs">
@@ -243,10 +249,6 @@ export default function DeliveryMenu() {
           ))}
         </div>
 
-        <div className="delivery-menu-order-lookup">
-          <span>Đã có đơn hàng?</span>
-          <Link to="/menu/lookup"><span>Tra cứu đơn</span><span aria-hidden="true">→</span></Link>
-        </div>
 
         {loading ? (
           <div className="delivery-state-card"><LoaderCircle className="spin" size={34} /><strong>Đang tải thực đơn...</strong></div>

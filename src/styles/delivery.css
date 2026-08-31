@@ -214,32 +214,39 @@
   font-weight:600;
   letter-spacing:0;
 }
-.delivery-home-menu .delivery-menu-toolbar>label{
+.delivery-home-menu .delivery-menu-search-area{
+  width:min(390px,100%);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:9px;
+}
+.delivery-home-menu .delivery-menu-search-area>label{
+  width:100%;
   height:44px;
+  padding:0 15px;
+  box-sizing:border-box;
   border:1px solid var(--lumora-home-border);
   border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:10px;
   background:#fffdfa;
   box-shadow:none;
 }
 .delivery-home-menu .delivery-menu-toolbar input{color:var(--lumora-home-text);font-size:14px}
-.delivery-home-menu .delivery-category-tabs{margin:30px 0 20px;gap:10px}
-.delivery-home-menu .delivery-menu-order-lookup{
-  min-height:46px;
-  margin:0 0 38px;
-  padding:0 16px;
-  border:1px solid var(--lumora-home-border);
-  border-radius:12px;
-  display:flex;
+.delivery-home-menu .delivery-menu-order-lookup-link{
+  display:inline-flex;
   align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  color:var(--lumora-home-muted);
-  background:#fffaf5;
+  gap:7px;
+  color:var(--lumora-home-orange);
   font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  white-space:nowrap;
 }
-.delivery-home-menu .delivery-menu-order-lookup>span{font-weight:600;color:var(--lumora-home-text)}
-.delivery-home-menu .delivery-menu-order-lookup>a{display:inline-flex;align-items:center;gap:7px;color:var(--lumora-home-orange);font-weight:700;text-decoration:none;white-space:nowrap}
-.delivery-home-menu .delivery-menu-order-lookup>a:hover{text-decoration:underline}
+.delivery-home-menu .delivery-menu-order-lookup-link:hover{text-decoration:underline}
+.delivery-home-menu .delivery-category-tabs{margin:30px 0 20px;gap:10px}
 .delivery-home-menu .delivery-category-tabs button{
   min-height:38px;
   padding:0 16px;
@@ -329,7 +336,8 @@
   .delivery-home-menu .delivery-menu-section{padding:72px 0 90px}
   .delivery-home-menu .delivery-menu-toolbar{align-items:stretch;flex-direction:column}
   .delivery-home-menu .delivery-menu-toolbar h2{font-size:30px}
-  .delivery-home-menu .delivery-menu-order-lookup{padding:11px 14px;align-items:flex-start;flex-direction:column;gap:5px}
+  .delivery-home-menu .delivery-menu-search-area{width:100%;align-items:flex-start}
+  .delivery-home-menu .delivery-menu-order-lookup-link{align-self:flex-end}
   .delivery-home-menu .delivery-food-grid{grid-template-columns:1fr}
   .delivery-home-menu .delivery-food-image{height:auto;aspect-ratio:1.15}
 }
