@@ -33,6 +33,7 @@ import {
   deliveryStatusClass,
   deliveryStatusLabel,
   displayOrderCode,
+  isDeliveryFinished,
   unwrapDeliveryList,
   unwrapDeliveryResponse,
 } from '../../utils/delivery';
@@ -98,13 +99,46 @@ function selectedStatus(order) {
   return String(deliveryData(order)?.trangThaiGiaoHang || '').toUpperCase();
 }
 
+const CASHIER_ACTION_STATUSES = new Set([
+  'CHO_THANH_TOAN',
+  'CHO_XAC_NHAN',
+  'CHO_TAI_XE_NHAN',
+  'CHO_BAN_GIAO',
+  'CHO_KHACH_NHAN',
+  'CHO_DOI_SOAT',
+  'GIAO_THAT_BAI',
+]);
+
+function orderPlacedAt(order) {
+  const value = new Date(order?.thoiGianDat || 0).getTime();
+  return Number.isFinite(value) ? value : 0;
+}
+
+function cashierSortGroup(order) {
+  const status = selectedStatus(order);
+  if (CASHIER_ACTION_STATUSES.has(status)) return 0;
+  if (isDeliveryFinished(status)) return 2;
+  return 1;
+}
+
+function compareCashierOrders(a, b) {
+  const groupA = cashierSortGroup(a);
+  const groupB = cashierSortGroup(b);
+  if (groupA !== groupB) return groupA - groupB;
+
+  const timeA = orderPlacedAt(a);
+  const timeB = orderPlacedAt(b);
+  // Đơn đang cần xử lý: đơn chờ lâu hơn lên trước. Đơn đã kết thúc: mới nhất lên trước.
+  return groupA === 2 ? timeB - timeA : timeA - timeB;
+}
+
 export default function DeliveryOrderManage() {
   const { user } = useAuth();
   const role = currentRole(user);
   const canManage = ['ADMIN', 'CASHIER'].includes(role);
   const toast = useToast();
   const socketEvent = useWebSocket(['/topic/delivery-orders', '/topic/cashier/delivery-orders']);
-  const [status, setStatus] = useState('ALL');
+  const [status, setStatus] = useState(() => (role === 'CASHIER' ? 'DANG_XU_LY' : 'ALL'));
   const [keyword, setKeyword] = useState('');
   const [orders, setOrders] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -120,7 +154,7 @@ export default function DeliveryOrderManage() {
     if (!silent) setLoading(true);
     setError('');
     try {
-      const response = await deliveryApi.list(status);
+      const response = await deliveryApi.list(status === 'DANG_XU_LY' ? 'ALL' : status);
       setOrders(unwrapDeliveryList(response));
     } catch (requestError) {
       const message = errorMessageOf(requestError, 'Không thể tải danh sách đơn đặt online.');
@@ -157,10 +191,14 @@ export default function DeliveryOrderManage() {
     }
   }, [socketEvent]);
 
+  const visibleOrders = useMemo(() => {
+    if (status !== 'DANG_XU_LY') return orders;
+    return orders.filter((order) => !isDeliveryFinished(selectedStatus(order)));
+  }, [orders, status]);
+
   const filteredOrders = useMemo(() => {
     const query = keyword.trim().toLocaleLowerCase('vi');
-    if (!query) return orders;
-    return orders.filter((order) => {
+    const matched = !query ? visibleOrders : visibleOrders.filter((order) => {
       const delivery = deliveryData(order);
       return [
         displayOrderCode(order),
@@ -172,14 +210,15 @@ export default function DeliveryOrderManage() {
         delivery.tenNguoiGiao,
       ].some((value) => String(value || '').toLocaleLowerCase('vi').includes(query));
     });
-  }, [keyword, orders]);
+    return [...matched].sort(compareCashierOrders);
+  }, [keyword, visibleOrders]);
 
   const counters = useMemo(() => ({
-    total: orders.length,
-    pending: orders.filter((item) => ['CHO_THANH_TOAN', 'CHO_XAC_NHAN'].includes(selectedStatus(item))).length,
-    preparing: orders.filter((item) => ['CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(selectedStatus(item))).length,
-    delivery: orders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT'].includes(selectedStatus(item))).length,
-  }), [orders]);
+    total: visibleOrders.length,
+    pending: visibleOrders.filter((item) => ['CHO_THANH_TOAN', 'CHO_XAC_NHAN'].includes(selectedStatus(item))).length,
+    preparing: visibleOrders.filter((item) => ['CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(selectedStatus(item))).length,
+    delivery: visibleOrders.filter((item) => ['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT'].includes(selectedStatus(item))).length,
+  }), [visibleOrders]);
 
   async function runAction(key, action, successMessage) {
     if (!selected) return;
@@ -239,6 +278,7 @@ export default function DeliveryOrderManage() {
       <div className="delivery-manage-toolbar">
         <label><Search size={19} /><input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm mã đơn, mã vận đơn, khách nhận..." /></label>
         <select value={status} onChange={(event) => setStatus(event.target.value)}>
+          <option value="DANG_XU_LY">Đang xử lý</option>
           {DELIVERY_ORDER_STATUSES.map((item) => <option key={item} value={item}>{deliveryStatusLabel(item)}</option>)}
         </select>
         <button type="button" onClick={() => loadOrders()} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={18} /> Làm mới</button>
