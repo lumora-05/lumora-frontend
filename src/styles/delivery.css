@@ -757,3 +757,17 @@
 /* Phân trang danh sách đơn hàng trực tuyến. */
 .delivery-manage-pagination{padding:13px 16px;border-top:1px solid #edf0f3;display:flex;align-items:center;justify-content:space-between;gap:14px;color:#7a8591;background:#fff;font-size:11px}.delivery-manage-pagination-controls{display:flex;align-items:center;gap:6px}.delivery-manage-pagination-controls button{min-width:34px;height:34px;padding:0 10px;border:1px solid #dfe4e9;border-radius:9px;color:#56626f;background:#fff;font:inherit;font-weight:850;cursor:pointer;transition:.15s ease}.delivery-manage-pagination-controls button:hover:not(:disabled){border-color:#f1ad85;color:#e85d18;background:#fff8f3}.delivery-manage-pagination-controls button.active{border-color:#f0691e;color:#fff;background:#f0691e}.delivery-manage-pagination-controls button:disabled{opacity:.4;cursor:not-allowed}.delivery-manage-page-item{display:flex;align-items:center;gap:6px}.delivery-manage-page-item i{min-width:14px;color:#9aa2aa;text-align:center;font-style:normal}
 @media(max-width:680px){.delivery-manage-pagination{align-items:stretch;flex-direction:column}.delivery-manage-pagination-controls{overflow-x:auto;padding-bottom:2px}.delivery-manage-pagination-controls button{flex:none}}
+
+/* Customer account refinements */
+.delivery-account-stats article{padding:14px 16px}
+.delivery-account-stats span{margin:7px 0 3px}
+.delivery-account-section-title>a{background:#e85b17}
+.delivery-account-section-title>a:hover{background:#d94f10}
+.delivery-account-order-list small{color:#9aa3ac;font-size:9px}
+.delivery-account-pagination{margin-top:16px;padding-top:14px;border-top:1px solid #edf0f3;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#7c8792;font-size:10px}
+.delivery-account-pagination>div{display:flex;align-items:center;gap:6px}
+.delivery-account-pagination button{min-width:34px;height:34px;padding:0 10px;border:1px solid #e1e6eb;border-radius:9px;color:#64707c;background:#fff;font-size:10px;font-weight:850;cursor:pointer}
+.delivery-account-pagination button:hover:not(:disabled){border-color:#efb08d;color:#e85b17;background:#fff8f3}
+.delivery-account-pagination button.active{border-color:#e85b17;color:#fff;background:#e85b17}
+.delivery-account-pagination button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:680px){.delivery-account-pagination{align-items:flex-start;flex-direction:column}.delivery-account-pagination>div{max-width:100%;overflow:auto;padding-bottom:2px}}
