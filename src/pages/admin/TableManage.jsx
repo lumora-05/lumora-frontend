@@ -584,7 +584,7 @@ export default function TableManage() {
     <section className="table-qr-page">
       <div className="table-qr-tabs" role="tablist" aria-label="Bàn và đặt chỗ">
         <button className={activeTab === 'tables' ? 'active' : ''} onClick={() => changeTab('tables')}>Quản lý bàn</button>
-        <button className={activeTab === 'reservations' ? 'active' : ''} onClick={() => changeTab('reservations')}>Đặt chỗ</button>
+        <button className={activeTab === 'reservations' ? 'active' : ''} onClick={() => changeTab('reservations')}>Lịch đặt bàn</button>
       </div>
 
       {activeTab === 'tables' ? (
