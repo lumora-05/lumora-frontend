@@ -404,10 +404,6 @@ export default function SystemSettings() {
   return (
     <section className="system-settings-page">
       <div className="system-settings-toolbar">
-        <div>
-          <h2>Cài đặt hệ thống</h2>
-          <p>Quản lý cấu hình chung của nhà hàng tại một nơi. Các thay đổi nghiệp vụ được áp dụng sau khi lưu.</p>
-        </div>
         <button type="button" className="system-settings-refresh" onClick={() => loadSettings()} disabled={saving || logoBusy || bannerBusy}>
           <RefreshCw size={17} /> Tải lại
         </button>

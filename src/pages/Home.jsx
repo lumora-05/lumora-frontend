@@ -22,6 +22,7 @@ import { reviewApi } from '../api/reviewApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { imageUrl } from '../utils/imageUrl';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
+import LumoraChatbot from '../components/customer/LumoraChatbot';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedFoodDescription, localizedFoodName } from '../utils/localizedContent';
 import { usePublicContentTranslations } from '../hooks/usePublicContentTranslations';
@@ -675,6 +676,7 @@ export default function Home() {
       <OrderCta settings={settings} />
       <ContactSection settings={settings} />
       <Footer settings={settings} />
+      <LumoraChatbot />
     </main>
   );
 }
