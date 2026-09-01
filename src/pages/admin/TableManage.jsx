@@ -18,6 +18,7 @@ import {
   Table2,
   Trash2,
   Unlink2,
+  Wrench,
   Users,
   X,
 } from 'lucide-react';
@@ -46,6 +47,9 @@ const TABLE_STATUS = {
   BAO_TRI: { label: 'Bảo trì', tone: 'maintenance' },
   DANG_THANH_TOAN: { label: 'Đang thanh toán', tone: 'payment' },
 };
+
+const TABLE_FILTER_STATUS = ['TRONG', 'DANG_SU_DUNG', 'DANG_THANH_TOAN', 'BAO_TRI'];
+const ADMIN_MANUAL_TABLE_STATUS = new Set(['TRONG', 'BAO_TRI']);
 
 function unwrapList(res) {
   return Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
@@ -473,12 +477,15 @@ export default function TableManage() {
     e.preventDefault();
     const payload = {
       tenBan: form.tenBan.trim(),
-      trangThai: form.trangThai,
       ghiChu: form.ghiChu.trim(),
       khuVuc: form.khuVuc.trim(),
       tenKhuVuc: form.khuVuc.trim(),
       sucChua: Number(form.sucChua || 4),
     };
+
+    // Trạng thái vận hành do hệ thống quản lý. Bàn mới luôn bắt đầu ở trạng thái Trống;
+    // việc đưa bàn vào/ra bảo trì được xử lý bằng hành động riêng ở chi tiết bàn.
+    if (!editingId) payload.trangThai = 'TRONG';
 
     try {
       const response = editingId
@@ -557,6 +564,33 @@ export default function TableManage() {
     }
   }
 
+  async function toggleMaintenance(row) {
+    if (!row) return;
+    const currentStatus = String(row.trangThai || 'TRONG').toUpperCase();
+    if (!ADMIN_MANUAL_TABLE_STATUS.has(currentStatus)) {
+      toast.info('Trạng thái phục vụ/thanh toán do hệ thống tự cập nhật.');
+      return;
+    }
+
+    const targetStatus = currentStatus === 'BAO_TRI' ? 'TRONG' : 'BAO_TRI';
+    const payload = {
+      tenBan: String(row.tenBan || '').trim(),
+      trangThai: targetStatus,
+      ghiChu: String(row.ghiChu || '').trim(),
+      khuVuc: getArea(row) === 'Khu vực chung' ? '' : getArea(row),
+      tenKhuVuc: getArea(row) === 'Khu vực chung' ? '' : getArea(row),
+      sucChua: getCapacity(row),
+    };
+
+    try {
+      const response = await tableApi.update(tableId(row), payload);
+      toast.success(messageOf(response, targetStatus === 'BAO_TRI' ? 'Đã đưa bàn vào bảo trì' : 'Bàn đã sẵn sàng phục vụ'));
+      await load(tableId(row));
+    } catch (error) {
+      toast.error(errorMessageOf(error, targetStatus === 'BAO_TRI' ? 'Không thể đưa bàn vào bảo trì' : 'Không thể kết thúc bảo trì'));
+    }
+  }
+
   function statusOptions() {
     if (activeTab === 'qr') {
       return (
@@ -573,8 +607,8 @@ export default function TableManage() {
     return (
       <>
         <option value="all">Tất cả trạng thái</option>
-        {Object.entries(TABLE_STATUS).map(([value, meta]) => (
-          <option key={value} value={value}>{meta.label}</option>
+        {TABLE_FILTER_STATUS.map((value) => (
+          <option key={value} value={value}>{TABLE_STATUS[value].label}</option>
         ))}
       </>
     );
@@ -637,9 +671,10 @@ export default function TableManage() {
 
             <div className="table-status-legend">
               <span>Chú thích trạng thái</span>
-              {Object.entries(TABLE_STATUS).slice(0, 5).map(([key, meta]) => (
-                <i key={key} className={meta.tone}><b />{meta.label}</i>
-              ))}
+              {TABLE_FILTER_STATUS.map((key) => {
+                const meta = TABLE_STATUS[key];
+                return <i key={key} className={meta.tone}><b />{meta.label}</i>;
+              })}
             </div>
           </div>
 
@@ -679,6 +714,11 @@ export default function TableManage() {
                     {!isGrouped(selected) ? <button disabled={!canMerge(selected) || Boolean(reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG')} title={reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG' ? `Bàn đã được giữ lúc ${reservationHoldTime(reservationHolds.get(String(tableId(selected))))}` : !canMerge(selected) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={17} /> Ghép bàn</button> : null}
                     {isGrouped(selected) ? <button disabled={!canUnmerge(selected)} title={!canUnmerge(selected) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
                     <button onClick={() => openEdit(selected)}><Pencil size={17} /> Chỉnh sửa</button>
+                    {ADMIN_MANUAL_TABLE_STATUS.has(String(selected?.trangThai || 'TRONG').toUpperCase()) ? (
+                      <button onClick={() => toggleMaintenance(selected)}>
+                        <Wrench size={17} /> {String(selected?.trangThai || 'TRONG').toUpperCase() === 'BAO_TRI' ? 'Kết thúc bảo trì' : 'Đưa vào bảo trì'}
+                      </button>
+                    ) : null}
                     <button className="primary" onClick={() => generateQr(selected)}><QrCode size={17} /> {qrSrc(selected) ? 'Tạo lại QR' : 'Tạo QR'}</button>
                     <button className="danger" onClick={() => askRemove(selected)}><Trash2 size={17} /> Xóa bàn</button>
                   </div>
@@ -797,7 +837,15 @@ export default function TableManage() {
               <label><span>Tên bàn</span><input required value={form.tenBan} onChange={(e) => setForm({ ...form, tenBan: e.target.value })} placeholder="Ví dụ: Bàn 01" /></label>
               <label><span>Khu vực</span><input value={form.khuVuc} onChange={(e) => setForm({ ...form, khuVuc: e.target.value })} placeholder="Ví dụ: Tầng 1 - Trong nhà" /></label>
               <label><span>Sức chứa</span><input min="1" type="number" value={form.sucChua} onChange={(e) => setForm({ ...form, sucChua: e.target.value })} /></label>
-              <label><span>Trạng thái</span><select value={form.trangThai} onChange={(e) => setForm({ ...form, trangThai: e.target.value })}>{Object.entries(TABLE_STATUS).map(([value, meta]) => <option key={value} value={value}>{meta.label}</option>)}</select></label>
+              <label>
+                <span>Trạng thái</span>
+                <input
+                  value={editingId ? (TABLE_STATUS[form.trangThai]?.label || form.trangThai || 'Trống') : 'Trống'}
+                  disabled
+                  readOnly
+                  title={editingId ? 'Trạng thái vận hành do hệ thống quản lý' : 'Bàn mới mặc định ở trạng thái Trống'}
+                />
+              </label>
               <label className="full"><span>Ghi chú</span><textarea rows="3" value={form.ghiChu} onChange={(e) => setForm({ ...form, ghiChu: e.target.value })} placeholder="Ghi chú thêm về bàn..." /></label>
             </div>
             <footer><button type="button" onClick={closeModal}>Hủy</button><button className="save" type="submit">{editingId ? 'Cập nhật' : 'Lưu bàn'}</button></footer>
