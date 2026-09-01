@@ -2,7 +2,26 @@
 .lumora-chatbot-root,
 .lumora-chatbot-root *{box-sizing:border-box}
 .lumora-chatbot-root{position:fixed;right:24px;bottom:24px;z-index:980;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1f2937}
-.lumora-chatbot-trigger{min-width:58px;height:56px;padding:0 18px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:linear-gradient(135deg,#ff790f,#f4510b);color:#fff;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 16px 38px rgba(244,81,11,.33);font-size:13px;font-weight:900;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease;position:relative}
+.lumora-chatbot-trigger{
+  width:56px;
+  min-width:56px;
+  height:56px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:50%;
+  background:linear-gradient(135deg,#ff790f,#f4510b);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 16px 38px rgba(244,81,11,.33);
+  cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease;
+  position:relative;
+}
+.lumora-chatbot-trigger span{
+  display:none;
+}
 .lumora-chatbot-trigger:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(244,81,11,.39)}
 .lumora-chatbot-trigger b{position:absolute;right:3px;top:0;width:11px;height:11px;border:2px solid #fff;border-radius:50%;background:#22c55e}
 .lumora-chatbot-panel{position:absolute;right:0;bottom:68px;width:min(400px,calc(100vw - 32px));height:min(690px,calc(100dvh - 116px));overflow:hidden;border:1px solid rgba(225,230,236,.95);border-radius:24px;background:#fff;box-shadow:0 28px 75px rgba(15,23,42,.24);display:flex;flex-direction:column;animation:lumora-chatbot-rise .2s ease-out;transform-origin:bottom right}
@@ -73,7 +92,12 @@
 @media(max-width:700px){
   .lumora-chatbot-root{right:14px;bottom:14px}
   .lumora-chatbot-root.table-context{bottom:142px}
-  .lumora-chatbot-trigger{min-width:52px;height:52px;padding:0 15px;font-size:11px}
+  .lumora-chatbot-trigger{
+  width:52px;
+  min-width:52px;
+  height:52px;
+  padding:0;
+}
   .lumora-chatbot-root.table-context .lumora-chatbot-trigger{width:50px;min-width:50px;padding:0}
   .lumora-chatbot-root.table-context .lumora-chatbot-trigger span{display:none}
   .lumora-chatbot-panel{right:0;bottom:63px;width:calc(100vw - 20px);height:min(680px,calc(100dvh - 88px));border-radius:22px}

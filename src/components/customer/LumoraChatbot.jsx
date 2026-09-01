@@ -559,7 +559,7 @@ export default function LumoraChatbot({ qrToken = '' }) {
         aria-label={open ? 'Đóng LUMORA Assistant' : 'Mở LUMORA Assistant'}
       >
         {open ? <X size={22} /> : <Bot size={23} />}
-        {!open ? <span>Hỏi LUMORA</span> : null}
+        
         {hasUnread && !open ? <b /> : null}
       </button>
     </div>
