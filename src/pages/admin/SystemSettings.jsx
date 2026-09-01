@@ -403,11 +403,7 @@ export default function SystemSettings() {
 
   return (
     <section className="system-settings-page">
-      <div className="system-settings-toolbar">
-        <button type="button" className="system-settings-refresh" onClick={() => loadSettings()} disabled={saving || logoBusy || bannerBusy}>
-          <RefreshCw size={17} /> Tải lại
-        </button>
-      </div>
+      
 
       <div className="system-settings-tabs" role="tablist" aria-label="Nhóm cài đặt hệ thống">
         {TABS.map(({ id, label, icon: Icon }) => (
