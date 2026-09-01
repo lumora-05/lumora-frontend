@@ -284,9 +284,9 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
         </div>
       ) : null}
 
-      {paid ? <div className="reservation-public-deposit-message success"><Check size={17} /><p>{depositStatus === 'DA_KHAU_TRU' ? 'Tiền cọc đã được khấu trừ vào khoản phải thanh toán.' : 'Nhà hàng đã xác nhận nhận được tiền cọc. Lịch đang tiếp tục được xử lý.'}</p></div> : null}
+      {paid ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>{depositStatus === 'DA_KHAU_TRU' ? 'Tiền cọc đã được khấu trừ vào khoản phải thanh toán.' : 'Nhà hàng đã xác nhận nhận được tiền cọc. Lịch đang tiếp tục được xử lý.'}</p></div> : null}
       {depositStatus === 'CHO_HOAN' ? <div className="reservation-public-deposit-message warning"><Clock3 size={17} /><p>Khoản cọc đang chờ nhà hàng hoàn lại. Khi hoàn tất, trạng thái sẽ được cập nhật tại đây.</p></div> : null}
-      {depositStatus === 'DA_HOAN' ? <div className="reservation-public-deposit-message success"><Check size={17} /><p>Nhà hàng đã ghi nhận hoàn tiền cọc.</p></div> : null}
+      {depositStatus === 'DA_HOAN' ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>Nhà hàng đã ghi nhận hoàn tiền cọc.</p></div> : null}
       {depositStatus === 'MAT_COC' ? <div className="reservation-public-deposit-message danger"><XCircle size={17} /><p>Khoản cọc không được hoàn theo chính sách của lịch đặt bàn này.</p></div> : null}
       {depositStatus === 'DA_HUY' ? <div className="reservation-public-deposit-message muted"><XCircle size={17} /><p>Yêu cầu cọc đã kết thúc mà không phát sinh khoản tiền cần xử lý.</p></div> : null}
       {item?.lyDoXuLyCoc ? <div className="reservation-public-deposit-reason"><b>Ghi chú xử lý cọc:</b> {item.lyDoXuLyCoc}</div> : null}
