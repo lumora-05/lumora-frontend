@@ -755,7 +755,7 @@
 .customer-detail-content{padding:10px 7px 7px;display:flex;flex-direction:column}
 .customer-detail-category{width:max-content;padding:7px 10px;border-radius:999px;color:#e65517;background:#fff1e8;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
 .customer-detail-title-row{margin-top:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:22px}
-.customer-detail-title-row h1{margin:0;color:#172131;font-size:clamp(30px,4vw,43px);line-height:1.12;letter-spacing:-.035em}
+.customer-detail-title-row h1{margin:0;color:#172131;font-family:'Playfair Display',ui-serif,Georgia,Cambria,'Times New Roman',serif;font-size:clamp(30px,4vw,43px);font-weight:600;line-height:1.12;letter-spacing:-.035em}
 .customer-detail-title-row>strong{color:#ed5010;font-size:25px;white-space:nowrap}
 .customer-detail-content>p{margin:17px 0 24px;color:#748093;font-size:14px;line-height:1.75}
 .customer-detail-control-row{padding:19px 0;border-top:1px solid #edf0f4;border-bottom:1px solid #edf0f4;display:flex;align-items:center;justify-content:space-between;gap:20px}
