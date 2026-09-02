@@ -151,7 +151,7 @@ export default function CustomerServiceRequest({ qrToken, tableId }) {
         aria-label="Gọi nhân viên phục vụ"
       >
         <BellRing size={18} />
-        <span>Gọi phục vụ</span>
+        <span>Phục vụ</span>
         {activeRequests.length ? <b>{activeRequests.length}</b> : null}
       </button>
 
