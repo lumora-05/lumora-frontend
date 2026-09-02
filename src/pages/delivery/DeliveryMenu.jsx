@@ -1,5 +1,6 @@
 import {
   ChefHat,
+  ChevronDown,
   Clock3,
   LoaderCircle,
   LogIn,
@@ -48,6 +49,7 @@ function foodCategoryId(food) {
 }
 
 const PENDING_ADD_KEY = 'lumora_delivery_pending_add';
+const PAGE_SIZE = 8;
 
 export default function DeliveryMenu() {
   const cart = useCart();
@@ -62,6 +64,7 @@ export default function DeliveryMenu() {
   const [error, setError] = useState('');
   const [authChoiceFood, setAuthChoiceFood] = useState(null);
   const [sharedBannerUrl, setSharedBannerUrl] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const translationRevision = usePublicContentTranslations({ language, foods, categories });
 
   useEffect(() => {
@@ -122,6 +125,12 @@ export default function DeliveryMenu() {
       return matchesCategory && matchesKeyword;
     });
   }, [foods, keyword, selectedCategory, language, translationRevision]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [keyword, selectedCategory, language]);
+
+  const visibleFoods = filteredFoods.slice(0, visibleCount);
 
   function performAddToCart(food) {
     const id = foodId(food);
@@ -259,7 +268,7 @@ export default function DeliveryMenu() {
             {!filteredFoods.length ? (
               <div className="delivery-state-card"><Search size={32} /><strong>Không tìm thấy món phù hợp.</strong></div>
             ) : null}
-            {filteredFoods.map((food, index) => (
+            {visibleFoods.map((food, index) => (
               <article className="delivery-food-card" key={foodId(food) ?? index}>
                 <Link
                   className="delivery-food-image delivery-food-image-link"
@@ -292,6 +301,18 @@ export default function DeliveryMenu() {
             ))}
           </div>
         )}
+
+        {!loading && !error && visibleCount < filteredFoods.length ? (
+          <div className="delivery-menu-load-more">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((current) => Math.min(current + PAGE_SIZE, filteredFoods.length))}
+            >
+              Xem thêm món
+              <ChevronDown size={18} />
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {cart.count > 0 ? (

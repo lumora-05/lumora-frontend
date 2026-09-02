@@ -857,3 +857,9 @@
   .delivery-account-profile-modal{width:100%;padding:25px 19px 22px;border-radius:22px 22px 0 0}
 }
 @media(max-width:430px){.delivery-account-profile-actions{grid-template-columns:1fr}.delivery-account-profile-modal-actions{grid-template-columns:1fr}}
+
+/* Delivery menu pagination */
+.delivery-home-menu .delivery-menu-load-more{display:flex;justify-content:center;margin-top:30px}
+.delivery-home-menu .delivery-menu-load-more>button{min-height:44px;padding:0 20px;border:1px solid #efb08d;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#e85c17;background:#fff;font-size:12px;font-weight:850;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.delivery-home-menu .delivery-menu-load-more>button:hover{background:#fff4ed;border-color:#e98249;transform:translateY(-1px)}
+@media(max-width:680px){.delivery-home-menu .delivery-menu-load-more>button{width:100%}}
