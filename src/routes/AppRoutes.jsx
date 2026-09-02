@@ -100,7 +100,7 @@ export default function AppRoutes(){return <Routes>
     <Route path="menu" element={<KitchenMenuList/>}/>
     <Route path="out-of-stock" element={<Navigate to="/kitchen/menu" replace/>}/>
     <Route path="history" element={<KitchenHistory/>}/>
-    <Route path="delivery-orders" element={<DeliveryOrderManage/>}/>
+    <Route path="delivery-orders" element={<Navigate to="/kitchen" replace/>}/>
     <Route path="notifications" element={<KitchenNotifications/>}/>
     <Route path="account" element={<KitchenAccount/>}/>
   </Route>
