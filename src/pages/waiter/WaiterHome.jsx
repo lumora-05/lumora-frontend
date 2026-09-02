@@ -185,7 +185,7 @@ export default function WaiterHome() {
   return (
     <section className="waiter-page waiter-table-monitor-page">
       <div className="waiter-card waiter-table-map-card">
-        <div className="waiter-table-map-head">
+        <div className="waiter-table-map-head waiter-table-map-head-no-title">
           <div className="waiter-table-map-tools">
             <div className="waiter-table-arrangement-actions">
               <button type="button" disabled={!selectedTableRow || !canTransfer(selectedTableRow)} title={selectedTableRow && !canTransfer(selectedTableRow) ? 'Chỉ chuyển bàn đang có đơn phục vụ' : ''} onClick={() => setArrangementMode('transfer')}><ArrowRightLeft size={16} /> Chuyển bàn</button>
