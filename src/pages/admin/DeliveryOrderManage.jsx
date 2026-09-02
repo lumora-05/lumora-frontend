@@ -444,7 +444,7 @@ export default function DeliveryOrderManage() {
 
                     {canManage ? (
                       <section className="delivery-detail-section delivery-actions-panel">
-                        <h3>Thao tác nghiệp vụ</h3>
+                        
 
                         {isVietQr && currentStatus === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN' ? (
                           <div className="delivery-action-block"><label>Mã giao dịch VietQR *<input value={form.transactionCode} onChange={(event) => setForm((current) => ({ ...current, transactionCode: event.target.value }))} maxLength={100} placeholder="Ví dụ: MB202608060001" /></label><label>Ghi chú xác nhận<input value={form.paymentNote} onChange={(event) => setForm((current) => ({ ...current, paymentNote: event.target.value }))} maxLength={500} placeholder="Đã kiểm tra tài khoản" /></label><small>Sau khi ghi nhận thanh toán, đơn chuyển sang bước chờ nhà hàng xác nhận. Bếp chưa nhận món ở bước này.</small><button type="button" disabled={Boolean(actionLoading) || !form.transactionCode.trim()} onClick={() => runAction('payment', () => deliveryApi.confirmVietQr(deliveryOrderId(selected), { maGiaoDich: form.transactionCode.trim(), ghiChu: form.paymentNote.trim() || null }), 'Đã ghi nhận VietQR; đơn đang chờ nhà hàng xác nhận')}><Banknote size={17} />{actionLoading === 'payment' ? 'Đang xử lý...' : 'Ghi nhận đã nhận tiền'}</button></div>
