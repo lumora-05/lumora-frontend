@@ -2441,3 +2441,20 @@
 .customer-menu-bg-page{
   background:linear-gradient(180deg,#faf7f2 0%,#f8f5ef 100%);
 }
+
+.customer-header-actions.menu-showcase .customer-service-trigger{
+  min-width:0;
+  width:42px;
+  height:42px;
+  padding:0;
+  border:none;
+  background:transparent;
+  box-shadow:none;
+}
+
+.customer-header-actions.menu-showcase .customer-service-trigger:hover{
+  border:none;
+  background:transparent;
+  box-shadow:none;
+  transform:none;
+}
