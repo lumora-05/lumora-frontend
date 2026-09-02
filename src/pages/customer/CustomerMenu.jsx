@@ -289,7 +289,7 @@ export default function CustomerMenu() {
                               ? <img src={imageUrl(food.hinhAnh)} alt={localizedFoodName(food, language, 'Món ăn')} />
                               : <span className="customer-menu-home-image-placeholder"><UtensilsCrossed size={42} /></span>}
                           </Link>
-                          {badge ? <span className="v0-dish-tag">{badge.label}</span> : null}
+                          
                         </div>
                         <div className="v0-dish-body">
                           <h3 className="v0-serif">
