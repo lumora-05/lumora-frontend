@@ -6,7 +6,6 @@ import {
   QrCode,
   ShoppingCart,
   Star,
-  UtensilsCrossed,
 } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { tableApi } from '../../api/tableApi';
@@ -164,7 +163,7 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
 
         <nav className={navClassName} aria-label="Điều hướng khách hàng">
           <Link className={menuActive ? 'active' : ''} to={`/table/${qrToken}`}>
-            {isMenuShowcase ? <BookOpen size={18} /> : <UtensilsCrossed size={19} />}
+            <BookOpen size={18} />
             <span>Thực đơn</span>
           </Link>
           <Link className={cartActive ? 'active' : ''} to={`/table/${qrToken}/cart`}>
@@ -195,7 +194,7 @@ export default function CustomerHeader({ tableName, variant = 'default' }) {
 
       <nav className="customer-mobile-nav" aria-label="Điều hướng khách hàng trên điện thoại">
         <Link className={menuActive ? 'active' : ''} to={`/table/${qrToken}`}>
-          <UtensilsCrossed size={21} /><span>Thực đơn</span>
+          <BookOpen size={21} /><span>Thực đơn</span>
         </Link>
         <Link className={cartActive ? 'active' : ''} to={`/table/${qrToken}/cart`}>
           <span className="customer-mobile-cart-icon"><ShoppingCart size={21} />{cart.count > 0 ? <b>{cart.count}</b> : null}</span>
