@@ -196,7 +196,7 @@ export default function CustomerReviews() {
 
   return (
     <main className="customer-flow-page customer-review-page customer-menu-bg-page">
-      <CustomerHeader />
+      <CustomerHeader variant="menu-showcase" />
 
       <section className="customer-review-container">
         <div className="customer-review-heading">

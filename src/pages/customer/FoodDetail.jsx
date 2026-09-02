@@ -149,7 +149,7 @@ export default function FoodDetail() {
 
   return (
     <main className="customer-flow-page">
-      <CustomerHeader />
+      <CustomerHeader variant="menu-showcase" />
 
       {loading ? (
         <div className="customer-menu-access-state">

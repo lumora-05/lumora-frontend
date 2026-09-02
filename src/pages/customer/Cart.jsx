@@ -125,7 +125,7 @@ export default function Cart() {
 
   return (
     <main className="customer-flow-page customer-menu-bg-page">
-      <CustomerHeader />
+      <CustomerHeader variant="menu-showcase" />
 
       <section className="customer-cart-container">
         <div className="customer-page-heading">

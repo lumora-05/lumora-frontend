@@ -63,7 +63,7 @@ export default function CustomerOrders() {
 
   return (
     <main className="customer-flow-page customer-menu-bg-page">
-      <CustomerHeader />
+      <CustomerHeader variant="menu-showcase" />
       <section className="customer-orders-landing">
         {loading ? (
           <div className="customer-menu-access-state">

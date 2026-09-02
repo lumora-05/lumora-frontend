@@ -236,7 +236,7 @@ export default function OrderSuccess() {
 
   return (
     <main className="customer-flow-page">
-      <CustomerHeader tableName={tableName} />
+      <CustomerHeader tableName={tableName} variant="menu-showcase" />
 
       <section className="customer-tracking-container">
         <div className="customer-page-heading customer-tracking-heading">
