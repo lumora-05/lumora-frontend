@@ -212,8 +212,8 @@ function Receipt({ order, payment, slip, preview }) {
       <footer>
         {preview ? (
           <>
-            <p><strong>PHIẾU NÀY CHƯA XÁC NHẬN THANH TOÁN</strong></p>
-            <p>Vui lòng báo nhân viên sau khi chuyển khoản.</p>
+            <p><strong>PHIẾU NÀY ĐANG CHỜ THANH TOÁN</strong></p>
+            <p>Hệ thống sẽ tự xác nhận sau khi giao dịch được payOS ghi nhận thành công.</p>
           </>
         ) : (
           <>
@@ -248,18 +248,23 @@ export default function PrintInvoice() {
     setError('');
 
     const request = preview
-      ? (previewPhone
-        ? Promise.all([
-          paymentApi.paymentSlipByOrder(orderId),
-          paymentApi.loyaltyPreview(orderId, { phone: previewPhone, pointsToUse: previewPoints }),
-          paymentApi.vietQrByOrder(orderId, { phone: previewPhone, pointsToUse: previewPoints }),
-        ]).then(([slipResponse, loyaltyResponse, qrResponse]) => {
-          if (!active) return;
-          const slipData = slipResponse?.data || slipResponse;
-          const loyaltyData = loyaltyResponse?.data || loyaltyResponse;
-          const qrData = qrResponse?.data || qrResponse;
-          setSlip({
-            ...slipData,
+      ? Promise.all([
+        paymentApi.paymentSlipByOrder(orderId),
+        previewPhone
+          ? paymentApi.loyaltyPreview(orderId, { phone: previewPhone, pointsToUse: previewPoints })
+          : Promise.resolve(null),
+        paymentApi.vietQrByOrder(
+          orderId,
+          previewPhone ? { phone: previewPhone, pointsToUse: previewPoints } : {},
+        ),
+      ]).then(([slipResponse, loyaltyResponse, qrResponse]) => {
+        if (!active) return;
+        const slipData = slipResponse?.data || slipResponse;
+        const loyaltyData = loyaltyResponse?.data || loyaltyResponse || null;
+        const qrData = qrResponse?.data || qrResponse;
+        setSlip({
+          ...slipData,
+          ...(loyaltyData ? {
             tongTienTruocDiem: loyaltyData?.tongTienTruocDiem,
             tongTien: loyaltyData?.tongThanhToan,
             tienGiamTuDiem: loyaltyData?.tienGiamTuDiem,
@@ -272,13 +277,12 @@ export default function PrintInvoice() {
               soDienThoai: loyaltyData?.soDienThoai || previewPhone,
             },
             loyaltyPreview: loyaltyData,
-            vietQr: qrData,
-          });
-        })
-        : paymentApi.paymentSlipByOrder(orderId).then((response) => {
-          if (!active) return;
-          setSlip(response?.data || response);
-        }))
+          } : {}),
+          // Luôn ghi đè QR tạm tính kiểu cũ bằng payment request payOS để
+          // webhook có thể tự động xác nhận sau khi khách chuyển khoản.
+          vietQr: qrData,
+        });
+      })
       : Promise.all([
         orderApi.getById(orderId),
         paymentApi.byOrder(orderId).catch(() => null),
@@ -337,7 +341,7 @@ export default function PrintInvoice() {
             <div className="cashier-print-flow-note">
               <strong>Phiếu dành cho khách tại bàn</strong>
               <p>Phiếu có VietQR đúng số tiền sau khuyến mãi và sau khi đổi điểm.</p>
-              <p>Việc in phiếu không làm đơn chuyển sang đã thanh toán.</p>
+              <p>Sau khi khách chuyển khoản thành công, hệ thống sẽ tự cập nhật trạng thái thanh toán.</p>
             </div>
           ) : null}
 

@@ -3907,3 +3907,14 @@
 /* Reservation deposit deduction in cashier payment */
 .cashier-payment-breakdown .cashier-deposit-deduction b{color:#b26019}
 .cashier-deposit-covered{margin:18px 0;padding:14px;border:1px solid #bfe0c9;border-radius:13px;background:#f0faf3;color:#247044;display:flex;align-items:flex-start;gap:10px}.cashier-deposit-covered svg{flex:0 0 auto;margin-top:1px}.cashier-deposit-covered strong{display:block;font-size:14px}.cashier-deposit-covered p{margin:4px 0 0;color:#52705d;font-size:11px;line-height:1.5}
+
+/* payOS: chuyển khoản tại bàn được xác nhận tự động qua webhook */
+.cashier-transfer-auto-status{display:flex;align-items:flex-start;gap:11px;border-radius:12px;background:#f4f8ff;border:1px solid #cddcf7;padding:13px;color:#355071}
+.cashier-transfer-auto-status>span:last-child{display:grid;gap:4px;min-width:0}
+.cashier-transfer-auto-status strong{font-size:14px;color:#29486e}
+.cashier-transfer-auto-status small{font-size:12px;line-height:1.5;color:#617795}
+.cashier-transfer-pulse{width:11px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 rgba(68,105,154,.34);margin-top:4px;flex:0 0 auto;animation:cashier-transfer-pulse 1.6s ease-out infinite}
+.cashier-transfer-waiting-action{min-height:44px;padding:0 17px;border:1px solid #cddcf7;border-radius:11px;background:#f4f8ff;color:#355071;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-weight:950}
+.cashier-transfer-waiting-action .cashier-transfer-pulse{margin-top:0}
+@keyframes cashier-transfer-pulse{0%{box-shadow:0 0 0 0 rgba(68,105,154,.34)}70%{box-shadow:0 0 0 8px rgba(68,105,154,0)}100%{box-shadow:0 0 0 0 rgba(68,105,154,0)}}
+@media(max-width:760px){.cashier-transfer-waiting-action{width:100%}}

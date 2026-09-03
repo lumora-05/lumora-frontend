@@ -66,7 +66,7 @@ export default function Payment() {
   const [loading, setLoading] = useState(true);
   const [method, setMethod] = useState('TIEN_MAT');
   const [cashReceived, setCashReceived] = useState('');
-  const [transferVerified, setTransferVerified] = useState(false);
+  const transferCompletedRef = useRef(false);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -129,6 +129,39 @@ export default function Payment() {
   const pointsPendingApply = loyaltyChecked && parsedPointsInput !== appliedPoints;
 
   useEffect(() => {
+    if (!order || method !== 'CHUYEN_KHOAN' || total <= 0 || order?.trangThai === 'DA_THANH_TOAN') {
+      return undefined;
+    }
+
+    let active = true;
+
+    const checkTransferStatus = async () => {
+      try {
+        const response = await orderApi.getById(orderId);
+        if (!active) return;
+        const data = response?.data || response;
+        if (data) setOrder(data);
+
+        if (data?.trangThai === 'DA_THANH_TOAN' && !transferCompletedRef.current) {
+          transferCompletedRef.current = true;
+          toast.success('Thanh toán chuyển khoản đã được xác nhận tự động.');
+          navigate(`/cashier/print/${orderId}`, { replace: true });
+        }
+      } catch {
+        // Webhook có thể đến trong lúc một lần kiểm tra trạng thái bị lỗi mạng;
+        // lần kiểm tra kế tiếp sẽ tiếp tục mà không làm phiền thu ngân bằng toast lỗi.
+      }
+    };
+
+    void checkTransferStatus();
+    const timer = window.setInterval(checkTransferStatus, 2500);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [method, navigate, order?.trangThai, orderId, toast, total]);
+
+  useEffect(() => {
     if (!order) return;
     const previousPayable = previousPayableRef.current;
     setCashReceived((currentValue) => {
@@ -149,7 +182,6 @@ export default function Payment() {
     setLoyaltyError('');
     setPointsInput('0');
     setAppliedPoints(0);
-    setTransferVerified(false);
   }
 
   function changeCustomerPhone(value) {
@@ -160,7 +192,6 @@ export default function Payment() {
     setLoyaltyError('');
     setPointsInput('0');
     setAppliedPoints(0);
-    setTransferVerified(false);
   }
 
   async function loadLoyaltyPreview(requestedPoints = 0, notify = false) {
@@ -176,7 +207,6 @@ export default function Payment() {
 
     setLoyaltyLoading(true);
     setLoyaltyError('');
-    setTransferVerified(false);
     try {
       const response = await paymentApi.loyaltyPreview(orderId, {
         phone,
@@ -235,10 +265,6 @@ export default function Payment() {
       if (cashValue < total) return 'Tiền khách đưa chưa đủ.';
     }
 
-    if (method === 'CHUYEN_KHOAN' && !transferVerified) {
-      return 'Vui lòng xác nhận đã kiểm tra và nhận đủ tiền chuyển khoản.';
-    }
-
     if (note.trim().length > 255) return 'Ghi chú tối đa 255 ký tự.';
     return '';
   }
@@ -247,7 +273,6 @@ export default function Payment() {
     setMethod(nextMethod);
     setError('');
     setConfirmOpen(false);
-    if (nextMethod !== 'CHUYEN_KHOAN') setTransferVerified(false);
   }
 
   function requestConfirmation() {
@@ -261,6 +286,12 @@ export default function Payment() {
   }
 
   async function confirmPayment() {
+    if (total > 0 && method === 'CHUYEN_KHOAN') {
+      setConfirmOpen(false);
+      setError('Chuyển khoản VietQR được hệ thống xác nhận tự động sau khi nhận webhook payOS.');
+      return;
+    }
+
     const validationMessage = validate();
     if (validationMessage) {
       setConfirmOpen(false);
@@ -415,7 +446,6 @@ export default function Payment() {
                       onChange={(event) => {
                         setPointsInput(event.target.value);
                         setLoyaltyError('');
-                        setTransferVerified(false);
                       }}
                     />
                   </label>
@@ -518,17 +548,13 @@ export default function Payment() {
                 <Printer size={17} />Mở phiếu thanh toán có VietQR
               </Link>
 
-              <label className="cashier-transfer-check">
-                <input
-                  type="checkbox"
-                  checked={transferVerified}
-                  onChange={(event) => setTransferVerified(event.target.checked)}
-                />
+              <div className="cashier-transfer-auto-status" role="status" aria-live="polite">
+                <span className="cashier-transfer-pulse" aria-hidden="true" />
                 <span>
-                  <strong>Tôi đã kiểm tra tài khoản và nhận đủ tiền</strong>
-                  <small>Chỉ tích sau khi khoản chuyển đã thực sự vào tài khoản nhà hàng.</small>
+                  <strong>Đang chờ hệ thống xác nhận tự động</strong>
+                  <small>Sau khi khách chuyển khoản thành công, payOS gửi webhook về backend và trạng thái đơn sẽ tự cập nhật.</small>
                 </span>
-              </label>
+              </div>
             </div>
           )}
 
@@ -546,9 +572,16 @@ export default function Payment() {
 
           <div className="cashier-payment-actions">
             <Link className="cashier-outline-action" to={`/cashier/invoices/${orderId}`}>Quay lại chi tiết</Link>
-            <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
-              <WalletCards size={18} />{total <= 0 ? 'Hoàn tất bằng tiền cọc' : method === 'CHUYEN_KHOAN' ? 'Xác nhận đã nhận tiền' : 'Xác nhận thanh toán'}
-            </button>
+            {total > 0 && method === 'CHUYEN_KHOAN' ? (
+              <div className="cashier-transfer-waiting-action" role="status">
+                <span className="cashier-transfer-pulse" aria-hidden="true" />
+                <strong>Đang chờ thanh toán</strong>
+              </div>
+            ) : (
+              <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
+                <WalletCards size={18} />{total <= 0 ? 'Hoàn tất bằng tiền cọc' : 'Xác nhận thanh toán'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -561,7 +594,7 @@ export default function Payment() {
             <button type="button" className="cashier-confirm-close" onClick={() => setConfirmOpen(false)} disabled={submitting} aria-label="Đóng"><X size={20} /></button>
             <div className="cashier-confirm-icon"><CheckCircle2 size={30} /></div>
             <h2 id="cashier-confirm-title">Xác nhận giao dịch</h2>
-            <p>{total <= 0 ? 'Khoản cọc đã đủ để thanh toán hóa đơn. Xác nhận để hoàn tất đơn và ghi nhận khấu trừ cọc.' : method === 'CHUYEN_KHOAN' ? 'Xác nhận khoản chuyển đã vào tài khoản trước khi hoàn tất đơn.' : 'Vui lòng kiểm tra lại thông tin trước khi ghi nhận thanh toán.'}</p>
+            <p>{total <= 0 ? 'Khoản cọc đã đủ để thanh toán hóa đơn. Xác nhận để hoàn tất đơn và ghi nhận khấu trừ cọc.' : 'Vui lòng kiểm tra lại thông tin trước khi ghi nhận thanh toán.'}</p>
             <div className="cashier-confirm-summary">
               <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
               {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName} · {customerPhone}</strong></p> : null}
@@ -574,8 +607,6 @@ export default function Payment() {
                   <p><span>Khách đưa</span><strong>{formatMoney(cashValue || 0)}</strong></p>
                   <p><span>Tiền thừa</span><strong>{formatMoney(change)}</strong></p>
                 </>
-              ) : total > 0 ? (
-                <p><span>Kiểm tra tiền</span><strong className="cashier-confirm-verified">Đã nhận đủ</strong></p>
               ) : null}
               {note.trim() ? <p><span>Ghi chú</span><strong>{note.trim()}</strong></p> : null}
             </div>
