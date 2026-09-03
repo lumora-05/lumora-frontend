@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Ban, ChevronRight, Clock3, Search, UtensilsCrossed } from 'lucide-react';
+import { Ban, ChevronRight, Clock3, Link2, Search, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import CancellationRequestsModal from '../../components/order/CancellationRequestsModal';
@@ -62,11 +62,6 @@ function queueGroup(order) {
   return 'OTHER';
 }
 
-function matchesTab(order, tab) {
-  const group = queueGroup(order);
-  if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(group);
-  return group === tab;
-}
 
 function latestCall(order) {
   return Math.max(1, ...(order?.chiTietDonHang || []).map(callNumber));
@@ -74,6 +69,58 @@ function latestCall(order) {
 
 function roleOf(user) {
   return String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '').replace('ROLE_', '').toUpperCase();
+}
+
+
+function sharedPaymentGroupId(order) {
+  return String(order?.maNhomThanhToan || '').trim();
+}
+
+function buildOrderGroups(orders) {
+  const groups = new Map();
+  orders.forEach((order) => {
+    const sharedId = sharedPaymentGroupId(order);
+    const key = sharedId ? `shared:${sharedId}` : `order:${orderId(order)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(order);
+  });
+
+  return Array.from(groups.entries()).map(([key, rows]) => {
+    const sortedRows = [...rows].sort((a, b) => tableNameOfOrder(a).localeCompare(tableNameOfOrder(b), 'vi', { numeric: true }));
+    return {
+      key,
+      rows: sortedRows,
+      shared: key.startsWith('shared:') && sortedRows.length > 1,
+    };
+  });
+}
+
+function queueGroupOfRows(rows) {
+  const groups = rows.map(queueGroup);
+  if (groups.includes('PAYMENT')) return 'PAYMENT';
+  if (groups.includes('READY')) return 'READY';
+  if (groups.includes('PREPARING')) return 'PREPARING';
+  return groups[0] || 'OTHER';
+}
+
+function matchesGroupTab(group, tab) {
+  const queue = queueGroupOfRows(group.rows);
+  if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(queue);
+  return queue === tab;
+}
+
+function groupPriority(group) {
+  return group.rows
+    .map(actionPriority)
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1])[0] || [99, 0];
+}
+
+function groupSearchText(group) {
+  return group.rows.map((order) => `${orderId(order) || ''} ${tableNameOfOrder(order)} ${(order.chiTietDonHang || []).map(itemName).join(' ')}`).join(' ');
+}
+
+function groupTableLabel(group) {
+  return [...new Set(group.rows.map(tableNameOfOrder).filter(Boolean))].join(' + ');
 }
 
 
@@ -125,23 +172,24 @@ export default function TableStatus() {
   }, [event]);
 
   const activeOrders = useMemo(() => orders.filter(isActiveOrder), [orders]);
+  const orderGroups = useMemo(() => buildOrderGroups(activeOrders), [activeOrders]);
 
   const counts = useMemo(() => TAB_GROUPS.reduce((result, [value]) => {
-    result[value] = activeOrders.filter((order) => matchesTab(order, value)).length;
+    result[value] = orderGroups.filter((group) => matchesGroupTab(group, value)).length;
     return result;
-  }, {}), [activeOrders]);
+  }, {}), [orderGroups]);
 
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
-    return activeOrders
-      .filter((order) => matchesTab(order, tab))
-      .filter((order) => !q || `${orderId(order) || ''} ${tableNameOfOrder(order)} ${(order.chiTietDonHang || []).map(itemName).join(' ')}`.toLowerCase().includes(q))
+    return orderGroups
+      .filter((group) => matchesGroupTab(group, tab))
+      .filter((group) => !q || groupSearchText(group).toLowerCase().includes(q))
       .sort((a, b) => {
-        const [priorityA, timeA] = actionPriority(a);
-        const [priorityB, timeB] = actionPriority(b);
+        const [priorityA, timeA] = groupPriority(a);
+        const [priorityB, timeB] = groupPriority(b);
         return priorityA - priorityB || timeA - timeB;
       });
-  }, [activeOrders, keyword, tab]);
+  }, [orderGroups, keyword, tab]);
 
 
   async function processCancellation(request, action, note) {
@@ -164,6 +212,57 @@ export default function TableStatus() {
   async function openCancellationRequests() {
     setCancelRequestsOpen(true);
     await loadCancellationRequests(true);
+  }
+
+  function renderOrderCard(order, nested = false) {
+    const id = orderId(order);
+    const meta = statusMeta(order.trangThai);
+    const group = orderGroup(order);
+    const items = (order.chiTietDonHang || []).filter((item) => String(item?.trangThaiMon || '').toUpperCase() !== 'DA_HUY');
+    const readyCount = pendingReadyCount(order);
+    const call = latestCall(order);
+    const createdAt = orderCreatedAt(order);
+    const elapsedTone = waitTone(createdAt, group);
+    const tableIcon = elapsedTone === 'urgent'
+      ? '/waiter-icons/table-chair-action.png'
+      : elapsedTone === 'warning'
+        ? '/waiter-icons/table-chair-preparing.png'
+        : TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png';
+    const buttonLabel = group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
+
+    return (
+      <article className={`waiter-order-feed-card ${nested ? 'waiter-shared-order-row' : ''} ${meta.tone} ${group === 'READY' ? 'priority-card' : ''} wait-${elapsedTone}`} key={id}>
+        <div className="waiter-feed-main">
+          <div className="waiter-feed-main-row">
+            <div className={`waiter-order-table-icon ${group.toLowerCase()} wait-${elapsedTone}`}>
+              <img src={tableIcon} alt="" aria-hidden="true" />
+            </div>
+            <div className="waiter-feed-main-content">
+              <div className="waiter-feed-title">
+                <div>
+                  <strong>{tableNameOfOrder(order)}</strong>
+                  <span>#{id}</span>
+                  {call > 1 ? <em>Lượt gọi #{call}</em> : null}
+                </div>
+                <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
+              </div>
+              <div className="waiter-feed-summary">
+                <span><UtensilsCrossed size={16} />{itemCount(order)} món</span>
+                {readyCount > 0 ? <span className="waiter-ready-count">{readyCount} món cần mang ra</span> : null}
+                <p>{items.length ? items.slice(0, 4).map(itemName).join(', ') : 'Chưa có chi tiết món'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="waiter-feed-side">
+          <div className={`waiter-elapsed ${elapsedTone}`}>
+            <Clock3 size={15} />
+            <span><b>{waitLabel(createdAt)}</b><small>Từ {formatClock(createdAt)}</small></span>
+          </div>
+          <Link className="waiter-view-button" to={`/waiter/orders/${id}`}>{buttonLabel} <ChevronRight size={17} /></Link>
+        </div>
+      </article>
+    );
   }
 
   return (
@@ -193,54 +292,26 @@ export default function TableStatus() {
         </div>
 
         <div className="waiter-order-feed">
-          {filtered.map((order) => {
-            const id = orderId(order);
-            const meta = statusMeta(order.trangThai);
-            const group = orderGroup(order);
-            const items = (order.chiTietDonHang || []).filter((item) => String(item?.trangThaiMon || '').toUpperCase() !== 'DA_HUY');
-            const readyCount = pendingReadyCount(order);
-            const call = latestCall(order);
-            const createdAt = orderCreatedAt(order);
-            const elapsedTone = waitTone(createdAt, group);
-            const tableIcon = elapsedTone === 'urgent'
-              ? '/waiter-icons/table-chair-action.png'
-              : elapsedTone === 'warning'
-                ? '/waiter-icons/table-chair-preparing.png'
-                : TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png';
-            const buttonLabel = group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
-            return (
-              <article className={`waiter-order-feed-card ${meta.tone} ${group === 'READY' ? 'priority-card' : ''} wait-${elapsedTone}`} key={id}>
-                <div className="waiter-feed-main">
-                  <div className="waiter-feed-main-row">
+          {filtered.map((orderGroup) => {
+            if (!orderGroup.shared) return renderOrderCard(orderGroup.rows[0]);
 
-                    <div className={`waiter-order-table-icon ${group.toLowerCase()} wait-${elapsedTone}`}>
-                      <img src={tableIcon} alt="" aria-hidden="true" />
-                    </div>
-                    <div className="waiter-feed-main-content">
-                      <div className="waiter-feed-title">
-                        <div>
-                          <strong>{tableNameOfOrder(order)}</strong>
-                          <span>#{id}</span>
-                          {call > 1 ? <em>Lượt gọi #{call}</em> : null}
-                        </div>
-                        <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
-                      </div>
-                      <div className="waiter-feed-summary">
-                        <span><UtensilsCrossed size={16} />{itemCount(order)} món</span>
-                        {readyCount > 0 ? <span className="waiter-ready-count">{readyCount} món cần mang ra</span> : null}
-                        <p>{items.length ? items.slice(0, 4).map(itemName).join(', ') : 'Chưa có chi tiết món'}</p>
-                      </div>
+            const totalItems = orderGroup.rows.reduce((sum, order) => sum + itemCount(order), 0);
+            return (
+              <section className="waiter-shared-order-group" key={orderGroup.key}>
+                <div className="waiter-shared-order-head">
+                  <div className="waiter-shared-order-title">
+                    <span className="waiter-shared-order-icon"><Link2 size={18} /></span>
+                    <div>
+                      <strong>{groupTableLabel(orderGroup)}</strong>
+                      <small>{orderGroup.rows.length} đơn · {totalItems} món</small>
                     </div>
                   </div>
+                  <span className="waiter-shared-order-badge">Bàn ghép · Thanh toán chung</span>
                 </div>
-                <div className="waiter-feed-side">
-                  <div className={`waiter-elapsed ${elapsedTone}`}>
-                    <Clock3 size={15} />
-                    <span><b>{waitLabel(createdAt)}</b><small>Từ {formatClock(createdAt)}</small></span>
-                  </div>
-                  <Link className="waiter-view-button" to={`/waiter/orders/${id}`}>{buttonLabel} <ChevronRight size={17} /></Link>
+                <div className="waiter-shared-order-list">
+                  {orderGroup.rows.map((order) => renderOrderCard(order, true))}
                 </div>
-              </article>
+              </section>
             );
           })}
           {!filtered.length ? <div className="waiter-queue-empty">Không có đơn hàng phù hợp.</div> : null}
