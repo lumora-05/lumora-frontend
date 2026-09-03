@@ -71,7 +71,7 @@ function canTransfer(table) {
 }
 
 function canMerge(table) {
-  return !isGrouped(table) && ['TRONG', 'DANG_SU_DUNG', 'DANG_THANH_TOAN'].includes(table?.trangThai || 'TRONG');
+  return !isGrouped(table) && ['TRONG', 'DANG_SU_DUNG'].includes(table?.trangThai || 'TRONG');
 }
 
 function canUnmerge(table) {
@@ -132,23 +132,49 @@ export default function WaiterHome() {
     return map;
   }, [activeOrders]);
 
+  const tableIdsByGroup = useMemo(() => {
+    const map = new Map();
+    tables.forEach((table) => {
+      if (!table?.maNhomBan) return;
+      const key = String(table.maNhomBan);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(String(tableId(table)));
+    });
+    return map;
+  }, [tables]);
+
+  function ordersForTable(table) {
+    if (!table) return [];
+    if (!isGrouped(table) || !table?.maNhomBan) {
+      return ordersByTable.get(String(tableId(table))) || [];
+    }
+    const ids = tableIdsByGroup.get(String(table.maNhomBan)) || [String(tableId(table))];
+    return ids.flatMap((id) => ordersByTable.get(String(id)) || []);
+  }
+
   const selectedTableRow = useMemo(
     () => tables.find((table) => String(tableId(table)) === String(selectedTable)) || null,
     [tables, selectedTable],
   );
 
-  const selectedOrderTableId = selectedTableRow ? primaryTableId(selectedTableRow) : 'ALL';
   const selectedReservationHold = selectedTableRow ? reservationHolds.get(String(tableId(selectedTableRow))) || null : null;
-  const selectedTableHasOrders = selectedTableRow ? (ordersByTable.get(String(selectedOrderTableId)) || []).length > 0 : false;
+  const selectedTableHasOrders = selectedTableRow ? (ordersByTable.get(String(tableId(selectedTableRow))) || []).length > 0 : false;
 
   const shownTables = useMemo(() => tables.filter((table) => {
-    const rows = ordersByTable.get(String(primaryTableId(table))) || [];
+    const rows = ordersForTable(table);
     return filters[tableVisualStatus(table, rows, reservationHolds.get(String(tableId(table))))];
-  }), [tables, ordersByTable, filters, reservationHolds]);
+  }), [tables, ordersByTable, tableIdsByGroup, filters, reservationHolds]);
 
   const shownOrders = useMemo(() => activeOrders
-    .filter((order) => selectedTable === 'ALL' || String(tableIdOfOrder(order)) === String(selectedOrderTableId))
-    .sort((a, b) => new Date(orderCreatedAt(b) || 0) - new Date(orderCreatedAt(a) || 0)), [activeOrders, selectedTable, selectedOrderTableId]);
+    .filter((order) => {
+      if (selectedTable === 'ALL' || !selectedTableRow) return true;
+      if (!isGrouped(selectedTableRow) || !selectedTableRow?.maNhomBan) {
+        return String(tableIdOfOrder(order)) === String(tableId(selectedTableRow));
+      }
+      const ids = tableIdsByGroup.get(String(selectedTableRow.maNhomBan)) || [];
+      return ids.includes(String(tableIdOfOrder(order)));
+    })
+    .sort((a, b) => new Date(orderCreatedAt(b) || 0) - new Date(orderCreatedAt(a) || 0)), [activeOrders, selectedTable, selectedTableRow, tableIdsByGroup]);
 
   function toggleFilter(key) {
     setFilters((current) => ({ ...current, [key]: !current[key] }));
@@ -206,7 +232,7 @@ export default function WaiterHome() {
         <div className="waiter-room-grid">
           {shownTables.map((table) => {
             const id = tableId(table);
-            const tableOrders = ordersByTable.get(String(primaryTableId(table))) || [];
+            const tableOrders = ordersForTable(table);
             const hold = reservationHolds.get(String(id));
             const statusKey = tableVisualStatus(table, tableOrders, hold);
             const meta = STATUS_META[statusKey];

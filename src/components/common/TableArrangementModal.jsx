@@ -26,6 +26,10 @@ function isEmpty(table) {
   return String(table?.trangThai || 'TRONG').toUpperCase() === 'TRONG';
 }
 
+function isServing(table) {
+  return String(table?.trangThai || '').toUpperCase() === 'DANG_SU_DUNG';
+}
+
 const MODE_META = {
   transfer: {
     title: 'Chuyển bàn',
@@ -35,7 +39,7 @@ const MODE_META = {
   },
   merge: {
     title: 'Ghép bàn',
-    description: 'Chọn các bàn trống cùng khu vực để dùng chung một đơn với bàn chính.',
+    description: 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực. Hai bàn đang có đơn sẽ được tính chung một bill.',
     confirmText: 'Xác nhận ghép',
     Icon: Link2,
   },
@@ -71,10 +75,16 @@ export default function TableArrangementModal({
   const candidates = useMemo(() => {
     const sourceId = tableId(sourceTable);
     const sourceArea = tableArea(sourceTable);
+    const sourceIsServing = isServing(sourceTable);
     return tables
       .filter((table) => tableId(table) !== sourceId)
       .filter((table) => !isGrouped(table))
-      .filter(isEmpty)
+      .filter((table) => {
+        if (mode !== 'merge') return isEmpty(table);
+        // Backend chỉ cho ghép hai bàn đang có đơn khi bàn chính cũng đang phục vụ.
+        // Bàn đang chờ thanh toán không được ghép thêm.
+        return isEmpty(table) || (sourceIsServing && isServing(table));
+      })
       .filter((table) => mode !== 'merge' || tableArea(table) === sourceArea)
       .sort((a, b) => tableName(a).localeCompare(tableName(b), 'vi'));
   }, [tables, sourceTable, mode]);
@@ -91,7 +101,10 @@ export default function TableArrangementModal({
   }
 
   function toggleTable(id) {
-    if (reservationHolds?.has?.(String(id))) return;
+    const table = tables.find((item) => String(tableId(item)) === String(id));
+    // Lịch đặt chỉ khóa bàn đang trống. Bàn đang phục vụ vẫn có thể được ghép
+    // để thanh toán chung theo nghiệp vụ mới.
+    if (table && isEmpty(table) && reservationHolds?.has?.(String(id))) return;
     setSelectedIds((current) => current.includes(id)
       ? current.filter((value) => value !== id)
       : [...current, id]);
@@ -170,15 +183,26 @@ export default function TableArrangementModal({
                 const id = tableId(table);
                 const checked = selectedIds.includes(id);
                 const hold = holdFor(table);
+                const unavailable = Boolean(hold && isEmpty(table));
+                const serving = isServing(table);
                 return (
-                  <label key={id} className={`${checked ? 'selected' : ''} ${hold ? 'unavailable' : ''}`.trim()}>
-                    <input type="checkbox" checked={checked} disabled={Boolean(hold)} onChange={() => toggleTable(id)} />
+                  <label key={id} className={`${checked ? 'selected' : ''} ${unavailable ? 'unavailable' : ''}`.trim()}>
+                    <input type="checkbox" checked={checked} disabled={unavailable} onChange={() => toggleTable(id)} />
                     <span><Table2 size={17} /></span>
-                    <div><strong>{tableName(table)}</strong><small>{hold ? `Đã đặt lúc ${reservationHoldTime(hold)} · Không thể ghép` : tableArea(table)}</small></div>
+                    <div>
+                      <strong>{tableName(table)}</strong>
+                      <small>
+                        {unavailable
+                          ? `Đã đặt lúc ${reservationHoldTime(hold)} · Không thể ghép`
+                          : serving
+                            ? `${tableArea(table)} · Đang phục vụ · Tính chung bill`
+                            : `${tableArea(table)} · Bàn trống`}
+                      </small>
+                    </div>
                   </label>
                 );
               })}
-              {!candidates.length ? <div className="table-arrangement-empty">Không có bàn trống cùng khu vực để ghép.</div> : null}
+              {!candidates.length ? <div className="table-arrangement-empty">Không có bàn phù hợp cùng khu vực để ghép.</div> : null}
             </div>
           </div>
         ) : null}

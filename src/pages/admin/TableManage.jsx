@@ -105,7 +105,7 @@ function canTransfer(row) {
 }
 
 function canMerge(row) {
-  return !isGrouped(row) && ['TRONG', 'DANG_SU_DUNG', 'DANG_THANH_TOAN'].includes(row?.trangThai || 'TRONG');
+  return !isGrouped(row) && ['TRONG', 'DANG_SU_DUNG'].includes(row?.trangThai || 'TRONG');
 }
 
 function canUnmerge(row) {

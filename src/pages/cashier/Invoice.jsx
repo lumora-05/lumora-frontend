@@ -24,23 +24,42 @@ import {
 
 const PROMOTION_EDITABLE_STATUSES = ['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'];
 
+function sharedItemsOf(order, payment, slip) {
+  const source = Array.isArray(payment?.chiTietThanhToanChung) && payment.chiTietThanhToanChung.length
+    ? payment.chiTietThanhToanChung
+    : Array.isArray(slip?.items) && slip.items.length
+      ? slip.items
+      : order?.chiTietDonHang || [];
+
+  return source.filter((item) => item?.trangThaiMon !== 'DA_HUY').map((item) => ({
+    key: item?.maChiTiet,
+    name: item?.monAn?.tenMonAn || item?.tenMonAn || 'Món ăn',
+    quantity: Number(item?.soLuong || 0),
+    unitPrice: Number(item?.donGia ?? item?.monAn?.gia ?? 0),
+    note: item?.ghiChu,
+  }));
+}
+
 export default function Invoice() {
   const { orderId } = useParams();
   const toast = useToast();
   const [order, setOrder] = useState(null);
   const [payment, setPayment] = useState(null);
+  const [paymentSlip, setPaymentSlip] = useState(null);
   const [promotionCode, setPromotionCode] = useState('');
   const [updatingPromotion, setUpdatingPromotion] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [orderResponse, paymentResponse] = await Promise.all([
+    const [orderResponse, paymentResponse, slipResponse] = await Promise.all([
       orderApi.getById(orderId),
       paymentApi.byOrder(orderId).catch(() => null),
+      paymentApi.paymentSlipByOrder(orderId).catch(() => null),
     ]);
     const orderData = orderResponse?.data || orderResponse;
     setOrder(orderData);
     setPayment(paymentResponse?.data || paymentResponse || null);
+    setPaymentSlip(slipResponse?.data || slipResponse || null);
     setPromotionCode(orderData?.maCodeKhuyenMai || orderData?.khuyenMai?.maCode || '');
   }, [orderId]);
 
@@ -53,10 +72,14 @@ export default function Invoice() {
     return () => { active = false; };
   }, [load]);
 
-  const subtotal = useMemo(() => subtotalOf(order), [order]);
-  const serviceFee = useMemo(() => serviceFeeOf(order), [order]);
-  const discount = useMemo(() => discountOf(order), [order]);
-  const total = useMemo(() => Number(payment?.tongTien ?? totalOf(order)), [order, payment]);
+  const sharedBill = Boolean(
+    (Array.isArray(payment?.maDonHangsThanhToanChung) && payment.maDonHangsThanhToanChung.length > 1)
+    || paymentSlip?.loaiPhieu === 'PHIEU_TAM_TINH_CHUNG',
+  );
+  const subtotal = useMemo(() => Number(payment?.tamTinh ?? paymentSlip?.tamTinh ?? subtotalOf(order)), [order, payment, paymentSlip]);
+  const serviceFee = useMemo(() => sharedBill ? 0 : serviceFeeOf(order), [order, sharedBill]);
+  const discount = useMemo(() => Number(payment?.tienGiam ?? paymentSlip?.tienGiam ?? discountOf(order)), [order, payment, paymentSlip]);
+  const total = useMemo(() => Number(payment?.tongTien ?? paymentSlip?.tongTien ?? totalOf(order)), [order, payment, paymentSlip]);
   const pointDiscount = useMemo(() => Number(payment?.tienGiamTuDiem ?? order?.tienGiamTuDiem ?? 0), [order, payment]);
   const depositApplied = useMemo(() => Math.max(0, Number(payment?.tienCocDaKhauTru || 0)), [payment]);
   const amountPaidAfterDeposit = useMemo(() => Math.max(0, total - Math.min(depositApplied, total)), [depositApplied, total]);
@@ -69,9 +92,10 @@ export default function Invoice() {
   const info = statusInfo(paid ? 'DA_THANH_TOAN' : order?.trangThai);
   const wait = elapsedInfo(paymentRequestTimeOf(order));
   const backUrl = paid ? '/cashier/history' : '/cashier';
-  const appliedPromotionCode = payment?.maCodeKhuyenMai || order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
+  const appliedPromotionCode = payment?.maCodeKhuyenMai || paymentSlip?.maCodeKhuyenMai || order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
   const canEditPromotion = !paid && PROMOTION_EDITABLE_STATUSES.includes(order?.trangThai);
-  const visibleItems = (order?.chiTietDonHang || []).filter((item) => item?.trangThaiMon !== 'DA_HUY');
+  const visibleItems = sharedItemsOf(order, payment, paymentSlip);
+  const tableLabel = payment?.tenBanThanhToanChung || paymentSlip?.tenBan || tableNameOf(order);
   const loyaltyCustomer = payment?.khachHang || order?.khachHang;
   const pointsUsed = Number(payment?.diemDaSuDung ?? order?.diemDaSuDung ?? 0);
   const pointsEarned = Number(payment?.diemDuocCong ?? order?.diemDuocCong ?? 0);
@@ -119,14 +143,15 @@ export default function Invoice() {
       <div className="cashier-detail-card">
         <div className="cashier-detail-heading">
           <div>
-            <span className="cashier-eyebrow">{paid ? 'CHI TIẾT HÓA ĐƠN' : 'CHI TIẾT ĐƠN THANH TOÁN'}</span>
+            <span className="cashier-eyebrow">{sharedBill ? (paid ? 'CHI TIẾT HÓA ĐƠN CHUNG' : 'CHI TIẾT BILL CHUNG') : (paid ? 'CHI TIẾT HÓA ĐƠN' : 'CHI TIẾT ĐƠN THANH TOÁN')}</span>
             <h1>{documentCode(order)}</h1>
           </div>
           <span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span>
         </div>
 
         <div className="cashier-detail-meta">
-          <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
+          <p><span>Bàn</span><strong>{tableLabel}</strong></p>
+          {sharedBill ? <p><span>Loại thanh toán</span><strong>Thanh toán chung</strong></p> : null}
           <p><span>Số khách</span><strong>{guestCountOf(order)}</strong></p>
           <p><span>Thời gian</span><strong>{dateTimeText(orderTimeOf(order))}</strong></p>
           <p><span>Nhân viên phục vụ</span><strong>{order?.nhanVien?.hoTen || order?.tenNhanVien || '—'}</strong></p>
@@ -148,17 +173,17 @@ export default function Invoice() {
             </thead>
             <tbody>
               {visibleItems.map((item, index) => {
-                const unitPrice = Number(item?.donGia ?? item?.monAn?.gia ?? 0);
+                const unitPrice = Number(item?.unitPrice || 0);
                 return (
-                  <tr key={item?.maChiTiet || `${index}-${item?.monAn?.maMonAn || ''}`}>
+                  <tr key={item?.key || index}>
                     <td>{index + 1}</td>
                     <td>
-                      <strong>{item?.monAn?.tenMonAn || item?.tenMonAn || 'Món ăn'}</strong>
-                      {item?.ghiChu ? <small>{item.ghiChu}</small> : null}
+                      <strong>{item.name}</strong>
+                      {item.note ? <small>{item.note}</small> : null}
                     </td>
-                    <td>{item?.soLuong || 0}</td>
+                    <td>{item.quantity}</td>
                     <td>{formatMoney(unitPrice)}</td>
-                    <td><strong>{formatMoney(unitPrice * Number(item?.soLuong || 0))}</strong></td>
+                    <td><strong>{formatMoney(unitPrice * item.quantity)}</strong></td>
                   </tr>
                 );
               })}

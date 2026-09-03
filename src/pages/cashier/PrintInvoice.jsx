@@ -85,8 +85,28 @@ function orderItemsOf(order) {
   return mergeReceiptItems(items);
 }
 
+function paymentItemsOf(payment) {
+  const source = payment?.chiTietThanhToanChung;
+  if (!Array.isArray(source) || !source.length) return [];
+  const items = source.filter((item) => item?.trangThaiMon !== 'DA_HUY').map((item) => {
+    const unitPrice = Number(item?.donGia ?? item?.monAn?.gia ?? item?.gia ?? 0);
+    const quantity = Number(item?.soLuong || 0);
+    return {
+      key: item?.maChiTiet,
+      dishId: item?.monAn?.maMonAn ?? item?.maMonAn,
+      name: item?.monAn?.tenMonAn || item?.tenMonAn || 'Món ăn',
+      quantity,
+      unitPrice,
+      lineTotal: Number(item?.thanhTien ?? unitPrice * quantity),
+      note: item?.ghiChu,
+    };
+  });
+  return mergeReceiptItems(items);
+}
+
 function Receipt({ order, payment, slip, preview }) {
-  const items = preview ? slipItemsOf(slip) : orderItemsOf(order);
+  const sharedPaymentItems = preview ? [] : paymentItemsOf(payment);
+  const items = preview ? slipItemsOf(slip) : (sharedPaymentItems.length ? sharedPaymentItems : orderItemsOf(order));
   const subtotal = preview
     ? Number(slip?.tamTinh ?? items.reduce((sum, item) => sum + item.lineTotal, 0))
     : Number(payment?.tamTinh ?? subtotalOf(order));
@@ -107,7 +127,9 @@ function Receipt({ order, payment, slip, preview }) {
   const code = preview
     ? (slip?.maDonHangHienThi || `DH${String(slip?.maDonHang || '').padStart(7, '0')}`)
     : documentCode({ ...order, maHoaDon: payment?.maHoaDon || order?.maHoaDon });
-  const tableName = preview ? (slip?.tenBan || 'Mang đi') : tableNameOf(order);
+  const tableName = preview
+    ? (slip?.tenBan || 'Mang đi')
+    : (payment?.tenBanThanhToanChung || tableNameOf(order));
   const time = preview
     ? (slip?.thoiGianTaoPhieu || slip?.thoiGianYeuCauThanhToan || slip?.thoiGianDat)
     : (payment?.thoiGianThanhToan || payment?.ngayThanhToan || order?.thoiGianDat);

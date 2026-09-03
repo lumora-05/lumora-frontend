@@ -109,15 +109,30 @@ export default function Payment() {
     return () => { active = false; };
   }, [orderId]);
 
-  const subtotal = useMemo(() => subtotalOf(order), [order]);
-  const discount = useMemo(() => discountOf(order), [order]);
-  const totalBeforePoints = useMemo(() => totalOf(order), [order]);
+  const sharedBill = paymentSlip?.loaiPhieu === 'PHIEU_TAM_TINH_CHUNG'
+    || String(paymentSlip?.maDonHangHienThi || '').includes('+');
+  const tableLabel = paymentSlip?.tenBan || tableNameOf(order);
+  const displayCode = sharedBill && paymentSlip?.maDonHangHienThi
+    ? paymentSlip.maDonHangHienThi
+    : documentCode(order);
+  const subtotal = useMemo(
+    () => Number(paymentSlip?.tamTinh ?? subtotalOf(order)),
+    [order, paymentSlip],
+  );
+  const discount = useMemo(
+    () => Number(paymentSlip?.tienGiam ?? discountOf(order)),
+    [order, paymentSlip],
+  );
+  const totalBeforePoints = useMemo(
+    () => Number(paymentSlip?.tongTien ?? totalOf(order)),
+    [order, paymentSlip],
+  );
   const pointDiscount = Number(loyaltyPreview?.tienGiamTuDiem || 0);
   const grossTotal = Number(loyaltyPreview?.tongThanhToan ?? totalBeforePoints);
   const depositCredit = Math.max(0, Number(paymentSlip?.tienCocDaKhauTru || 0));
   const depositApplied = Math.min(depositCredit, grossTotal);
   const total = Math.max(0, grossTotal - depositApplied);
-  const promotionCode = order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
+  const promotionCode = paymentSlip?.maCodeKhuyenMai || order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
   const cashValue = Number(cashReceived);
   const change = useMemo(
     () => Math.max(0, Number.isFinite(cashValue) ? cashValue - total : 0),
@@ -356,13 +371,14 @@ export default function Payment() {
       <div className="cashier-payment-shell">
         <div className="cashier-payment-info">
           <div className="cashier-section-title">
-            <h1>{documentCode(order)}</h1>
+            <h1>{displayCode}</h1>
+            {sharedBill ? <p>Thanh toán chung nhiều đơn trong cùng nhóm bàn</p> : null}
           </div>
 
           <div className="cashier-payment-meta">
-            <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
-            <p><span>Thời gian đặt</span><strong>{dateTimeText(order?.thoiGianDat)}</strong></p>
-            <p><span>Nhân viên phục vụ</span><strong>{order?.nhanVien?.hoTen || order?.tenNhanVien || '—'}</strong></p>
+            <p><span>Bàn</span><strong>{tableLabel}</strong></p>
+            <p><span>Thời gian đặt</span><strong>{dateTimeText(paymentSlip?.thoiGianDat || order?.thoiGianDat)}</strong></p>
+            <p><span>Nhân viên phục vụ</span><strong>{paymentSlip?.nhanVienPhucVu || order?.nhanVien?.hoTen || order?.tenNhanVien || '—'}</strong></p>
           </div>
 
           <div className="cashier-payment-total cashier-payment-breakdown">
@@ -559,7 +575,8 @@ export default function Payment() {
           )}
 
           <div className="cashier-payment-review">
-            <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
+            <p><span>Bàn</span><strong>{tableLabel}</strong></p>
+            {sharedBill ? <p><span>Loại thanh toán</span><strong>Bill chung</strong></p> : null}
             <p><span>Phương thức</span><strong>{total <= 0 ? 'Khấu trừ tiền cọc' : methodLabel}</strong></p>
             {promotionCode ? <p><span>Khuyến mãi</span><strong>{promotionCode}</strong></p> : null}
             {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName || customerPhone}</strong></p> : null}
@@ -596,7 +613,8 @@ export default function Payment() {
             <h2 id="cashier-confirm-title">Xác nhận giao dịch</h2>
             <p>{total <= 0 ? 'Khoản cọc đã đủ để thanh toán hóa đơn. Xác nhận để hoàn tất đơn và ghi nhận khấu trừ cọc.' : 'Vui lòng kiểm tra lại thông tin trước khi ghi nhận thanh toán.'}</p>
             <div className="cashier-confirm-summary">
-              <p><span>Bàn</span><strong>{tableNameOf(order)}</strong></p>
+              <p><span>Bàn</span><strong>{tableLabel}</strong></p>
+              {sharedBill ? <p><span>Loại thanh toán</span><strong>Thanh toán chung</strong></p> : null}
               {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName} · {customerPhone}</strong></p> : null}
               {appliedPoints > 0 ? <p><span>Dùng điểm</span><strong>{appliedPoints} điểm (-{formatMoney(pointDiscount)})</strong></p> : null}
               {loyaltyPreview ? <p><span>Điểm được cộng</span><strong>+{Number(loyaltyPreview.diemDuKienCong || 0)} điểm</strong></p> : null}

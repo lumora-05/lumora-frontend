@@ -36,6 +36,64 @@ function paginationRange(current, total) {
   return result;
 }
 
+function groupRepresentative(rows) {
+  return rows.find((order) => String(order?.banAn?.maBan ?? '') === String(order?.banAn?.maBanChinh ?? ''))
+    || [...rows].sort((a, b) => Number(orderIdOf(a) || 0) - Number(orderIdOf(b) || 0))[0];
+}
+
+function collapseSharedBills(orders) {
+  const groups = new Map();
+  orders.forEach((order) => {
+    const groupId = String(order?.maNhomThanhToan || '').trim();
+    const key = groupId ? `group:${groupId}` : `order:${orderIdOf(order)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(order);
+  });
+
+  return Array.from(groups.values()).map((rows) => {
+    if (rows.length <= 1) return rows[0];
+    const representative = groupRepresentative(rows);
+    const tableLabel = [...new Set(rows.map(tableNameOf).filter(Boolean))].join(' + ');
+    const requestTimes = rows.map(paymentRequestTimeOf).filter(Boolean).map((value) => new Date(value).getTime()).filter(Number.isFinite);
+    const paymentTimes = rows.map(paymentTimeOf).filter(Boolean).map((value) => new Date(value).getTime()).filter(Number.isFinite);
+    return {
+      ...representative,
+      __sharedBill: true,
+      __sharedOrders: rows,
+      __tableLabel: tableLabel,
+      __itemCount: rows.reduce((sum, order) => sum + itemCountOf(order), 0),
+      __total: rows.reduce((sum, order) => sum + totalOf(order), 0),
+      __requestTime: requestTimes.length ? new Date(Math.min(...requestTimes)).toISOString() : paymentRequestTimeOf(representative),
+      __paymentTime: paymentTimes.length ? new Date(Math.max(...paymentTimes)).toISOString() : paymentTimeOf(representative),
+      __orderCodes: rows.map(documentCode).join(' + '),
+    };
+  });
+}
+
+function rowTableName(order) {
+  return order?.__tableLabel || tableNameOf(order);
+}
+
+function rowItemCount(order) {
+  return Number(order?.__itemCount ?? itemCountOf(order));
+}
+
+function rowTotal(order) {
+  return Number(order?.__total ?? totalOf(order));
+}
+
+function rowRequestTime(order) {
+  return order?.__requestTime || paymentRequestTimeOf(order);
+}
+
+function rowPaymentTime(order) {
+  return order?.__paymentTime || paymentTimeOf(order);
+}
+
+function rowDocumentCode(order, historyMode) {
+  return !historyMode && order?.__sharedBill ? order.__orderCodes : documentCode(order);
+}
+
 export default function CashierHome({ mode = 'queue' }) {
   const historyMode = mode === 'history';
   const [orders, setOrders] = useState([]);
@@ -71,14 +129,15 @@ export default function CashierHome({ mode = 'queue' }) {
   }, []);
   useEffect(() => { setPage(1); }, [mode, query, date, historyStatus]);
 
+  const billingRows = useMemo(() => collapseSharedBills(orders), [orders]);
   const queueCount = useMemo(
-    () => orders.filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length,
-    [orders],
+    () => billingRows.filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length,
+    [billingRows],
   );
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-    return orders
+    return billingRows
       .filter((order) => {
         if (!historyMode) return PAYMENT_REQUEST_STATUSES.includes(order?.trangThai);
         if (historyStatus === 'PAID') return PAID_STATUSES.includes(order?.trangThai);
@@ -86,19 +145,19 @@ export default function CashierHome({ mode = 'queue' }) {
         return PAID_STATUSES.includes(order?.trangThai) || CANCELED_STATUSES.includes(order?.trangThai);
       })
       .filter((order) => {
-        const relevantTime = historyMode ? paymentTimeOf(order) : paymentRequestTimeOf(order);
+        const relevantTime = historyMode ? rowPaymentTime(order) : rowRequestTime(order);
         return !date || localDateValue(relevantTime) === date;
       })
       .filter((order) => {
         if (!keyword) return true;
-        return `${documentCode(order)} ${order?.maDonHang || ''} ${tableNameOf(order)}`.toLowerCase().includes(keyword);
+        return `${rowDocumentCode(order, historyMode)} ${order?.maDonHang || ''} ${rowTableName(order)}`.toLowerCase().includes(keyword);
       })
       .sort((a, b) => {
-        const aTime = new Date(historyMode ? paymentTimeOf(a) : paymentRequestTimeOf(a) || 0).getTime();
-        const bTime = new Date(historyMode ? paymentTimeOf(b) : paymentRequestTimeOf(b) || 0).getTime();
+        const aTime = new Date(historyMode ? rowPaymentTime(a) : rowRequestTime(a) || 0).getTime();
+        const bTime = new Date(historyMode ? rowPaymentTime(b) : rowRequestTime(b) || 0).getTime();
         return historyMode ? bTime - aTime : aTime - bTime;
       });
-  }, [orders, historyMode, historyStatus, date, query]);
+  }, [billingRows, historyMode, historyStatus, date, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -187,16 +246,16 @@ export default function CashierHome({ mode = 'queue' }) {
               ) : rows.map((order) => {
                 const info = statusInfo(order?.trangThai);
                 const id = orderIdOf(order);
-                const elapsed = elapsedInfo(paymentRequestTimeOf(order), now);
+                const elapsed = elapsedInfo(rowRequestTime(order), now);
                 return (
                   <tr key={id} className={!historyMode && elapsed.tone === 'urgent' ? 'cashier-urgent-row' : ''}>
-                    <td><strong className="cashier-invoice-code">{documentCode(order)}</strong></td>
-                    <td><strong>{tableNameOf(order)}</strong></td>
-                    <td>{itemCountOf(order)}</td>
-                    <td><strong>{formatMoney(totalOf(order))}</strong></td>
+                    <td><strong className="cashier-invoice-code">{rowDocumentCode(order, historyMode)}</strong></td>
+                    <td><strong>{rowTableName(order)}</strong>{order?.__sharedBill ? <small> · Bill chung</small> : null}</td>
+                    <td>{rowItemCount(order)}</td>
+                    <td><strong>{formatMoney(rowTotal(order))}</strong></td>
                     <td><span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span></td>
                     <td>
-                      {historyMode ? dateTimeText(paymentTimeOf(order)) : (
+                      {historyMode ? dateTimeText(rowPaymentTime(order)) : (
                         <span className={`cashier-wait-time ${elapsed.tone}`}><Clock3 size={15} />{elapsed.label}</span>
                       )}
                     </td>
@@ -214,17 +273,17 @@ export default function CashierHome({ mode = 'queue' }) {
           ) : rows.map((order) => {
             const info = statusInfo(order?.trangThai);
             const id = orderIdOf(order);
-            const elapsed = elapsedInfo(paymentRequestTimeOf(order), now);
+            const elapsed = elapsedInfo(rowRequestTime(order), now);
             return (
               <article key={id} className={`cashier-mobile-item ${!historyMode ? elapsed.tone : ''}`}>
                 <header>
-                  <div><strong>{tableNameOf(order)}</strong><span>{documentCode(order)}</span></div>
+                  <div><strong>{rowTableName(order)}</strong><span>{rowDocumentCode(order, historyMode)}{order?.__sharedBill ? ' · Bill chung' : ''}</span></div>
                   <span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span>
                 </header>
                 <div className="cashier-mobile-item-grid">
-                  <p><span>Số món</span><b>{itemCountOf(order)}</b></p>
-                  <p><span>Tổng tiền</span><b>{formatMoney(totalOf(order))}</b></p>
-                  <p className="wide"><span>{historyMode ? 'Thời gian' : 'Thời gian chờ'}</span><b>{historyMode ? dateTimeText(paymentTimeOf(order)) : elapsed.label}</b></p>
+                  <p><span>Số món</span><b>{rowItemCount(order)}</b></p>
+                  <p><span>Tổng tiền</span><b>{formatMoney(rowTotal(order))}</b></p>
+                  <p className="wide"><span>{historyMode ? 'Thời gian' : 'Thời gian chờ'}</span><b>{historyMode ? dateTimeText(rowPaymentTime(order)) : elapsed.label}</b></p>
                 </div>
                 <footer>{renderActions(order)}</footer>
               </article>
