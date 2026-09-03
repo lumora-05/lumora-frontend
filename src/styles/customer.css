@@ -2458,3 +2458,14 @@
   box-shadow:none;
   transform:none;
 }
+/* QR bàn ghép: nhiều đơn gốc, một phiên phục vụ chung. */
+.customer-order-items-list.shared-session{gap:12px}
+.customer-shared-order-block{display:grid;gap:9px}
+.customer-shared-order-block+.customer-shared-order-block{padding-top:12px;border-top:1px dashed #dfe5eb}
+.customer-shared-order-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border-radius:11px;background:#fff7f2;border:1px solid #ffe0d0}
+.customer-shared-order-head>div{display:flex;align-items:center;gap:9px;min-width:0}
+.customer-shared-order-head strong{color:#273244;font-size:12px}
+.customer-shared-order-head span{color:#7c8797;font-size:10px;font-weight:800}
+.customer-shared-order-head small{color:#e65716;font-size:9px;font-weight:900;white-space:nowrap}
+.customer-shared-order-items{display:grid;gap:8px}
+@media(max-width:560px){.customer-shared-order-head{align-items:flex-start;flex-direction:column}.customer-shared-order-head small{white-space:normal}}

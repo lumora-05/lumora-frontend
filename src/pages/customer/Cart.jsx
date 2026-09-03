@@ -51,6 +51,7 @@ export default function Cart() {
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
+  const [serviceOrders, setServiceOrders] = useState([]);
   const [table, setTable] = useState(null);
   const [checkingOrder, setCheckingOrder] = useState(true);
   const resolvedTableId = table?.maBan ?? table?.id;
@@ -66,9 +67,12 @@ export default function Cart() {
       ]);
       const tableData = tableResponse?.data ?? tableResponse;
       setTable(tableData?.banAn ?? tableData?.table ?? null);
-      setCurrentOrder(unwrapList(orderResponse)[0] || null);
+      const openOrders = unwrapList(orderResponse);
+      setServiceOrders(openOrders);
+      setCurrentOrder(openOrders[0] || null);
     } catch {
       setTable(null);
+      setServiceOrders([]);
       setCurrentOrder(null);
     } finally {
       setCheckingOrder(false);
@@ -85,7 +89,9 @@ export default function Cart() {
   }, [socketEvent, tableTopic, loadCurrentOrder]);
 
   const currentStatus = currentOrder?.trangThai;
-  const cannotAddMore = PAYMENT_PENDING.has(currentStatus);
+  const cannotAddMore = serviceOrders.length
+    ? serviceOrders.some((item) => PAYMENT_PENDING.has(item?.trangThai))
+    : PAYMENT_PENDING.has(currentStatus);
   const currentId = orderIdOf(currentOrder);
 
   async function submit() {

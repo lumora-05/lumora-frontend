@@ -7,7 +7,6 @@ import {
   Clock3,
   CreditCard,
   LoaderCircle,
-  MapPin,
   Plus,
   ReceiptText,
   RefreshCw,
@@ -75,6 +74,9 @@ const CANNOT_ADD_STATUSES = new Set([
   'DA_HUY'
 ]);
 
+const PAYMENT_PENDING_STATUSES = new Set(['CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN']);
+const PROMOTION_EDIT_STATUSES = new Set(['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN']);
+
 function statusStep(status) {
   if (status === 'DA_THANH_TOAN') return 4;
   if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'].includes(status)) return 3;
@@ -96,12 +98,50 @@ function formatDateTime(value) {
   });
 }
 
+function unwrapList(response) {
+  const data = response?.data ?? response;
+  return Array.isArray(data) ? data.filter(Boolean) : [];
+}
+
+function orderIdOf(order) {
+  return order?.maDonHang ?? order?.id;
+}
+
+function orderStatus(order) {
+  return String(order?.trangThai || 'CHO_XAC_NHAN').toUpperCase();
+}
+
+function orderTableName(order) {
+  return order?.banAn?.tenBan || order?.tenBan || 'Bàn';
+}
+
+function groupStatus(orders) {
+  const statuses = orders.map(orderStatus);
+  if (!statuses.length) return 'CHO_XAC_NHAN';
+  if (statuses.every((status) => status === 'DA_THANH_TOAN')) return 'DA_THANH_TOAN';
+  if (statuses.some((status) => PAYMENT_PENDING_STATUSES.has(status))) return 'CHO_THANH_TOAN';
+  if (statuses.every((status) => status === 'DA_PHUC_VU')) return 'DA_PHUC_VU';
+  return statuses.reduce((lowest, status) => (
+    statusStep(status) < statusStep(lowest) ? status : lowest
+  ), statuses[0]);
+}
+
+function earliestOrderTime(orders) {
+  const values = orders
+    .map((item) => item?.thoiGianDat || item?.createdAt)
+    .map((value) => value ? new Date(value) : null)
+    .filter((date) => date && !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+  return values[0] || null;
+}
+
 export default function OrderSuccess() {
   const { language } = useLanguage();
   const { qrToken, orderId } = useParams();
   const location = useLocation();
   const toast = useToast();
   const [order, setOrder] = useState(null);
+  const [serviceOrders, setServiceOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [requestingPayment, setRequestingPayment] = useState(false);
   const [paymentConfirmOpen, setPaymentConfirmOpen] = useState(false);
@@ -117,11 +157,33 @@ export default function OrderSuccess() {
     if (!qrToken || !orderId) return;
     try {
       setError('');
+
+      // Backend trả cùng danh sách đơn đang mở cho mọi QR trong nhóm bàn ghép.
+      // Ưu tiên danh sách này để QR bàn chính và QR bàn phụ nhìn cùng một phiên phục vụ.
+      let groupOrders = [];
+      try {
+        const groupResponse = await orderApi.customerOpenOrdersByQrToken(qrToken);
+        groupOrders = unwrapList(groupResponse);
+      } catch {
+        // Fallback về endpoint theo dõi đơn cũ để vẫn xem được đơn độc lập/đơn vừa kết thúc.
+      }
+
+      if (groupOrders.length) {
+        const primaryOrder = groupOrders[0];
+        setServiceOrders(groupOrders);
+        setOrder(primaryOrder);
+        setPromotionCode(primaryOrder?.maCodeKhuyenMai || primaryOrder?.khuyenMai?.maCode || '');
+        return;
+      }
+
       const response = await orderApi.customerTracking(qrToken, orderId);
       const data = response?.data || response;
       setOrder(data);
+      setServiceOrders(data ? [data] : []);
       setPromotionCode(data?.maCodeKhuyenMai || data?.khuyenMai?.maCode || '');
     } catch (err) {
+      setOrder(null);
+      setServiceOrders([]);
       setError(err?.message || 'Không thể tải thông tin đơn hàng lúc này.');
     } finally {
       setLoading(false);
@@ -137,19 +199,30 @@ export default function OrderSuccess() {
     if (socketEvent?.topic === orderTopic) load();
   }, [socketEvent, orderTopic, load]);
 
-  const currentStatus = order?.trangThai || 'CHO_XAC_NHAN';
+  const orders = serviceOrders.length ? serviceOrders : (order ? [order] : []);
+  const actionOrder = orders[0] || order;
+  const actionOrderId = orderIdOf(actionOrder) || orderId;
+  const statuses = orders.map(orderStatus);
+  const currentStatus = groupStatus(orders);
   const activeStep = statusStep(currentStatus);
-  const subtotal = Number(order?.tamTinh ?? order?.tongTien ?? 0);
-  const discount = Number(order?.tienGiam || 0);
-  const total = Number(order?.tongTien || 0);
-  const appliedPromotionCode = order?.maCodeKhuyenMai || order?.khuyenMai?.maCode || '';
-  const tableName = order?.banAn?.tenBan || order?.tenBan || 'Bàn';
-  const canAddMore = !CANNOT_ADD_STATUSES.has(currentStatus);
-  const canRequestPayment = currentStatus === 'DA_PHUC_VU';
-  const paymentPending = ['CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'].includes(currentStatus);
-  const canEditPromotion = ['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'].includes(currentStatus);
-  const paid = currentStatus === 'DA_THANH_TOAN';
+  const subtotal = orders.reduce((sum, item) => sum + Number(item?.tamTinh ?? item?.tongTien ?? 0), 0);
+  const discount = orders.reduce((sum, item) => sum + Number(item?.tienGiam || 0), 0);
+  const total = orders.reduce((sum, item) => sum + Number(item?.tongTien || 0), 0);
+  const appliedPromotionCode = actionOrder?.maCodeKhuyenMai || actionOrder?.khuyenMai?.maCode || '';
+  const appliedPromotionCodes = [...new Set(orders
+    .map((item) => item?.maCodeKhuyenMai || item?.khuyenMai?.maCode || '')
+    .filter(Boolean))];
+  const tableNames = [...new Set(orders.map(orderTableName).filter(Boolean))];
+  const tableName = tableNames.join(' + ') || orderTableName(actionOrder);
+  const isSharedSession = Boolean(actionOrder?.maNhomThanhToan) || tableNames.length > 1;
+  const canAddMore = orders.length > 0 && statuses.every((status) => !CANNOT_ADD_STATUSES.has(status));
+  const canRequestPayment = orders.length > 0 && statuses.every((status) => status === 'DA_PHUC_VU');
+  const paymentPending = statuses.some((status) => PAYMENT_PENDING_STATUSES.has(status));
+  const canEditPromotion = orders.length > 0 && statuses.every((status) => PROMOTION_EDIT_STATUSES.has(status));
+  const paid = orders.length > 0 && statuses.every((status) => status === 'DA_THANH_TOAN');
   const statusText = STATUS_LABEL[currentStatus] || currentStatus || 'Đang cập nhật';
+  const firstOrderTime = earliestOrderTime(orders);
+  const totalItemLines = orders.reduce((sum, item) => sum + (item?.chiTietDonHang || []).length, 0);
 
   const pageMessage = useMemo(() => {
     if (location.state?.isAdditionalCall) return `Lượt gọi thêm ${location.state?.callNumber || ''} đã được gửi trực tiếp xuống bếp.`;
@@ -159,7 +232,7 @@ export default function OrderSuccess() {
 
   async function applyPromotion() {
     const code = promotionCode.trim().toUpperCase();
-    if (!canEditPromotion || updatingPromotion) return;
+    if (!canEditPromotion || updatingPromotion || !actionOrderId) return;
     if (!code) {
       toast.error('Vui lòng nhập mã khuyến mãi.');
       return;
@@ -167,10 +240,8 @@ export default function OrderSuccess() {
 
     try {
       setUpdatingPromotion(true);
-      const response = await promotionApi.customerApply(qrToken, order?.maDonHang || orderId, code);
-      const updated = response?.data || response;
-      if (updated?.maDonHang) setOrder(updated);
-      else await load();
+      await promotionApi.customerApply(qrToken, actionOrderId, code);
+      await load();
       setPromotionCode(code);
       toast.success(`Đã áp dụng mã ${code}.`);
     } catch (err) {
@@ -181,13 +252,11 @@ export default function OrderSuccess() {
   }
 
   async function removePromotion() {
-    if (!appliedPromotionCode || !canEditPromotion || updatingPromotion) return;
+    if (!appliedPromotionCode || !canEditPromotion || updatingPromotion || !actionOrderId) return;
     try {
       setUpdatingPromotion(true);
-      const response = await promotionApi.customerRemove(qrToken, order?.maDonHang || orderId);
-      const updated = response?.data || response;
-      if (updated?.maDonHang) setOrder(updated);
-      else await load();
+      await promotionApi.customerRemove(qrToken, actionOrderId);
+      await load();
       setPromotionCode('');
       toast.success('Đã gỡ mã khuyến mãi.');
     } catch (err) {
@@ -202,7 +271,8 @@ export default function OrderSuccess() {
     try {
       setCancelLoading(true);
       const itemId = cancelTarget?.maChiTiet ?? cancelTarget?.maChiTietDonHang ?? cancelTarget?.id;
-      const response = await orderApi.customerRequestItemCancellation(qrToken, order?.maDonHang || orderId, itemId, payload);
+      const targetOrderId = cancelTarget?.__orderId || actionOrderId;
+      const response = await orderApi.customerRequestItemCancellation(qrToken, targetOrderId, itemId, payload);
       toast.success(response?.message || 'Đã gửi yêu cầu hủy món đến nhân viên phục vụ.');
       setCancelTarget(null);
       await load();
@@ -219,13 +289,13 @@ export default function OrderSuccess() {
   }
 
   async function confirmRequestPayment() {
-    if (!canRequestPayment || requestingPayment) return;
+    if (!canRequestPayment || requestingPayment || !actionOrderId) return;
 
     try {
       setRequestingPayment(true);
-      await orderApi.customerRequestPayment(qrToken, order?.maDonHang || orderId);
+      await orderApi.customerRequestPayment(qrToken, actionOrderId);
       setPaymentConfirmOpen(false);
-      toast.success('Đã gửi yêu cầu thanh toán đến nhân viên.');
+      toast.success(isSharedSession ? 'Đã gửi yêu cầu thanh toán chung đến nhân viên.' : 'Đã gửi yêu cầu thanh toán đến nhân viên.');
       await load();
     } catch (err) {
       toast.error(errorMessageOf(err, 'Không thể gửi yêu cầu thanh toán. Vui lòng gọi nhân viên phục vụ.'));
@@ -241,9 +311,9 @@ export default function OrderSuccess() {
       <section className="customer-tracking-container">
         <div className="customer-page-heading customer-tracking-heading">
           <div>
-            <span><ReceiptText size={17} /> Đơn hàng</span>
-            <h1>Theo dõi đơn hàng</h1>
-            <p>{pageMessage}</p>
+            <span><ReceiptText size={17} /> {isSharedSession ? 'Phiên bàn ghép' : 'Đơn hàng'}</span>
+            <h1>{isSharedSession ? 'Theo dõi nhóm bàn' : 'Theo dõi đơn hàng'}</h1>
+            <p>{isSharedSession ? `QR của các bàn trong nhóm đều xem chung phiên phục vụ ${tableName}.` : pageMessage}</p>
           </div>
           <div className="customer-live-status"><CircleDot size={15} /> {statusText}</div>
         </div>
@@ -264,48 +334,78 @@ export default function OrderSuccess() {
           <div className="customer-tracking-layout">
             <section className="customer-order-info-card">
               <div className="customer-card-heading">
-                <span>Thông tin đơn hàng</span>
-                <strong>#{order?.maDonHang || orderId}</strong>
+                <span>{isSharedSession ? 'Thông tin phiên phục vụ' : 'Thông tin đơn hàng'}</span>
+                <strong>{isSharedSession ? `${orders.length} đơn` : `#${actionOrderId}`}</strong>
               </div>
 
               <div className="customer-order-meta-list">
-                <p><span>Mã đơn hàng</span><b>DH{String(order?.maDonHang || orderId).padStart(6, '0')}</b></p>
+                <p>
+                  <span>{isSharedSession ? 'Các đơn trong nhóm' : 'Mã đơn hàng'}</span>
+                  <b>{orders.map((item) => `DH${String(orderIdOf(item)).padStart(6, '0')}`).join(' · ')}</b>
+                </p>
                 <p><span>Bàn</span><b>{tableName}</b></p>
-                <p><span>Thời gian đặt</span><b>{formatDateTime(order?.thoiGianDat || order?.createdAt)}</b></p>
+                <p><span>{isSharedSession ? 'Thời gian bắt đầu' : 'Thời gian đặt'}</span><b>{formatDateTime(firstOrderTime)}</b></p>
               </div>
 
               <div className="customer-order-items-box">
                 <div className="customer-order-items-heading">
-                  <span><UtensilsCrossed size={18} /> Món đã gọi</span>
-                  <small>{(order?.chiTietDonHang || []).length} dòng món</small>
+                  <span><UtensilsCrossed size={18} /> {isSharedSession ? 'Món đã gọi trong nhóm' : 'Món đã gọi'}</span>
+                  <small>{totalItemLines} dòng món</small>
                 </div>
-                <div className="customer-order-items-list">
-                  {(order?.chiTietDonHang || []).map((item, index) => {
-                    const itemId = item?.maChiTiet ?? item?.maChiTietDonHang ?? item?.id ?? index;
-                    const itemStatus = String(item?.trangThaiMon || 'CHO_BEP').toUpperCase();
-                    const pendingCancellation = isPendingCancellation(item);
-                    const cancelled = isCancelledItem(item);
-                    const statusLabel = ITEM_STATUS_LABEL[itemStatus] || itemStatus;
+                <div className={`customer-order-items-list ${isSharedSession ? 'shared-session' : ''}`}>
+                  {orders.map((groupOrder) => {
+                    const groupOrderId = orderIdOf(groupOrder);
+                    const groupTable = orderTableName(groupOrder);
+                    const items = groupOrder?.chiTietDonHang || [];
                     return (
-                      <article className={`customer-order-item-row ${cancelled ? 'cancelled' : ''}`} key={itemId}>
-                        <div className="customer-order-item-main">
-                          <strong>{localizedFoodName(item?.monAn || item, language, 'Món ăn')}</strong>
-                          <span>× {item?.soLuong || 0}{item?.ghiChu ? ` · ${item.ghiChu}` : ''}</span>
-                          {(pendingCancellation || cancelled) ? (
-                            <small>{item?.lyDoHuy || cancellationReasonLabel(item?.maLyDoHuy)}{item?.ghiChuHuy ? ` · ${item.ghiChuHuy}` : ''}</small>
-                          ) : null}
+                      <section className="customer-shared-order-block" key={groupOrderId || groupTable}>
+                        {isSharedSession ? (
+                          <div className="customer-shared-order-head">
+                            <div>
+                              <strong>{groupTable}</strong>
+                              <span>Đơn #{groupOrderId}</span>
+                            </div>
+                            <small>{STATUS_LABEL[orderStatus(groupOrder)] || orderStatus(groupOrder)}</small>
+                          </div>
+                        ) : null}
+
+                        <div className="customer-shared-order-items">
+                          {items.map((item, index) => {
+                            const itemId = item?.maChiTiet ?? item?.maChiTietDonHang ?? item?.id ?? index;
+                            const itemStatus = String(item?.trangThaiMon || 'CHO_BEP').toUpperCase();
+                            const pendingCancellation = isPendingCancellation(item);
+                            const cancelled = isCancelledItem(item);
+                            const statusLabel = ITEM_STATUS_LABEL[itemStatus] || itemStatus;
+                            return (
+                              <article className={`customer-order-item-row ${cancelled ? 'cancelled' : ''}`} key={`${groupOrderId}-${itemId}`}>
+                                <div className="customer-order-item-main">
+                                  <strong>{localizedFoodName(item?.monAn || item, language, 'Món ăn')}</strong>
+                                  <span>× {item?.soLuong || 0}{item?.ghiChu ? ` · ${item.ghiChu}` : ''}</span>
+                                  {(pendingCancellation || cancelled) ? (
+                                    <small>{item?.lyDoHuy || cancellationReasonLabel(item?.maLyDoHuy)}{item?.ghiChuHuy ? ` · ${item.ghiChuHuy}` : ''}</small>
+                                  ) : null}
+                                </div>
+                                <div className="customer-order-item-side">
+                                  <span className={`customer-order-item-status ${cancelled ? 'cancelled' : pendingCancellation ? 'pending-cancel' : ''}`}>{statusLabel}</span>
+                                  <b>{cancelled ? 'Không tính tiền' : formatMoney((item?.donGia || item?.monAn?.gia || 0) * (item?.soLuong || 0))}</b>
+                                  {canCustomerRequestCancellation(item) ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCancelTarget({ ...item, __orderId: groupOrderId, __tableName: groupTable })}
+                                    >
+                                      <Ban size={15} /> Yêu cầu hủy
+                                    </button>
+                                  ) : pendingCancellation ? <em>Đang chờ nhân viên duyệt</em> : null}
+                                </div>
+                              </article>
+                            );
+                          })}
+                          {!items.length ? <p className="customer-order-items-empty">Đơn hàng chưa có món.</p> : null}
                         </div>
-                        <div className="customer-order-item-side">
-                          <span className={`customer-order-item-status ${cancelled ? 'cancelled' : pendingCancellation ? 'pending-cancel' : ''}`}>{statusLabel}</span>
-                          <b>{cancelled ? 'Không tính tiền' : formatMoney((item?.donGia || item?.monAn?.gia || 0) * (item?.soLuong || 0))}</b>
-                          {canCustomerRequestCancellation(item) ? (
-                            <button type="button" onClick={() => setCancelTarget(item)}><Ban size={15} /> Yêu cầu hủy</button>
-                          ) : pendingCancellation ? <em>Đang chờ nhân viên duyệt</em> : null}
-                        </div>
-                      </article>
+                      </section>
                     );
                   })}
-                  {!(order?.chiTietDonHang || []).length ? <p className="customer-order-items-empty">Đơn hàng chưa có món.</p> : null}
+                  {!totalItemLines ? <p className="customer-order-items-empty">Phiên phục vụ chưa có món.</p> : null}
                 </div>
               </div>
 
@@ -332,14 +432,22 @@ export default function OrderSuccess() {
                     {updatingPromotion ? 'Đang xử lý...' : appliedPromotionCode ? 'Đổi mã' : 'Áp dụng'}
                   </button>
                 </div>
-                <small>{canEditPromotion ? 'Mỗi đơn chỉ áp dụng một mã. Mã mới sẽ thay thế mã hiện tại.' : 'Có thể áp dụng mã sau khi món đã được phục vụ.'}</small>
+                <small>{canEditPromotion
+                  ? (isSharedSession ? 'Mã được áp dụng trên đơn chính; bill chung sẽ tổng hợp ưu đãi của toàn bộ nhóm.' : 'Mỗi đơn chỉ áp dụng một mã. Mã mới sẽ thay thế mã hiện tại.')
+                  : (isSharedSession ? 'Có thể áp dụng mã sau khi toàn bộ món trong nhóm đã được phục vụ.' : 'Có thể áp dụng mã sau khi món đã được phục vụ.')}
+                </small>
               </div>
 
               <div className="customer-order-price-list">
-                <p><span>Tạm tính</span><b>{formatMoney(subtotal)}</b></p>
+                <p><span>Tạm tính{isSharedSession ? ' cả nhóm' : ''}</span><b>{formatMoney(subtotal)}</b></p>
                 <p><span>Phí phục vụ</span><b>{formatMoney(0)}</b></p>
-                {discount > 0 ? <p className="discount"><span>Khuyến mãi {appliedPromotionCode ? `(${appliedPromotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p> : null}
-                <p className="total"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></p>
+                {discount > 0 ? (
+                  <p className="discount">
+                    <span>Khuyến mãi {appliedPromotionCodes.length ? `(${appliedPromotionCodes.join(', ')})` : ''}</span>
+                    <b>-{formatMoney(discount)}</b>
+                  </p>
+                ) : null}
+                <p className="total"><span>{isSharedSession ? 'Tổng bill chung' : 'Tổng cộng'}</span><strong>{formatMoney(total)}</strong></p>
               </div>
 
               <div className="customer-order-actions">
@@ -354,7 +462,7 @@ export default function OrderSuccess() {
                   type="button"
                   disabled={!canRequestPayment || requestingPayment}
                   onClick={requestPayment}
-                  title={!canRequestPayment && !paymentPending && !paid ? 'Chỉ yêu cầu thanh toán sau khi món đã được phục vụ' : undefined}
+                  title={!canRequestPayment && !paymentPending && !paid ? (isSharedSession ? 'Chỉ yêu cầu thanh toán khi toàn bộ món của nhóm đã được phục vụ' : 'Chỉ yêu cầu thanh toán sau khi món đã được phục vụ') : undefined}
                 >
                   <CreditCard size={19} />
                   {requestingPayment
@@ -363,14 +471,16 @@ export default function OrderSuccess() {
                       ? 'Đã thanh toán'
                       : paymentPending
                         ? 'Đã yêu cầu thanh toán'
-                        : 'Yêu cầu thanh toán'}
+                        : isSharedSession
+                          ? 'Thanh toán chung'
+                          : 'Yêu cầu thanh toán'}
                 </button>
               </div>
             </section>
 
             <section className="customer-order-timeline-card">
               <div className="customer-card-heading">
-                <span>Trạng thái đơn hàng</span>
+                <span>{isSharedSession ? 'Trạng thái phiên phục vụ' : 'Trạng thái đơn hàng'}</span>
                 <small>Cập nhật tự động</small>
               </div>
 
@@ -392,7 +502,7 @@ export default function OrderSuccess() {
 
               <div className="customer-tracking-note">
                 <Clock3 size={18} />
-                <span>Trạng thái sẽ tự động thay đổi khi nhân viên và bếp cập nhật đơn hàng.</span>
+                <span>{isSharedSession ? 'Khi bất kỳ đơn nào trong nhóm thay đổi, màn hình của tất cả QR bàn ghép sẽ tự cập nhật.' : 'Trạng thái sẽ tự động thay đổi khi nhân viên và bếp cập nhật đơn hàng.'}</span>
               </div>
             </section>
           </div>
@@ -402,8 +512,10 @@ export default function OrderSuccess() {
       <CustomerConfirmModal
         open={paymentConfirmOpen}
         loading={requestingPayment}
-        title="Xác nhận yêu cầu thanh toán"
-        description={`Bạn muốn gửi yêu cầu thanh toán cho đơn DH${String(order?.maDonHang || orderId).padStart(6, '0')}? Nhân viên sẽ đến hỗ trợ tại ${tableName}.`}
+        title={isSharedSession ? 'Xác nhận thanh toán chung' : 'Xác nhận yêu cầu thanh toán'}
+        description={isSharedSession
+          ? `Bạn muốn gửi yêu cầu thanh toán chung cho ${tableName}? Hệ thống sẽ tính toàn bộ ${orders.length} đơn trong nhóm thành một bill.`
+          : `Bạn muốn gửi yêu cầu thanh toán cho đơn DH${String(actionOrderId || orderId).padStart(6, '0')}? Nhân viên sẽ đến hỗ trợ tại ${tableName}.`}
         confirmText="Gửi yêu cầu"
         cancelText="Quay lại"
         onClose={() => !requestingPayment && setPaymentConfirmOpen(false)}

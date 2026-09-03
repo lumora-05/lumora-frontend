@@ -11,12 +11,6 @@ function unwrapList(response) {
   return Array.isArray(data) ? data : [];
 }
 
-function toTime(value) {
-  const date = value ? new Date(value) : null;
-  if (!date || Number.isNaN(date.getTime())) return 0;
-  return date.getTime();
-}
-
 export default function CustomerOrders() {
   const { qrToken } = useParams();
   const navigate = useNavigate();
@@ -36,9 +30,9 @@ export default function CustomerOrders() {
       const tableData = tableResponse?.data ?? tableResponse;
       const table = tableData?.banAn ?? tableData?.table;
       setResolvedTableId(table?.maBan ?? table?.id ?? null);
-      const orders = unwrapList(orderResponse)
-        .filter(Boolean)
-        .sort((a, b) => toTime(b?.thoiGianDat || b?.createdAt) - toTime(a?.thoiGianDat || a?.createdAt));
+      // Backend ưu tiên đơn của bàn chính khi các bàn đã ghép. Giữ nguyên thứ tự
+      // để quét QR bàn chính hay bàn phụ đều mở cùng một phiên phục vụ.
+      const orders = unwrapList(orderResponse).filter(Boolean);
       const current = orders[0];
       const id = current?.maDonHang ?? current?.id;
       if (id) {
