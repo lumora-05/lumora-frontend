@@ -71,7 +71,16 @@ function canTransfer(table) {
 }
 
 function canMerge(table) {
-  return !isGrouped(table) && ['TRONG', 'DANG_SU_DUNG'].includes(table?.trangThai || 'TRONG');
+  return ['TRONG', 'DANG_SU_DUNG'].includes(String(table?.trangThai || 'TRONG').toUpperCase());
+}
+
+function groupHasPayment(table, tables) {
+  const paymentStatuses = new Set(['DANG_THANH_TOAN', 'CHO_THANH_TOAN']);
+  if (!isGrouped(table) || !table?.maNhomBan) {
+    return paymentStatuses.has(String(table?.trangThai || '').toUpperCase());
+  }
+  return tables.some((item) => String(item?.maNhomBan ?? '') === String(table.maNhomBan)
+    && paymentStatuses.has(String(item?.trangThai || '').toUpperCase()));
 }
 
 function canUnmerge(table) {
@@ -159,6 +168,9 @@ export default function WaiterHome() {
 
   const selectedReservationHold = selectedTableRow ? reservationHolds.get(String(tableId(selectedTableRow))) || null : null;
   const selectedTableHasOrders = selectedTableRow ? (ordersByTable.get(String(tableId(selectedTableRow))) || []).length > 0 : false;
+  const selectedGroupHasPayment = selectedTableRow
+    ? groupHasPayment(selectedTableRow, tables) || ordersForTable(selectedTableRow).some((order) => orderGroup(order) === 'PAYMENT')
+    : false;
 
   const shownTables = useMemo(() => tables.filter((table) => {
     const rows = ordersForTable(table);
@@ -196,7 +208,10 @@ export default function WaiterHome() {
       } else {
         return;
       }
-      toast.success(messageOf(response, arrangementMode === 'transfer' ? 'Chuyển bàn thành công' : arrangementMode === 'merge' ? 'Ghép bàn thành công' : 'Tách bàn thành công'));
+      const mergeSuccess = arrangementMode === 'merge' && isGrouped(selectedTableRow)
+        ? 'Thêm bàn vào nhóm thành công'
+        : 'Ghép bàn thành công';
+      toast.success(messageOf(response, arrangementMode === 'transfer' ? 'Chuyển bàn thành công' : arrangementMode === 'merge' ? mergeSuccess : 'Tách bàn thành công'));
       setArrangementMode(null);
       await load(preferredId);
     } catch (error) {
@@ -215,7 +230,18 @@ export default function WaiterHome() {
           <div className="waiter-table-map-tools">
             <div className="waiter-table-arrangement-actions">
               <button type="button" disabled={!selectedTableRow || !canTransfer(selectedTableRow)} title={selectedTableRow && !canTransfer(selectedTableRow) ? 'Chỉ chuyển bàn đang có đơn phục vụ' : ''} onClick={() => setArrangementMode('transfer')}><ArrowRightLeft size={16} /> Chuyển bàn</button>
-              <button type="button" disabled={!selectedTableRow || !canMerge(selectedTableRow) || Boolean(selectedReservationHold && !selectedTableHasOrders)} title={selectedTableRow && selectedReservationHold && !selectedTableHasOrders ? `Bàn đã được giữ lúc ${reservationHoldTime(selectedReservationHold)}` : selectedTableRow && !canMerge(selectedTableRow) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={16} /> Ghép bàn</button>
+              <button
+                type="button"
+                disabled={!selectedTableRow || !canMerge(selectedTableRow) || selectedGroupHasPayment || Boolean(selectedReservationHold && !selectedTableHasOrders && !isGrouped(selectedTableRow))}
+                title={selectedGroupHasPayment
+                  ? 'Nhóm đã bắt đầu thanh toán nên không thể thêm bàn'
+                  : selectedTableRow && selectedReservationHold && !selectedTableHasOrders && !isGrouped(selectedTableRow)
+                    ? `Bàn đã được giữ lúc ${reservationHoldTime(selectedReservationHold)}`
+                    : selectedTableRow && !canMerge(selectedTableRow)
+                      ? 'Bàn hiện tại không thể ghép'
+                      : ''}
+                onClick={() => setArrangementMode('merge')}
+              ><Link2 size={16} /> {isGrouped(selectedTableRow) ? 'Thêm bàn' : 'Ghép bàn'}</button>
               <button type="button" disabled={!selectedTableRow || !canUnmerge(selectedTableRow)} title={selectedTableRow && !canUnmerge(selectedTableRow) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={16} /> Tách bàn</button>
             </div>
             <div className="waiter-map-filters">

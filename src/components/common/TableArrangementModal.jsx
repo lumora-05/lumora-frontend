@@ -65,6 +65,16 @@ export default function TableArrangementModal({
   const [selectedIds, setSelectedIds] = useState([]);
   const meta = MODE_META[mode] || MODE_META.transfer;
   const Icon = meta.Icon;
+  const sourceGrouped = isGrouped(sourceTable);
+  const sourceGroupId = sourceTable?.maNhomBan;
+  const groupMembers = useMemo(() => {
+    if (!sourceGrouped || !sourceGroupId) return sourceTable ? [sourceTable] : [];
+    return tables
+      .filter((table) => String(table?.maNhomBan ?? '') === String(sourceGroupId))
+      .sort((a, b) => tableName(a).localeCompare(tableName(b), 'vi'));
+  }, [tables, sourceTable, sourceGrouped, sourceGroupId]);
+  const groupPrimary = groupMembers.find((table) => String(tableId(table)) === String(sourceTable?.maBanChinh)) || sourceTable;
+  const extendingGroup = mode === 'merge' && sourceGrouped;
 
   useEffect(() => {
     if (!open) return;
@@ -74,10 +84,12 @@ export default function TableArrangementModal({
 
   const candidates = useMemo(() => {
     const sourceId = tableId(sourceTable);
-    const sourceArea = tableArea(sourceTable);
-    const sourceIsServing = isServing(sourceTable);
+    const sourceArea = tableArea(groupPrimary || sourceTable);
+    const sourceIsServing = groupMembers.some(isServing);
     return tables
       .filter((table) => tableId(table) !== sourceId)
+      // Không cho chọn lại bàn đang ở trong nhóm hiện tại và cũng không cho
+      // gộp trực tiếp với một nhóm bàn khác. Backend chỉ nhận bàn độc lập.
       .filter((table) => !isGrouped(table))
       .filter((table) => {
         if (mode !== 'merge') return isEmpty(table);
@@ -87,8 +99,13 @@ export default function TableArrangementModal({
       })
       .filter((table) => mode !== 'merge' || tableArea(table) === sourceArea)
       .sort((a, b) => tableName(a).localeCompare(tableName(b), 'vi'));
-  }, [tables, sourceTable, mode]);
+  }, [tables, sourceTable, mode, groupMembers, groupPrimary]);
 
+  const dialogTitle = extendingGroup ? 'Thêm bàn vào nhóm' : meta.title;
+  const dialogDescription = extendingGroup
+    ? 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực để thêm vào nhóm hiện tại. Bill chung và bàn chính được giữ nguyên.'
+    : meta.description;
+  const confirmText = extendingGroup ? 'Xác nhận thêm bàn' : meta.confirmText;
 
   function holdFor(table) {
     return reservationHolds?.get?.(String(tableId(table))) || null;
@@ -136,8 +153,8 @@ export default function TableArrangementModal({
           <div className="table-arrangement-heading">
             <span><Icon size={21} /></span>
             <div>
-              <h3>{meta.title}</h3>
-              <p>{meta.description}</p>
+              <h3>{dialogTitle}</h3>
+              <p>{dialogDescription}</p>
             </div>
           </div>
           <button type="button" className="table-arrangement-close" onClick={close} disabled={loading} aria-label="Đóng">
@@ -148,9 +165,9 @@ export default function TableArrangementModal({
         <div className="table-arrangement-source">
           <span><Table2 size={18} /></span>
           <div>
-            <small>{mode === 'merge' ? 'Bàn chính' : mode === 'transfer' ? 'Bàn nguồn' : 'Nhóm đang chọn'}</small>
-            <strong>{tableName(sourceTable)}</strong>
-            <p>{tableArea(sourceTable)}</p>
+            <small>{mode === 'merge' ? (extendingGroup ? 'Nhóm hiện tại' : 'Bàn chính') : mode === 'transfer' ? 'Bàn nguồn' : 'Nhóm đang chọn'}</small>
+            <strong>{extendingGroup ? groupMembers.map(tableName).join(' + ') : tableName(sourceTable)}</strong>
+            <p>{tableArea(groupPrimary || sourceTable)}{extendingGroup ? ` · Bàn chính: ${tableName(groupPrimary)}` : ''}</p>
           </div>
         </div>
 
@@ -175,7 +192,7 @@ export default function TableArrangementModal({
         {mode === 'merge' ? (
           <div className="table-arrangement-options">
             <div className="table-arrangement-options-head">
-              <span>Chọn bàn ghép</span>
+              <span>{extendingGroup ? 'Chọn bàn thêm vào nhóm' : 'Chọn bàn ghép'}</span>
               <small>{selectedIds.length} bàn đã chọn</small>
             </div>
             <div className="table-arrangement-option-list">
@@ -202,7 +219,7 @@ export default function TableArrangementModal({
                   </label>
                 );
               })}
-              {!candidates.length ? <div className="table-arrangement-empty">Không có bàn phù hợp cùng khu vực để ghép.</div> : null}
+              {!candidates.length ? <div className="table-arrangement-empty">{extendingGroup ? 'Không có bàn độc lập phù hợp để thêm vào nhóm.' : 'Không có bàn phù hợp cùng khu vực để ghép.'}</div> : null}
             </div>
           </div>
         ) : null}
@@ -216,7 +233,7 @@ export default function TableArrangementModal({
         <footer>
           <button type="button" onClick={close} disabled={loading}>Hủy bỏ</button>
           <button type="submit" className="primary" disabled={loading || !canSubmit}>
-            <Icon size={17} />{loading ? 'Đang xử lý...' : meta.confirmText}
+            <Icon size={17} />{loading ? 'Đang xử lý...' : confirmText}
           </button>
         </footer>
       </form>

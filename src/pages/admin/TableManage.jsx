@@ -105,7 +105,16 @@ function canTransfer(row) {
 }
 
 function canMerge(row) {
-  return !isGrouped(row) && ['TRONG', 'DANG_SU_DUNG'].includes(row?.trangThai || 'TRONG');
+  return ['TRONG', 'DANG_SU_DUNG'].includes(String(row?.trangThai || 'TRONG').toUpperCase());
+}
+
+function groupHasPayment(row, rows) {
+  const paymentStatuses = new Set(['DANG_THANH_TOAN', 'CHO_THANH_TOAN']);
+  if (!isGrouped(row) || !row?.maNhomBan) {
+    return paymentStatuses.has(String(row?.trangThai || '').toUpperCase());
+  }
+  return rows.some((item) => String(item?.maNhomBan ?? '') === String(row.maNhomBan)
+    && paymentStatuses.has(String(item?.trangThai || '').toUpperCase()));
 }
 
 function canUnmerge(row) {
@@ -540,7 +549,10 @@ export default function TableManage() {
       } else {
         return;
       }
-      toast.success(messageOf(response, arrangementMode === 'transfer' ? 'Chuyển bàn thành công' : arrangementMode === 'merge' ? 'Ghép bàn thành công' : 'Tách bàn thành công'));
+      const mergeSuccess = arrangementMode === 'merge' && isGrouped(selected)
+        ? 'Thêm bàn vào nhóm thành công'
+        : 'Ghép bàn thành công';
+      toast.success(messageOf(response, arrangementMode === 'transfer' ? 'Chuyển bàn thành công' : arrangementMode === 'merge' ? mergeSuccess : 'Tách bàn thành công'));
       setArrangementMode(null);
       await load(preferredId);
     } catch (error) {
@@ -711,7 +723,17 @@ export default function TableManage() {
                     <a href={customerPath(selected)} target="_blank" rel="noreferrer"><Eye size={17} /> Xem menu QR</a>
                     <button onClick={() => downloadQr(selected, toast)}><Download size={17} /> Tải mã QR</button>
                     {!isGrouped(selected) ? <button disabled={!canTransfer(selected)} title={!canTransfer(selected) ? 'Chỉ chuyển bàn đang có đơn phục vụ' : ''} onClick={() => setArrangementMode('transfer')}><ArrowRightLeft size={17} /> Chuyển bàn</button> : null}
-                    {!isGrouped(selected) ? <button disabled={!canMerge(selected) || Boolean(reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG')} title={reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG' ? `Bàn đã được giữ lúc ${reservationHoldTime(reservationHolds.get(String(tableId(selected))))}` : !canMerge(selected) ? 'Bàn hiện tại không thể ghép' : ''} onClick={() => setArrangementMode('merge')}><Link2 size={17} /> Ghép bàn</button> : null}
+                    <button
+                      disabled={!canMerge(selected) || groupHasPayment(selected, rows) || Boolean(!isGrouped(selected) && reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG')}
+                      title={groupHasPayment(selected, rows)
+                        ? 'Nhóm đã bắt đầu thanh toán nên không thể thêm bàn'
+                        : !isGrouped(selected) && reservationHolds.get(String(tableId(selected))) && String(selected?.trangThai || 'TRONG').toUpperCase() === 'TRONG'
+                          ? `Bàn đã được giữ lúc ${reservationHoldTime(reservationHolds.get(String(tableId(selected))))}`
+                          : !canMerge(selected)
+                            ? 'Bàn hiện tại không thể ghép'
+                            : ''}
+                      onClick={() => setArrangementMode('merge')}
+                    ><Link2 size={17} /> {isGrouped(selected) ? 'Thêm bàn' : 'Ghép bàn'}</button>
                     {isGrouped(selected) ? <button disabled={!canUnmerge(selected)} title={!canUnmerge(selected) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
                     <button onClick={() => openEdit(selected)}><Pencil size={17} /> Chỉnh sửa</button>
                     {ADMIN_MANUAL_TABLE_STATUS.has(String(selected?.trangThai || 'TRONG').toUpperCase()) ? (
