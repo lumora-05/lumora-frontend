@@ -125,7 +125,13 @@ export default function OrderDetail() {
     const ids = ready.map((item) => String(itemId(item)));
     setServingIds((current) => new Set([...current, ...ids]));
     try {
-      await Promise.all(ready.map((item) => orderApi.markItemServed(itemId(item))));
+      if (ready.length === 1) {
+        await orderApi.markItemServed(itemId(ready[0]));
+      } else {
+        await orderApi.markItemsServedBulk({
+          itemIds: ready.map((item) => Number(itemId(item))),
+        });
+      }
       toast.success(ready.length === 1 ? 'Đã xác nhận món được phục vụ' : `Đã xác nhận ${ready.length} món được phục vụ`);
       await load();
     } catch (error) {
