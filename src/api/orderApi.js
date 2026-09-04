@@ -48,6 +48,7 @@ export const orderApi = {
   kitchenItems: (status = 'CHO_BEP') => axiosClient.get(`/orders/kitchen/items/${status}`),
   updateStatus: (id, data) => axiosClient.put(`/orders/${id}/status`, data),
   updateItemStatus: (itemId, data) => axiosClient.put(`/orders/items/${itemId}/status`, data),
+  updateItemStatusesBulk: (data) => axiosClient.put('/orders/items/status/bulk', data),
   markItemServed: (itemId) => axiosClient.put(`/orders/items/${itemId}/served`),
   cancelItem: (itemId, data) => axiosClient.post(`/orders/items/${itemId}/cancel`, data),
   customerRequestItemCancellation: (qrToken, orderId, itemId, data) => axiosClient.post(`/customer/qr/${encodeToken(qrToken)}/orders/${orderId}/items/${itemId}/cancel-request`, data),

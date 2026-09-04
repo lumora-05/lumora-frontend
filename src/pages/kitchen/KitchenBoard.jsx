@@ -176,24 +176,10 @@ export default function KitchenBoard() {
     const ids = candidates.map(kitchenItemId).filter(Boolean);
     setBusyIds((current) => new Set([...current, ...ids]));
     try {
-      const results = await Promise.allSettled(candidates.map((item) => (
-        orderApi.updateItemStatus(kitchenItemId(item), { trangThaiMon: nextStatus })
-      )));
-      const successful = results.filter((result) => result.status === 'fulfilled');
-      const failed = results.filter((result) => result.status === 'rejected');
-
-      if (successful.length) {
-        const fallback = failed.length
-          ? `Đã cập nhật ${successful.length}/${candidates.length} món`
-          : successMessage;
-        toast.success(messageOf(successful.at(-1).value, fallback));
-      }
-      if (failed.length) {
-        const messages = [...new Set(failed.map((result) => (
-          errorMessageOf(result.reason, 'Không thể bắt đầu chế biến do nguyên liệu không đủ hoặc lô không an toàn')
-        )))];
-        toast.error(messages.length > 1 ? `${messages[0]} (và ${messages.length - 1} lỗi khác)` : messages[0]);
-      }
+      const response = candidates.length === 1
+        ? await orderApi.updateItemStatus(ids[0], { trangThaiMon: nextStatus })
+        : await orderApi.updateItemStatusesBulk({ itemIds: ids, trangThaiMon: nextStatus });
+      toast.success(messageOf(response, successMessage));
       await load(false, true);
     } catch (error) {
       toast.error(errorMessageOf(error, 'Cập nhật trạng thái món thất bại'));
