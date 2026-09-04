@@ -4225,7 +4225,7 @@
 .cashier-pos-total-due{
   min-height:54px;
   margin-top:6px;
-  padding:0 18px;
+  padding:0 12px;
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   border-radius:10px;
   background:linear-gradient(90deg,#fff4e8,#fff8f1);
