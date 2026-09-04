@@ -1,43 +1,21 @@
 import { Bell, ChevronDown, LogOut, Menu, UserRound } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { orderApi } from '../../api/orderApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
-import { canonicalKitchenStatus, flattenKitchenOrders, kitchenCallNumber, kitchenOrderId, unwrapList } from '../../utils/kitchenData';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
 
-export default function KitchenHeader({ title, subtitle, onOpenMenu }) {
+export default function KitchenHeader({ title, subtitle, attentionCount = 0, onOpenMenu }) {
   const { user, logout } = useAuth();
   const event = useWebSocket(['/topic/kitchen', '/topic/orders']);
   useStaffOperationalAlerts('KITCHEN', event);
-  const [newCount, setNewCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const name = user?.hoTen || user?.fullName || user?.tenDangNhap || user?.username || 'Nhân viên bếp';
   const avatar = profileAvatarOf(user);
-
-  async function loadCount() {
-    try {
-      const response = await orderApi.getAll();
-      const ticketKeys = new Set(
-        flattenKitchenOrders(unwrapList(response))
-          .filter((item) => canonicalKitchenStatus(item) !== 'HOAN_THANH')
-          .map((item) => `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`),
-      );
-      setNewCount(ticketKeys.size);
-    } catch {
-      // Badge is supplementary; page-level requests still show detailed errors.
-    }
-  }
-
-  useEffect(() => { loadCount(); }, []);
-  useEffect(() => {
-    if (event?.topic === '/topic/kitchen' || event?.topic === '/topic/orders') loadCount();
-  }, [event]);
-
-  const badge = useMemo(() => newCount > 99 ? '99+' : String(newCount), [newCount]);
+  const newCount = Math.max(0, Number(attentionCount) || 0);
+  const badge = newCount > 99 ? '99+' : String(newCount);
 
   return (
     <header className="kitchen-topbar">

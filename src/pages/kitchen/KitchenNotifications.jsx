@@ -28,7 +28,7 @@ export default function KitchenNotifications() {
   async function load(showLoading = true) {
     if (showLoading) setLoading(true);
     try {
-      const response = await orderApi.getAll();
+      const response = await orderApi.getKitchenActive();
       setItems(flattenKitchenOrders(unwrapList(response)));
     } catch (error) {
       toast.error(errorMessageOf(error, 'Không tải được thông báo bếp'));

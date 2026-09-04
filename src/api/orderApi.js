@@ -3,6 +3,7 @@ import axiosClient from './axiosClient';
 const encodeToken = (token) => encodeURIComponent(String(token ?? '').trim());
 
 let waiterActiveRequest = null;
+let kitchenActiveRequest = null;
 
 function getWaiterActive() {
   if (waiterActiveRequest) return waiterActiveRequest;
@@ -11,6 +12,16 @@ function getWaiterActive() {
     if (waiterActiveRequest === sharedRequest) waiterActiveRequest = null;
   });
   waiterActiveRequest = sharedRequest;
+  return sharedRequest;
+}
+
+function getKitchenActive() {
+  if (kitchenActiveRequest) return kitchenActiveRequest;
+  const request = axiosClient.get('/orders/kitchen/active');
+  const sharedRequest = request.finally(() => {
+    if (kitchenActiveRequest === sharedRequest) kitchenActiveRequest = null;
+  });
+  kitchenActiveRequest = sharedRequest;
   return sharedRequest;
 }
 
@@ -29,6 +40,8 @@ export const orderApi = {
   getPaymentRequestCount: () => axiosClient.get('/orders/payment-requests/count'),
   getWaiterActive,
   getWaiterAttentionCount: () => axiosClient.get('/orders/waiter/attention-count'),
+  getKitchenActive,
+  getKitchenAttentionCount: () => axiosClient.get('/orders/kitchen/attention-count'),
   getPage: (params = {}) => axiosClient.get('/orders/page', { params }),
   getById: (id) => axiosClient.get(`/orders/${id}`),
   byStatus: (status) => axiosClient.get(`/orders/status/${status}`),

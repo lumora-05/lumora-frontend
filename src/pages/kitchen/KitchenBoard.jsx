@@ -100,7 +100,7 @@ export default function KitchenBoard() {
   async function load(showNotice = false, silent = false) {
     if (!silent) setLoading(true);
     try {
-      const response = await orderApi.getAll();
+      const response = await orderApi.getKitchenActive();
       const next = flattenKitchenOrders(unwrapList(response));
       setItems(next);
 

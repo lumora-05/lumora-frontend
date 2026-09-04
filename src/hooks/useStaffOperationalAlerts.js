@@ -177,7 +177,7 @@ export function useStaffOperationalAlerts(role, event) {
       checking.current = true;
       try {
         if (roleKey === 'KITCHEN') {
-          const response = await orderApi.getAll();
+          const response = await orderApi.getKitchenActive();
           if (cancelled) return;
           const pending = kitchenWaitingGroups(flattenKitchenOrders(unwrapKitchenList(response)));
           if (pending > 0 && reminder && Date.now() - lastReminderAt.current >= REMINDER_INTERVAL_MS) {

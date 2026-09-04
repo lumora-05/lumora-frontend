@@ -6,7 +6,6 @@ import KitchenHeader from '../components/common/KitchenHeader';
 import { orderApi } from '../api/orderApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { canonicalKitchenStatus, flattenKitchenOrders, kitchenCallNumber, kitchenOrderId, unwrapList } from '../utils/kitchenData';
 import { imageUrl } from '../utils/imageUrl';
 
 const pageMeta = {
@@ -49,13 +48,8 @@ export default function KitchenLayout() {
 
   const loadKitchenAttentionCount = useCallback(async () => {
     try {
-      const response = await orderApi.getAll();
-      const attentionTicketKeys = new Set(
-        flattenKitchenOrders(unwrapList(response))
-          .filter((item) => canonicalKitchenStatus(item) !== 'HOAN_THANH')
-          .map((item) => `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`),
-      );
-      setKitchenAttentionCount(attentionTicketKeys.size);
+      const response = await orderApi.getKitchenAttentionCount();
+      setKitchenAttentionCount(Math.max(0, Number(response?.data ?? response ?? 0) || 0));
     } catch {
       // Badge là thông tin hỗ trợ; bảng chế biến vẫn tự hiển thị lỗi tải dữ liệu nếu có.
     }
@@ -120,6 +114,7 @@ export default function KitchenLayout() {
           key={`${location.key}:${location.pathname}:${location.search}`}
           title={title}
           subtitle={subtitle}
+          attentionCount={kitchenAttentionCount}
           onOpenMenu={() => setMenuOpen(true)}
         />
         <Outlet />
