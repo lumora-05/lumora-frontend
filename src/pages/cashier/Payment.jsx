@@ -3,9 +3,13 @@ import {
   ArrowLeft,
   Award,
   Banknote,
+  Check,
+  Clock3,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  FileText,
+  Maximize2,
   Printer,
   QrCode,
   RotateCcw,
@@ -19,6 +23,7 @@ import { orderApi } from '../../api/orderApi';
 import { paymentApi } from '../../api/paymentApi';
 import { useToast, errorMessageOf, messageOf } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
+import { imageUrl } from '../../utils/imageUrl';
 import {
   PAYABLE_STATUSES,
   dateTimeText,
@@ -73,6 +78,8 @@ function lineItemsOf(paymentSlip, order) {
       const unitPrice = Number(item?.donGia ?? item?.monAn?.gia ?? 0);
       const lineTotal = Number(item?.thanhTien ?? unitPrice * quantity);
       const note = String(item?.ghiChu || '').trim();
+      const description = String(item?.moTa || item?.monAn?.moTa || '').trim();
+      const image = item?.hinhAnh || item?.anhMon || item?.imageUrl || item?.monAn?.hinhAnh || item?.monAn?.anhMon || '';
       const dishId = item?.maMonAn ?? item?.monAn?.maMonAn ?? name;
       const key = `${dishId}|${unitPrice}|${note.toLocaleLowerCase('vi-VN')}`;
       const existing = grouped.get(key);
@@ -88,6 +95,8 @@ function lineItemsOf(paymentSlip, order) {
           unitPrice,
           lineTotal,
           note,
+          description,
+          image,
         });
       }
     });
@@ -112,6 +121,7 @@ export default function Payment() {
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [qrZoomOpen, setQrZoomOpen] = useState(false);
 
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -459,42 +469,56 @@ export default function Payment() {
 
   return (
     <section className="page cashier-page cashier-workspace cashier-pos-payment-page">
-      <div className="cashier-back-row">
-        <Link className="cashier-back-button" to={`/cashier/invoices/${orderId}`}><ArrowLeft size={17} />Quay lại</Link>
+      <div className="cashier-pos-context-row">
+        <Link className="cashier-back-button cashier-pos-back-button" to={`/cashier/invoices/${orderId}`}><ArrowLeft size={17} />Quay lại</Link>
+        <div className="cashier-pos-context-meta">
+          <div className="cashier-pos-context-item compact"><Banknote size={21} /><strong>{tableLabel}</strong></div>
+          <span className="cashier-pos-context-divider" />
+          <div className="cashier-pos-context-item compact"><FileText size={21} /><strong>{displayCode}</strong></div>
+          <span className="cashier-pos-context-divider" />
+          <div className="cashier-pos-context-item compact"><Clock3 size={22} /><strong>{dateTimeText(paymentSlip?.thoiGianDat || order?.thoiGianDat)}</strong></div>
+          <span className="cashier-pos-context-divider" />
+          <div className="cashier-pos-context-item staff">
+            <UserRound size={22} />
+            <span><small>Nhân viên phục vụ</small><strong>{paymentSlip?.nhanVienPhucVu || order?.nhanVien?.hoTen || order?.tenNhanVien || 'Chưa ghi nhận'}</strong></span>
+          </div>
+        </div>
       </div>
 
       <div className="cashier-payment-shell cashier-pos-payment-shell">
         <div className="cashier-payment-info cashier-pos-bill-panel">
-          <header className="cashier-pos-order-head">
-            <div className="cashier-section-title">
-              <span>HÓA ĐƠN ĐANG THANH TOÁN</span>
-              <h1>{displayCode}</h1>
-              {sharedBill ? <p>Thanh toán chung nhiều đơn trong cùng nhóm bàn</p> : null}
+          <div className="cashier-pos-panel-heading">
+            <div className="cashier-pos-panel-title">
+              <span className="cashier-pos-panel-title-icon"><FileText size={23} /></span>
+              <h2>Chi tiết hóa đơn</h2>
             </div>
-            <div className="cashier-pos-order-meta">
-              <p><span>Bàn</span><strong>{tableLabel}</strong></p>
-              <p><span>Thời gian</span><strong>{dateTimeText(paymentSlip?.thoiGianDat || order?.thoiGianDat)}</strong></p>
-              <p><span>Phục vụ</span><strong>{paymentSlip?.nhanVienPhucVu || order?.nhanVien?.hoTen || order?.tenNhanVien || 'Chưa ghi nhận'}</strong></p>
-            </div>
-          </header>
+            <span className="cashier-pos-item-count">{lineItems.reduce((sum, item) => sum + item.quantity, 0)} món</span>
+          </div>
 
           <div className="cashier-pos-items-wrap">
-            <div className="cashier-pos-items-heading">
-              <strong>Chi tiết món</strong>
-              <span>{lineItems.reduce((sum, item) => sum + item.quantity, 0)} món</span>
-            </div>
             {lineItems.length ? (
               <table className="cashier-pos-items-table">
                 <thead>
-                  <tr><th>Món ăn</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr>
+                  <tr><th>#</th><th>Món ăn</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th></tr>
                 </thead>
                 <tbody>
-                  {lineItems.map((item) => (
+                  {lineItems.map((item, index) => (
                     <tr key={item.key}>
-                      <td><strong>{item.name}</strong>{item.note ? <small>{item.note}</small> : null}</td>
-                      <td>{item.quantity}</td>
+                      <td className="cashier-pos-row-number">{index + 1}</td>
+                      <td>
+                        <div className="cashier-pos-food-cell">
+                          <span className="cashier-pos-food-thumb">
+                            {item.image ? <img src={imageUrl(item.image)} alt={item.name} /> : <FileText size={18} />}
+                          </span>
+                          <span>
+                            <strong>{item.name}</strong>
+                            <small>{item.description || item.note || 'Món ăn tại nhà hàng'}</small>
+                          </span>
+                        </div>
+                      </td>
                       <td>{formatMoney(item.unitPrice)}</td>
-                      <td>{formatMoney(item.lineTotal)}</td>
+                      <td>{item.quantity}</td>
+                      <td><strong className="cashier-pos-line-total">{formatMoney(item.lineTotal)}</strong></td>
                     </tr>
                   ))}
                 </tbody>
@@ -504,19 +528,19 @@ export default function Payment() {
 
           <div className="cashier-payment-total cashier-payment-breakdown cashier-pos-breakdown">
             <p><span>Tạm tính</span><b>{formatMoney(subtotal)}</b></p>
-            {discount > 0 ? <p><span>Khuyến mãi {promotionCode ? `(${promotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p> : null}
-            {pointDiscount > 0 ? <p><span>Giảm bằng điểm ({appliedPoints} điểm)</span><b>-{formatMoney(pointDiscount)}</b></p> : null}
-            <p><span>Tổng sau ưu đãi</span><b>{formatMoney(grossTotal)}</b></p>
-            {depositApplied > 0 ? <p className="cashier-deposit-deduction"><span>Cọc đặt bàn đã thanh toán</span><b>-{formatMoney(depositApplied)}</b></p> : null}
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon discount">◆</span>Khuyến mãi</span><b>{discount > 0 ? `-${formatMoney(discount)}` : formatMoney(0)}</b></p>
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon points">✦</span>Sử dụng điểm</span><b>{pointDiscount > 0 ? `-${formatMoney(pointDiscount)}` : formatMoney(0)}</b></p>
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon deposit">●</span>Tiền cọc</span><b>{depositApplied > 0 ? `-${formatMoney(depositApplied)}` : formatMoney(0)}</b></p>
+            <div className="cashier-pos-total-due"><span>Còn phải thu</span><strong>{formatMoney(total)}</strong></div>
           </div>
 
           <section className={`cashier-loyalty-box cashier-loyalty-compact ${loyaltyOpen ? 'open' : ''}`}>
             <div className="cashier-loyalty-compact-head">
               <button type="button" className="cashier-loyalty-toggle" onClick={() => setLoyaltyOpen((value) => !value)} aria-expanded={loyaltyOpen}>
-                <span className="cashier-loyalty-icon"><Award size={20} /></span>
+                <span className="cashier-loyalty-icon"><UserRound size={22} /></span>
                 <span>
                   <strong>Khách hàng thân thiết</strong>
-                  <small>{loyaltyPreview ? `${customerName || customerPhone} · ${Number(loyaltyPreview.diemHienCo || 0)} điểm` : 'Tích điểm hoặc sử dụng điểm nếu khách có nhu cầu.'}</small>
+                  <small>{loyaltyPreview ? `${customerName || customerPhone} · ${Number(loyaltyPreview.diemHienCo || 0)} điểm` : 'Nhập số điện thoại để tích điểm hoặc sử dụng điểm'}</small>
                 </span>
                 {loyaltyOpen ? <ChevronUp size={19} /> : <ChevronDown size={19} />}
               </button>
@@ -610,35 +634,27 @@ export default function Payment() {
           </section>
 
           <label className="cashier-payment-note cashier-pos-note">
-            <span>Ghi chú</span>
+            <span>Ghi chú (nếu có)</span>
             <textarea
               rows="2"
               maxLength="255"
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Nhập ghi chú nếu có..."
+              placeholder="Nhập ghi chú..."
             />
           </label>
         </div>
 
         <aside className="cashier-method-panel cashier-pos-payment-panel">
-          <div className="cashier-pos-due-card">
-            <span>CÒN PHẢI THU</span>
-            <strong>{formatMoney(total)}</strong>
-            <small>{tableLabel} · {displayCode}</small>
-          </div>
-
-          <div className="cashier-section-title cashier-pos-method-title">
-            <span>PHƯƠNG THỨC THANH TOÁN</span>
-            <h2>Chọn cách khách thanh toán</h2>
-          </div>
+          <div className="cashier-pos-method-heading"><h2>Chọn phương thức thanh toán</h2></div>
 
           {total > 0 ? (
             <div className="cashier-method-grid cashier-method-grid-two cashier-pos-method-grid">
               {METHODS.map(({ key, label, icon: Icon }) => (
                 <button key={key} type="button" className={method === key ? 'active' : ''} onClick={() => chooseMethod(key)}>
-                  <Icon size={22} />
+                  <Icon size={26} />
                   <span>{label}</span>
+                  {method === key ? <span className="cashier-pos-method-check"><Check size={17} strokeWidth={3} /></span> : null}
                 </button>
               ))}
             </div>
@@ -675,16 +691,22 @@ export default function Payment() {
                   ))}
                 </div>
               </div>
+              {error ? <div className="cashier-error">{error}</div> : null}
+              <div className="cashier-payment-actions cashier-pos-payment-actions">
+                <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
+                  <WalletCards size={18} />Xác nhận thu tiền
+                </button>
+              </div>
             </div>
           ) : null}
 
           {total > 0 && method === 'CHUYEN_KHOAN' ? (
             <div className="cashier-transfer-confirmation cashier-pos-transfer-panel">
-              <div className="cashier-transfer-heading">
-                <div className="cashier-transfer-icon"><QrCode size={22} /></div>
+              <div className="cashier-transfer-heading cashier-pos-transfer-heading">
+                <div className="cashier-transfer-icon"><Printer size={22} /></div>
                 <div>
-                  <strong>Thanh toán qua VietQR</strong>
-                  <p>Khách quét mã ngay tại màn hình. Hệ thống sẽ tự động xác nhận khi nhận được giao dịch.</p>
+                  <strong>Quét mã để thanh toán</strong>
+                  <p>Khách hàng quét mã VietQR bằng ứng dụng ngân hàng</p>
                 </div>
               </div>
 
@@ -706,18 +728,19 @@ export default function Payment() {
                 <>
                   <div className="cashier-pos-qr-card">
                     <img src={transferQr.qrUrl} alt={`VietQR thanh toán ${displayCode}`} />
-                    <div>
-                      <span>Số tiền</span>
-                      <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
-                      <small>{transferQr.addInfo || displayCode}</small>
-                    </div>
+                    <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
+                    <small>{transferQr.addInfo || displayCode}</small>
                   </div>
 
+                  <button type="button" className="cashier-pos-qr-zoom" onClick={() => setQrZoomOpen(true)}>
+                    <Maximize2 size={16} />Phóng to mã QR
+                  </button>
+
                   <div className="cashier-transfer-auto-status" role="status" aria-live="polite">
-                    <span className="cashier-transfer-pulse" aria-hidden="true" />
+                    <span className="cashier-transfer-clock"><Clock3 size={24} /></span>
                     <span>
                       <strong>Đang chờ khách thanh toán...</strong>
-                      <small>Giao dịch thành công sẽ được hệ thống cập nhật tự động.</small>
+                      <small>Hệ thống sẽ tự động xác nhận khi nhận được thanh toán.</small>
                     </span>
                   </div>
 
@@ -727,33 +750,23 @@ export default function Payment() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <Printer size={17} />In phiếu VietQR
+                    <Printer size={18} />In phiếu VietQR
                   </Link>
+                  {error ? <div className="cashier-error">{error}</div> : null}
                 </>
               ) : null}
             </div>
           ) : null}
 
-          <div className="cashier-payment-review cashier-pos-review">
-            <div className="cashier-pos-review-title">Tóm tắt giao dịch</div>
-            <p><span>Bàn</span><strong>{tableLabel}</strong></p>
-            {sharedBill ? <p><span>Loại thanh toán</span><strong>Bill chung</strong></p> : null}
-            <p><span>Phương thức</span><strong>{total <= 0 ? 'Khấu trừ tiền cọc' : methodLabel}</strong></p>
-            {promotionCode ? <p><span>Khuyến mãi</span><strong>{promotionCode}</strong></p> : null}
-            {loyaltyPreview ? <p><span>Khách hàng</span><strong>{customerName || customerPhone}</strong></p> : null}
-            {appliedPoints > 0 ? <p><span>Điểm sử dụng</span><strong>{appliedPoints} điểm</strong></p> : null}
-            {depositApplied > 0 ? <p><span>Cọc khấu trừ</span><strong>-{formatMoney(depositApplied)}</strong></p> : null}
-            <p className="cashier-pos-review-total"><span>Còn phải thu</span><strong>{formatMoney(total)}</strong></p>
-          </div>
-
-          {error ? <div className="cashier-error">{error}</div> : null}
-
-          {(total <= 0 || method === 'TIEN_MAT') ? (
-            <div className="cashier-payment-actions cashier-pos-payment-actions">
-              <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
-                <WalletCards size={18} />{total <= 0 ? 'Hoàn tất bằng tiền cọc' : 'Xác nhận thu tiền'}
-              </button>
-            </div>
+          {total <= 0 ? (
+            <>
+              {error ? <div className="cashier-error">{error}</div> : null}
+              <div className="cashier-payment-actions cashier-pos-payment-actions">
+                <button className="cashier-confirm-action" type="button" disabled={submitting} onClick={requestConfirmation}>
+                  <WalletCards size={18} />Hoàn tất bằng tiền cọc
+                </button>
+              </div>
+            </>
           ) : null}
         </aside>
       </div>
@@ -793,21 +806,34 @@ export default function Payment() {
         </div>
       ) : null}
 
+      {qrZoomOpen && transferQr ? (
+        <div className="cashier-confirm-overlay cashier-pos-qr-zoom-overlay" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setQrZoomOpen(false);
+        }}>
+          <div className="cashier-pos-qr-zoom-dialog" role="dialog" aria-modal="true" aria-label="Mã VietQR phóng to">
+            <button type="button" className="cashier-confirm-close" onClick={() => setQrZoomOpen(false)} aria-label="Đóng"><X size={22} /></button>
+            <img src={transferQr.qrUrl} alt={`VietQR thanh toán ${displayCode}`} />
+            <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
+            <small>{transferQr.addInfo || displayCode}</small>
+          </div>
+        </div>
+      ) : null}
+
       {successOpen ? (
         <div className="cashier-confirm-overlay cashier-payment-success-overlay">
           <div className="cashier-payment-success-dialog" role="dialog" aria-modal="true" aria-labelledby="cashier-payment-success-title">
-            <div className="cashier-payment-success-icon"><CheckCircle2 size={38} /></div>
-            <h2 id="cashier-payment-success-title">Thanh toán thành công</h2>
-            <p>Hệ thống đã ghi nhận giao dịch VietQR cho <strong>{tableLabel}</strong>.</p>
+            <button type="button" className="cashier-payment-success-close" onClick={() => setSuccessOpen(false)} aria-label="Đóng"><X size={22} /></button>
+            <div className="cashier-payment-success-icon"><Check size={40} strokeWidth={3.2} /></div>
+            <h2 id="cashier-payment-success-title">Thanh toán thành công!</h2>
+            <p>Hệ thống đã ghi nhận thanh toán cho<br /><strong>{tableLabel}</strong></p>
             <div className="cashier-payment-success-amount">{formatMoney(total)}</div>
             <div className="cashier-payment-success-meta">
+              <p><span>Phương thức</span><strong>Chuyển khoản VietQR</strong></p>
               <p><span>Mã đơn</span><strong>{displayCode}</strong></p>
-              <p><span>Phương thức</span><strong>VietQR</strong></p>
-              <p><span>Trạng thái</span><strong>Đã thanh toán</strong></p>
             </div>
             <div className="cashier-payment-success-actions">
-              <Link className="cashier-outline-action" to={`/cashier/print/${orderId}`} target="_blank" rel="noreferrer"><Printer size={17} />In hóa đơn</Link>
-              <button type="button" className="cashier-confirm-action" onClick={() => navigate('/cashier')}>Hoàn tất</button>
+              <Link className="cashier-outline-action" to={`/cashier/print/${orderId}`} target="_blank" rel="noreferrer"><Printer size={19} />In hóa đơn</Link>
+              <button type="button" className="cashier-confirm-action" onClick={() => navigate('/cashier')}><Check size={19} />Hoàn tất</button>
             </div>
           </div>
         </div>
