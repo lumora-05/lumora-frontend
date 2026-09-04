@@ -4365,12 +4365,12 @@
 .cashier-pos-qr-zoom-dialog{
   position:relative;
   width:min(494px,calc(100vw - 40px));
-  max-height:calc(100vh - 32px);
-  overflow:auto;
+  max-height:calc(100dvh - 40px);
+  overflow:hidden;
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:36px 28px 32px;
+  padding:27px 28px 25px;
   border:1px solid rgba(226,232,240,.9);
   border-radius:20px;
   background:#fff;
@@ -4379,10 +4379,10 @@
 }
 .cashier-pos-qr-zoom-close{
   position:absolute;
-  top:19px;
-  right:19px;
-  width:38px;
-  height:38px;
+  top:16px;
+  right:16px;
+  width:36px;
+  height:36px;
   padding:0;
   border:1px solid #aebed1;
   border-radius:50%;
@@ -4395,8 +4395,8 @@
 }
 .cashier-pos-qr-zoom-close:hover{background:#f8fafc;border-color:#8fa3bb;color:#334155}
 .cashier-pos-qr-zoom-icon{
-  width:64px;
-  height:64px;
+  width:56px;
+  height:56px;
   border-radius:50%;
   display:grid;
   place-items:center;
@@ -4405,7 +4405,7 @@
   background:linear-gradient(145deg,#ff751f,#ed4d0c);
   box-shadow:0 9px 22px rgba(234,88,12,.24);
 }
-.cashier-pos-qr-zoom-heading{margin-top:15px}
+.cashier-pos-qr-zoom-heading{margin-top:11px}
 .cashier-pos-qr-zoom-heading h2{
   margin:0;
   color:#10213a;
@@ -4415,17 +4415,17 @@
   letter-spacing:-.02em;
 }
 .cashier-pos-qr-zoom-heading p{
-  margin:7px 0 0;
+  margin:5px 0 0;
   color:#52677f;
   font-size:13px;
   line-height:1.45;
   font-weight:600;
 }
 .cashier-pos-qr-zoom-frame{
-  width:294px;
-  height:294px;
-  margin-top:22px;
-  padding:20px;
+  width:270px;
+  height:270px;
+  margin-top:17px;
+  padding:18px;
   border:1.5px solid #ff6b1a;
   border-radius:20px;
   background:#fff;
@@ -4442,10 +4442,10 @@
 .cashier-pos-qr-zoom-divider{
   width:100%;
   height:1px;
-  margin-top:29px;
+  margin-top:20px;
   background:repeating-linear-gradient(90deg,#dfe6ee 0 5px,transparent 5px 9px);
 }
-.cashier-pos-qr-zoom-amount{margin-top:20px;display:grid;justify-items:center}
+.cashier-pos-qr-zoom-amount{margin-top:15px;display:grid;justify-items:center}
 .cashier-pos-qr-zoom-amount>span{
   color:#536982;
   font-size:11px;
@@ -4454,9 +4454,9 @@
   letter-spacing:.04em;
 }
 .cashier-pos-qr-zoom-amount>strong{
-  margin-top:9px;
+  margin-top:7px;
   color:#e95214;
-  font-size:43px;
+  font-size:40px;
   line-height:1.02;
   font-weight:950;
   letter-spacing:-.035em;
@@ -4464,8 +4464,8 @@
 .cashier-pos-qr-zoom-code{
   width:244px;
   min-height:42px;
-  margin-top:18px;
-  padding:9px 15px;
+  margin-top:12px;
+  padding:8px 15px;
   border-radius:12px;
   background:#f3f6f9;
   color:#586d87;
@@ -4476,12 +4476,12 @@
 }
 .cashier-pos-qr-zoom-code strong{font-size:14px;font-weight:850;line-height:1}
 @media(max-width:560px){
-  .cashier-pos-qr-zoom-dialog{padding:30px 20px 24px;border-radius:18px}
-  .cashier-pos-qr-zoom-close{top:14px;right:14px}
-  .cashier-pos-qr-zoom-icon{width:58px;height:58px}
+  .cashier-pos-qr-zoom-dialog{padding:25px 20px 22px;border-radius:18px}
+  .cashier-pos-qr-zoom-close{top:13px;right:13px}
+  .cashier-pos-qr-zoom-icon{width:52px;height:52px}
   .cashier-pos-qr-zoom-heading h2{font-size:20px}
-  .cashier-pos-qr-zoom-frame{width:min(294px,78vw);height:min(294px,78vw);padding:18px}
-  .cashier-pos-qr-zoom-amount>strong{font-size:38px}
+  .cashier-pos-qr-zoom-frame{width:min(258px,76vw);height:min(258px,76vw);padding:17px}
+  .cashier-pos-qr-zoom-amount>strong{font-size:36px}
   .cashier-pos-qr-zoom-code{width:min(244px,72vw)}
 }
 
