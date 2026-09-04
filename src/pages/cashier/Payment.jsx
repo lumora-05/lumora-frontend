@@ -861,11 +861,31 @@ export default function Payment() {
         <div className="cashier-confirm-overlay cashier-pos-qr-zoom-overlay" role="presentation" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setQrZoomOpen(false);
         }}>
-          <div className="cashier-pos-qr-zoom-dialog" role="dialog" aria-modal="true" aria-label="Mã VietQR phóng to">
-            <button type="button" className="cashier-confirm-close" onClick={() => setQrZoomOpen(false)} aria-label="Đóng"><X size={22} /></button>
-            <img src={transferQr.qrUrl} alt={`VietQR thanh toán ${displayCode}`} />
-            <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
-            <small>{transferQr.addInfo || displayCode}</small>
+          <div className="cashier-pos-qr-zoom-dialog" role="dialog" aria-modal="true" aria-labelledby="cashier-pos-qr-zoom-title">
+            <button type="button" className="cashier-pos-qr-zoom-close" onClick={() => setQrZoomOpen(false)} aria-label="Đóng"><X size={22} /></button>
+
+            <span className="cashier-pos-qr-zoom-icon" aria-hidden="true"><QrCode size={29} strokeWidth={2.15} /></span>
+
+            <div className="cashier-pos-qr-zoom-heading">
+              <h2 id="cashier-pos-qr-zoom-title">Quét mã để thanh toán</h2>
+              <p>Sử dụng ứng dụng ngân hàng hoặc ví điện tử<br />để quét mã QR và thanh toán</p>
+            </div>
+
+            <div className="cashier-pos-qr-zoom-frame">
+              <img src={transferQr.qrUrl} alt={`VietQR thanh toán ${displayCode}`} />
+            </div>
+
+            <span className="cashier-pos-qr-zoom-divider" aria-hidden="true" />
+
+            <div className="cashier-pos-qr-zoom-amount">
+              <span>SỐ TIỀN CẦN THANH TOÁN</span>
+              <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
+            </div>
+
+            <div className="cashier-pos-qr-zoom-code">
+              <FileText size={16} strokeWidth={2} />
+              <strong>{transferQr.addInfo || displayCode}</strong>
+            </div>
           </div>
         </div>
       ) : null}
