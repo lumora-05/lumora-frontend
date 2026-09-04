@@ -4223,34 +4223,34 @@
 .cashier-pos-summary-icon.points{color:#ef5b19!important}
 .cashier-pos-summary-icon.deposit{color:#6f4932!important}
 .cashier-pos-total-due{
-  min-height:54px;
+  height:54px;
   margin:6px 10px 0;
   padding:0 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
+  position:relative;
   border-radius:10px;
   background:linear-gradient(90deg,#fff4e8,#fff8f1);
 }
+
 .cashier-pos-total-due span{
+  position:absolute;
+  left:26px;
+  top:50%;
+  transform:translateY(-50%);
   font-size:18px;
   font-weight:950;
   color:#dc3f0e;
-  margin-left:12px;
-  align-self:stretch;
-  display:flex;
-  align-items:center;
 }
+
 .cashier-pos-total-due strong{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
   font-size:24px;
   font-weight:950;
   color:#e34b13;
   white-space:nowrap;
   letter-spacing:-.02em;
-  align-self:stretch;
-  display:flex;
-  align-items:center;
 }
 .cashier-pos-payment-page .cashier-loyalty-compact{
   margin:13px 0 0!important;
