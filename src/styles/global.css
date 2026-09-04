@@ -4233,7 +4233,7 @@
 
 .cashier-pos-total-due span{
   position:absolute;
-  left:26px;
+  left:20px;
   top:50%;
   transform:translateY(-50%);
   font-size:18px;
