@@ -95,9 +95,10 @@ function integerValue(value, fallback = 0) {
 }
 
 function lineItemsOf(paymentSlip, order) {
+  const orderItems = Array.isArray(order?.chiTietDonHang) ? order.chiTietDonHang : [];
   const source = Array.isArray(paymentSlip?.items) && paymentSlip.items.length
     ? paymentSlip.items
-    : (order?.chiTietDonHang || []);
+    : orderItems;
 
   const grouped = new Map();
 
@@ -109,9 +110,28 @@ function lineItemsOf(paymentSlip, order) {
       const unitPrice = Number(item?.donGia ?? item?.monAn?.gia ?? 0);
       const lineTotal = Number(item?.thanhTien ?? unitPrice * quantity);
       const note = String(item?.ghiChu || '').trim();
-      const description = String(item?.moTa || item?.monAn?.moTa || '').trim();
-      const image = item?.hinhAnh || item?.anhMon || item?.imageUrl || item?.monAn?.hinhAnh || item?.monAn?.anhMon || '';
-      const dishId = item?.maMonAn ?? item?.monAn?.maMonAn ?? name;
+      const orderItem = orderItems.find((detail) => (
+        item?.maChiTiet != null && String(detail?.maChiTiet) === String(item.maChiTiet)
+      )) || orderItems.find((detail) => {
+        const detailName = detail?.tenMonAn || detail?.monAn?.tenMonAn || '';
+        const detailPrice = Number(detail?.donGia ?? detail?.monAn?.gia ?? 0);
+        return detailName === name && detailPrice === unitPrice;
+      });
+      const description = String(
+        item?.moTa || item?.monAn?.moTa || orderItem?.moTa || orderItem?.monAn?.moTa || '',
+      ).trim();
+      const image = item?.hinhAnh
+        || item?.anhMon
+        || item?.imageUrl
+        || item?.monAn?.hinhAnh
+        || item?.monAn?.anhMon
+        || orderItem?.hinhAnh
+        || orderItem?.anhMon
+        || orderItem?.imageUrl
+        || orderItem?.monAn?.hinhAnh
+        || orderItem?.monAn?.anhMon
+        || '';
+      const dishId = item?.maMonAn ?? item?.monAn?.maMonAn ?? orderItem?.maMonAn ?? orderItem?.monAn?.maMonAn ?? name;
       const key = `${dishId}|${unitPrice}|${note.toLocaleLowerCase('vi-VN')}`;
       const existing = grouped.get(key);
 
