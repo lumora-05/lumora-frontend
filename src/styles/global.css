@@ -4218,7 +4218,7 @@
 .cashier-pos-breakdown p>span:first-child{font-weight:650!important;color:#243247!important}
 .cashier-pos-breakdown p>b{font-size:12px!important;color:#172238!important;font-weight:900!important}
 .cashier-pos-summary-label{display:inline-flex!important;align-items:center!important;gap:10px!important}
-.cashier-pos-summary-icon{width:16px!important;text-align:center!important;font-size:14px!important;font-weight:900!important;line-height:1!important}
+.cashier-pos-summary-icon{width:18px!important;height:18px!important;display:inline-grid!important;place-items:center!important;flex:0 0 18px!important;line-height:1!important}.cashier-pos-summary-icon svg{width:18px!important;height:18px!important;display:block!important}
 .cashier-pos-summary-icon.discount{color:#f97316!important}
 .cashier-pos-summary-icon.points{color:#ef5b19!important}
 .cashier-pos-summary-icon.deposit{color:#6f4932!important}

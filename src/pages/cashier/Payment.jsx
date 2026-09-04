@@ -39,6 +39,37 @@ const METHODS = [
   { key: 'CHUYEN_KHOAN', label: 'VietQR', icon: QrCode },
 ];
 
+function PromotionSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="M3.6 10.3V6.7c0-1.7 1.4-3.1 3.1-3.1h3.7c.8 0 1.6.3 2.2.9l7 7a2.6 2.6 0 0 1 0 3.7l-4.4 4.4a2.6 2.6 0 0 1-3.7 0l-7-7a3.2 3.2 0 0 1-.9-2.3Z" />
+      <circle cx="8.1" cy="8.1" r="1.55" fill="#fff" />
+    </svg>
+  );
+}
+
+function PointsSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="M3 10.1h18v3.2H3zM4.2 14.5h6.6V21H5.5c-.7 0-1.3-.6-1.3-1.3v-5.2Zm9 0h6.6v5.2c0 .7-.6 1.3-1.3 1.3h-5.3v-6.5ZM10.8 3c-2.3-2-5.2-.5-4.7 1.8.3 1.7 2.5 2.8 4.7 3.1V3Zm2.4 0v4.9c2.2-.3 4.4-1.4 4.7-3.1.5-2.3-2.4-3.8-4.7-1.8Z" />
+    </svg>
+  );
+}
+
+function DepositSummaryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="10.2" cy="5.8" rx="5.8" ry="2.8" />
+        <path d="M4.4 5.8v4c0 1.6 2.6 2.8 5.8 2.8.8 0 1.6-.1 2.3-.2" />
+        <path d="M4.4 9.8v4c0 1.6 2.6 2.8 5.8 2.8.6 0 1.2 0 1.7-.1" />
+        <ellipse cx="15.2" cy="15.7" rx="4.8" ry="2.4" />
+        <path d="M10.4 15.7v3c0 1.3 2.1 2.3 4.8 2.3s4.8-1 4.8-2.3v-3" />
+      </g>
+    </svg>
+  );
+}
+
 function quickAmounts(total) {
   const values = [
     total,
@@ -528,9 +559,9 @@ export default function Payment() {
 
           <div className="cashier-payment-total cashier-payment-breakdown cashier-pos-breakdown">
             <p><span>Tạm tính</span><b>{formatMoney(subtotal)}</b></p>
-            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon discount">◆</span>Khuyến mãi</span><b>{discount > 0 ? `-${formatMoney(discount)}` : formatMoney(0)}</b></p>
-            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon points">✦</span>Sử dụng điểm</span><b>{pointDiscount > 0 ? `-${formatMoney(pointDiscount)}` : formatMoney(0)}</b></p>
-            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon deposit">●</span>Tiền cọc</span><b>{depositApplied > 0 ? `-${formatMoney(depositApplied)}` : formatMoney(0)}</b></p>
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon discount"><PromotionSummaryIcon /></span>Khuyến mãi</span><b>{discount > 0 ? `-${formatMoney(discount)}` : formatMoney(0)}</b></p>
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon points"><PointsSummaryIcon /></span>Sử dụng điểm</span><b>{pointDiscount > 0 ? `-${formatMoney(pointDiscount)}` : formatMoney(0)}</b></p>
+            <p><span className="cashier-pos-summary-label"><span className="cashier-pos-summary-icon deposit"><DepositSummaryIcon /></span>Tiền cọc</span><b>{depositApplied > 0 ? `-${formatMoney(depositApplied)}` : formatMoney(0)}</b></p>
             <div className="cashier-pos-total-due"><span>Còn phải thu</span><strong>{formatMoney(total)}</strong></div>
           </div>
 
