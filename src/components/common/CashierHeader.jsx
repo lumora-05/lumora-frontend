@@ -1,18 +1,12 @@
 import { Bell, ChevronDown, LogOut, Menu, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { deliveryApi } from '../../api/deliveryApi';
-import { orderApi } from '../../api/orderApi';
-import { reservationApi } from '../../api/reservationApi';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { imageUrl } from '../../utils/imageUrl';
 import { profileAvatarOf } from '../../utils/profileAvatar';
-import { PAYMENT_REQUEST_STATUSES, unwrap } from '../../utils/cashier';
-import { displayOrderCode, isCashierDeliveryAttention, unwrapDeliveryList } from '../../utils/delivery';
-import { normalizePage } from '../../utils/pagination';
-import { currentLocalDate, reservationPreorderNeedsReview, reservationStatus } from '../../utils/reservations';
+import { displayOrderCode } from '../../utils/delivery';
 import { useStaffOperationalAlerts } from '../../hooks/useStaffOperationalAlerts';
 
 function cashierOnlineAlert(event) {
@@ -50,58 +44,17 @@ function cashierOnlineAlert(event) {
   return null;
 }
 
-export default function CashierHeader({ title, subtitle, onOpenMenu }) {
+export default function CashierHeader({ title, subtitle, attentionCount = 0, onOpenMenu }) {
   const { user, logout } = useAuth();
   const toast = useToast();
   const event = useWebSocket(['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations']);
-  const [queueCount, setQueueCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const lastToastKey = useRef('');
   const name = user?.hoTen || user?.tenNhanVien || user?.tenDangNhap || user?.username || 'Nhân viên thu ngân';
   const avatar = profileAvatarOf(user);
   useStaffOperationalAlerts('CASHIER', event);
 
-  async function loadCount() {
-    let paymentCount = 0;
-    let deliveryCount = 0;
-    let reservationCount = 0;
-
-    try {
-      const paymentResponse = await orderApi.getAll();
-      paymentCount = unwrap(paymentResponse)
-        .filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length;
-    } catch {
-      // Badge chỉ mang tính hỗ trợ, lỗi chi tiết được hiển thị trong trang danh sách.
-    }
-
-    try {
-      const deliveryResponse = await deliveryApi.list('ALL');
-      deliveryCount = unwrapDeliveryList(deliveryResponse).filter(isCashierDeliveryAttention).length;
-    } catch {
-      // Giữ phần đếm công việc thanh toán nếu danh sách đơn online tạm thời không tải được.
-    }
-
-
-    try {
-      const [pendingResponse, activeResponse] = await Promise.all([
-        reservationApi.list({ status: 'CHO_XAC_NHAN', page: 0, size: 1 }),
-        reservationApi.list({ from: currentLocalDate(), page: 0, size: 100 }),
-      ]);
-      const pendingCount = normalizePage(pendingResponse, 1).totalElements;
-      const preorderReviewCount = normalizePage(activeResponse, 100).content
-        .filter((item) => reservationStatus(item) !== 'CHO_XAC_NHAN' && reservationPreorderNeedsReview(item)).length;
-      reservationCount = pendingCount + preorderReviewCount;
-    } catch {
-      // Giữ các phần đếm khác nếu danh sách đặt bàn tạm thời không tải được.
-    }
-
-    setQueueCount(paymentCount + deliveryCount + reservationCount);
-  }
-
-  useEffect(() => { loadCount(); }, []);
-  useEffect(() => {
-    if (['/topic/cashier', '/topic/orders', '/topic/payments', '/topic/cashier/reservations'].includes(event?.topic)) loadCount();
-  }, [event]);
+  const queueCount = Math.max(0, Number(attentionCount) || 0);
 
   useEffect(() => {
     const alert = cashierOnlineAlert(event);

@@ -8,7 +8,6 @@ import { orderApi } from '../api/orderApi';
 import { reservationApi } from '../api/reservationApi';
 import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { PAYMENT_REQUEST_STATUSES, unwrap } from '../utils/cashier';
 import { isCashierDeliveryAttention, unwrapDeliveryList } from '../utils/delivery';
 import { imageUrl } from '../utils/imageUrl';
 import { normalizePage } from '../utils/pagination';
@@ -79,10 +78,8 @@ export default function CashierLayout() {
 
   const loadPaymentAttentionCount = useCallback(async () => {
     try {
-      const response = await orderApi.getAll();
-      setPaymentAttentionCount(
-        unwrap(response).filter((order) => PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)).length,
-      );
+      const response = await orderApi.getPaymentRequestCount();
+      setPaymentAttentionCount(Math.max(0, Number(response?.data ?? response ?? 0) || 0));
     } catch {
       // Badge là thông tin hỗ trợ; trang thanh toán vẫn tự hiển thị lỗi tải dữ liệu nếu có.
     }
@@ -179,6 +176,7 @@ export default function CashierLayout() {
           key={`${location.key}:${location.pathname}:${location.search}`}
           title={title}
           subtitle={subtitle}
+          attentionCount={paymentAttentionCount + deliveryAttentionCount + reservationAttentionCount}
           onOpenMenu={() => setMenuOpen(true)}
         />
         <Outlet />

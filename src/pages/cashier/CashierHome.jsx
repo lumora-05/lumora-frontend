@@ -110,7 +110,9 @@ export default function CashierHome({ mode = 'queue' }) {
     setLoading(true);
     setLoadError('');
     try {
-      const response = await orderApi.getAll();
+      const response = historyMode
+        ? await orderApi.getAll()
+        : await orderApi.getPaymentRequests();
       setOrders(unwrap(response));
     } catch {
       setLoadError('Không tải được dữ liệu. Vui lòng kiểm tra kết nối và thử lại.');
