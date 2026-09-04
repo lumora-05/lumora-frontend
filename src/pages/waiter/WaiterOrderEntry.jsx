@@ -111,7 +111,7 @@ export default function WaiterOrderEntry() {
     try {
       const [tableResponse, orderResponse, holdMap] = await Promise.all([
         tableApi.getAll(),
-        orderApi.getAll(),
+        orderApi.getWaiterActive(),
         fetchReservationHoldMap().catch(() => new Map()),
       ]);
       const tableRows = unwrap(tableResponse);

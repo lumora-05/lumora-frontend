@@ -2,6 +2,18 @@ import axiosClient from './axiosClient';
 
 const encodeToken = (token) => encodeURIComponent(String(token ?? '').trim());
 
+let waiterActiveRequest = null;
+
+function getWaiterActive() {
+  if (waiterActiveRequest) return waiterActiveRequest;
+  const request = axiosClient.get('/orders/waiter/active');
+  const sharedRequest = request.finally(() => {
+    if (waiterActiveRequest === sharedRequest) waiterActiveRequest = null;
+  });
+  waiterActiveRequest = sharedRequest;
+  return sharedRequest;
+}
+
 export const orderApi = {
   create: (data) => axiosClient.post('/orders', data),
   customerCreate: (data) => axiosClient.post('/customer/orders', data),
@@ -15,6 +27,8 @@ export const orderApi = {
   getAll: () => axiosClient.get('/orders'),
   getPaymentRequests: () => axiosClient.get('/orders/payment-requests'),
   getPaymentRequestCount: () => axiosClient.get('/orders/payment-requests/count'),
+  getWaiterActive,
+  getWaiterAttentionCount: () => axiosClient.get('/orders/waiter/attention-count'),
   getPage: (params = {}) => axiosClient.get('/orders/page', { params }),
   getById: (id) => axiosClient.get(`/orders/${id}`),
   byStatus: (status) => axiosClient.get(`/orders/status/${status}`),

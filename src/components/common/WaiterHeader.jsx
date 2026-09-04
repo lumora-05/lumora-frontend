@@ -109,7 +109,7 @@ function realtimeOrderData(event) {
   return event?.body?.data || event?.body || {};
 }
 
-export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationPolicy = {} }) {
+export default function WaiterHeader({ title, subtitle, attentionCount = 0, onOpenMenu, reservationPolicy = {} }) {
   const { user, logout } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -120,7 +120,8 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationP
   const [reservations, setReservations] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationTab, setNotificationTab] = useState('ALL');
-  const [notificationLoading, setNotificationLoading] = useState(true);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationError, setNotificationError] = useState('');
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -134,7 +135,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationP
       setNotificationError('');
       const today = currentLocalDate();
       const [orderResponse, serviceResponse, reservationResponse] = await Promise.all([
-        orderApi.getAll(),
+        orderApi.getWaiterActive(),
         serviceRequestApi.list('ACTIVE'),
         reservationApi.list({ from: today, to: today, page: 0, size: 100 }),
       ]);
@@ -144,16 +145,17 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationP
       setReservations(Array.isArray(reservationPayload)
         ? reservationPayload
         : Array.isArray(reservationPayload?.content) ? reservationPayload.content : []);
+      setNotificationsLoaded(true);
     } catch {
       setNotificationError('Không thể tải thông báo.');
+      setNotificationsLoaded(true);
     } finally {
       if (!silent) setNotificationLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadNotifications(); }, [loadNotifications]);
   useEffect(() => {
-    if (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen' || event?.topic === '/topic/service-requests' || event?.topic === '/topic/reservations') {
+    if (notificationOpen && (event?.topic === '/topic/orders' || event?.topic === '/topic/kitchen' || event?.topic === '/topic/service-requests' || event?.topic === '/topic/reservations')) {
       loadNotifications({ silent: true });
     }
 
@@ -174,7 +176,7 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationP
         });
       }
     }
-  }, [event, loadNotifications, toast]);
+  }, [event, loadNotifications, notificationOpen, toast]);
 
   useEffect(() => {
     setNotificationOpen(false);
@@ -298,12 +300,14 @@ export default function WaiterHeader({ title, subtitle, onOpenMenu, reservationP
       || reservationStatus(item) === 'KHACH_DA_DEN'
     )).length;
   }, [reservationPolicy?.checkInEarlyMinutes, reservationPolicy?.noShowGraceMinutes, reservations]);
-  const totalBadgeCount = orderCount + newServiceCount + reservationActionCount;
+  const totalBadgeCount = Math.max(0, Number(attentionCount) || 0);
   const badge = totalBadgeCount > 99 ? '99+' : String(totalBadgeCount);
 
   function toggleNotifications() {
     setProfileOpen(false);
-    setNotificationOpen((current) => !current);
+    const next = !notificationOpen;
+    setNotificationOpen(next);
+    if (next && !notificationsLoaded) void loadNotifications();
   }
 
   function toggleProfile() {

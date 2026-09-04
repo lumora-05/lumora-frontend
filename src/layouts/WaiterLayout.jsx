@@ -42,9 +42,12 @@ export default function WaiterLayout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [brandSettings, setBrandSettings] = useState({ restaurantName: 'LUMORA', logoUrl: '' });
+  const [brandSettingsReady, setBrandSettingsReady] = useState(false);
   const [orderAttentionCount, setOrderAttentionCount] = useState(0);
   const [serviceAttentionCount, setServiceAttentionCount] = useState(0);
   const [reservationAttentionCount, setReservationAttentionCount] = useState(0);
+  const [orderNotificationCount, setOrderNotificationCount] = useState(0);
+  const [newServiceAttentionCount, setNewServiceAttentionCount] = useState(0);
   const waiterEvent = useWebSocket(['/topic/orders', '/topic/kitchen', '/topic/service-requests', '/topic/reservations']);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -59,6 +62,9 @@ export default function WaiterLayout() {
       })
       .catch(() => {
         // Giữ nhận diện mặc định nếu backend tạm thời không phản hồi.
+      })
+      .finally(() => {
+        if (active) setBrandSettingsReady(true);
       });
     return () => { active = false; };
   }, []);
@@ -67,7 +73,7 @@ export default function WaiterLayout() {
     try {
       const today = currentLocalDate();
       const [orderResponse, serviceResponse, reservationResponse] = await Promise.all([
-        orderApi.getAll(),
+        orderApi.getWaiterActive(),
         serviceRequestApi.list('ACTIVE'),
         reservationApi.list({ from: today, to: today, page: 0, size: 100 }),
       ]);
@@ -84,9 +90,15 @@ export default function WaiterLayout() {
       setOrderAttentionCount(orders.filter((order) => (
         ['READY', 'PAYMENT'].includes(orderGroup(order)) || pendingReadyCount(order) > 0
       )).length);
+      setOrderNotificationCount(orders.filter((order) => {
+        const status = String(order?.trangThai || '').toUpperCase();
+        if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return true;
+        return ['READY', 'PAYMENT'].includes(orderGroup(order));
+      }).length);
       setServiceAttentionCount(serviceRequests.filter((item) => (
         ['MOI', 'DA_TIEP_NHAN'].includes(serviceRequestStatus(item))
       )).length);
+      setNewServiceAttentionCount(serviceRequests.filter((item) => serviceRequestStatus(item) === 'MOI').length);
       setReservationAttentionCount(reservations.filter((item) => (
         canCheckIn(item, checkInEarlyMinutes, noShowGraceMinutes, now)
         || reservationStatus(item) === 'KHACH_DA_DEN'
@@ -96,7 +108,9 @@ export default function WaiterLayout() {
     }
   }, [brandSettings?.reservationCheckInEarlyMinutes, brandSettings?.reservationNoShowGraceMinutes]);
 
-  useEffect(() => { loadAttentionCounts(); }, [loadAttentionCounts]);
+  useEffect(() => {
+    if (brandSettingsReady) loadAttentionCounts();
+  }, [brandSettingsReady, loadAttentionCounts]);
   useEffect(() => {
     if (['/topic/orders', '/topic/kitchen', '/topic/service-requests', '/topic/reservations'].includes(waiterEvent?.topic)) {
       loadAttentionCounts();
@@ -152,6 +166,7 @@ export default function WaiterLayout() {
           key={`${location.key}:${location.pathname}:${location.search}`}
           title={title}
           subtitle={subtitle}
+          attentionCount={orderNotificationCount + newServiceAttentionCount + reservationAttentionCount}
           onOpenMenu={() => setMenuOpen(true)}
           reservationPolicy={{
             checkInEarlyMinutes: Math.max(Number(brandSettings?.reservationCheckInEarlyMinutes) || 30, 0),

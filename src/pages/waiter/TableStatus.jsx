@@ -140,7 +140,7 @@ export default function TableStatus() {
 
   async function load() {
     try {
-      const response = await orderApi.getAll();
+      const response = await orderApi.getWaiterActive();
       setOrders(unwrapList(response));
     } catch (error) {
       toast.error(errorMessageOf(error, 'Không tải được danh sách đơn'));

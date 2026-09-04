@@ -107,7 +107,7 @@ export default function WaiterHome() {
     try {
       const [tableResponse, orderResponse, holdMap] = await Promise.all([
         tableApi.getAll(),
-        orderApi.getAll().catch(() => []),
+        orderApi.getWaiterActive().catch(() => []),
         fetchReservationHoldMap().catch(() => new Map()),
       ]);
       const nextTables = unwrapList(tableResponse);

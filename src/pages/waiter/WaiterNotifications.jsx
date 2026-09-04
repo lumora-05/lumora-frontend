@@ -24,7 +24,7 @@ export default function WaiterNotifications() {
   const [filter, setFilter] = useState('ALL');
 
   async function load() {
-    try { setOrders(unwrapList(await orderApi.getAll())); }
+    try { setOrders(unwrapList(await orderApi.getWaiterActive())); }
     catch (error) { toast.error(errorMessageOf(error, 'Không tải được thông báo')); }
   }
   useEffect(() => { load(); }, []);

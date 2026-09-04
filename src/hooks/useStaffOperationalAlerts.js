@@ -194,7 +194,7 @@ export function useStaffOperationalAlerts(role, event) {
         }
 
         const [orderResponse, serviceResponse] = await Promise.all([
-          orderApi.getAll(),
+          orderApi.getWaiterActive(),
           serviceRequestApi.list('ACTIVE'),
         ]);
         if (cancelled) return;
