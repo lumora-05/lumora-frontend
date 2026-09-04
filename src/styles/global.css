@@ -4238,7 +4238,9 @@
   font-weight:950;
   color:#dc3f0e;
   margin-left:12px;
-  transform:translateY(-2px);
+  align-self:stretch;
+  display:flex;
+  align-items:center;
 }
 .cashier-pos-total-due strong{
   font-size:24px;
@@ -4246,7 +4248,9 @@
   color:#e34b13;
   white-space:nowrap;
   letter-spacing:-.02em;
-  line-height:1;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
 }
 .cashier-pos-payment-page .cashier-loyalty-compact{
   margin:13px 0 0!important;
