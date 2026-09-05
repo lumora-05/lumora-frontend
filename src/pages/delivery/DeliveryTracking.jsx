@@ -19,7 +19,7 @@ import {
   UserRound,
   XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader';
 import { deliveryApi } from '../../api/deliveryApi';
@@ -90,7 +90,8 @@ export default function DeliveryTracking() {
   const [error, setError] = useState('');
   const [qr, setQr] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
-  const [qrAutoRequested, setQrAutoRequested] = useState(false);
+  const qrAutoRequestKeyRef = useRef('');
+  const qrRequestIdRef = useRef(0);
   const [cancelReason, setCancelReason] = useState('');
   const [canceling, setCanceling] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -136,24 +137,52 @@ export default function DeliveryTracking() {
     const deliveryStatus = String(order?.trangThaiGiaoHang || '').toUpperCase();
     const paymentStatus = String(order?.trangThaiThanhToan || '').toUpperCase();
     const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
-    if (!order || qr || qrLoading || qrAutoRequested) return;
-    if (paymentMethod !== 'VIETQR' || deliveryStatus !== 'CHO_THANH_TOAN' || paymentStatus !== 'CHO_THANH_TOAN') return;
+    const shouldLoadPayOsQr = Boolean(order)
+      && paymentMethod === 'VIETQR'
+      && deliveryStatus === 'CHO_THANH_TOAN'
+      && paymentStatus === 'CHO_THANH_TOAN';
 
-    let active = true;
-    setQrAutoRequested(true);
+    if (!shouldLoadPayOsQr) {
+      qrAutoRequestKeyRef.current = '';
+      return undefined;
+    }
+
+    const requestKey = `${trackingCode}:${order?.maDonHang || order?.id || ''}`;
+    if (qr || qrAutoRequestKeyRef.current === requestKey) return undefined;
+
+    qrAutoRequestKeyRef.current = requestKey;
+    const requestId = ++qrRequestIdRef.current;
     setQrLoading(true);
+
     deliveryApi.createVietQr(trackingCode)
       .then((response) => {
-        if (active) setQr(unwrapDeliveryResponse(response));
+        if (qrRequestIdRef.current === requestId) {
+          setQr(unwrapDeliveryResponse(response));
+        }
       })
       .catch(() => {
-        // Vẫn giữ nút tạo lại ở giao diện cũ nếu QR tự động chưa tải được.
+        // Giữ trạng thái không có QR để giao diện hiện nút "Thử tạo lại mã QR".
       })
       .finally(() => {
-        if (active) setQrLoading(false);
+        if (qrRequestIdRef.current === requestId) {
+          setQrLoading(false);
+        }
       });
-    return () => { active = false; };
-  }, [order, qr, qrLoading, qrAutoRequested, trackingCode]);
+
+    return () => {
+      if (qrRequestIdRef.current === requestId) {
+        qrRequestIdRef.current += 1;
+      }
+    };
+  }, [
+    trackingCode,
+    qr,
+    order?.id,
+    order?.maDonHang,
+    order?.trangThaiGiaoHang,
+    order?.trangThaiThanhToan,
+    order?.phuongThucThanhToan,
+  ]);
 
   useEffect(() => {
     const status = order?.trangThaiGiaoHang;
