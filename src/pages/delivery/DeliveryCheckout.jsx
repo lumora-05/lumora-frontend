@@ -593,7 +593,7 @@ export default function DeliveryCheckout() {
         <Link to="/menu"><ArrowLeft size={18} /> Tiếp tục chọn món</Link>
       </section>
 
-      <form className="delivery-public-container delivery-checkout-grid" onSubmit={submit}>
+      <form className="delivery-public-container delivery-checkout-grid delivery-checkout-flow-v2" onSubmit={submit}>
         <div className="delivery-checkout-main">
           <section className="delivery-checkout-card">
             <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin nhận hàng</h2><p>Nhập thông tin người nhận và chọn cách nhận món</p></div></div>
@@ -753,25 +753,32 @@ export default function DeliveryCheckout() {
 
       {confirmOpen ? (
         <div className="delivery-confirm-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !submitting && setConfirmOpen(false)}>
-          <div className="delivery-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delivery-confirm-title" onMouseDown={(event) => event.stopPropagation()}>
+          <div className="delivery-confirm-modal delivery-confirm-modal-v2" role="dialog" aria-modal="true" aria-labelledby="delivery-confirm-title" onMouseDown={(event) => event.stopPropagation()}>
             <button type="button" className="delivery-confirm-close" onClick={() => !submitting && setConfirmOpen(false)} disabled={submitting} aria-label="Đóng"><X size={18} /></button>
             <span className="delivery-confirm-kicker">Kiểm tra lần cuối</span>
             <h2 id="delivery-confirm-title">Xác nhận đặt hàng</h2>
             <p className="delivery-confirm-intro">Đơn chỉ được tạo sau khi bạn xác nhận. Nhà hàng sẽ tiếp nhận và xác nhận trước khi bếp chế biến.</p>
 
-            <div className="delivery-confirm-info">
-              <p><span>Người nhận</span><strong>{form.tenNguoiNhan}</strong></p>
-              <p><span>Số điện thoại</span><strong>{form.soDienThoaiNhan}</strong></p>
-              <p className="wide"><span>Phương thức nhận</span><strong>{isPickup ? 'Đến lấy tại nhà hàng' : 'Giao tận nơi'}</strong></p>
-              <p className="wide"><span>{isPickup ? 'Địa điểm nhận' : 'Địa chỉ'}</span><strong>{displayAddress}</strong></p>
-              <p><span>Thời gian nhận</span><strong>{form.loaiThoiGianNhan === 'HEN_GIO' ? formatReceiveTime(form.thoiGianNhanMongMuon) : 'Giao sớm nhất'}</strong></p>
-              <p><span>Thanh toán</span><strong>{form.phuongThucThanhToan === 'COD' ? 'COD' : 'VietQR'}</strong></p>
+            <div className="delivery-confirm-info delivery-confirm-info-list">
+              <p><UserRound size={18} /><span>Người nhận</span><strong>{form.tenNguoiNhan}</strong></p>
+              <p><Phone size={18} /><span>Số điện thoại</span><strong>{form.soDienThoaiNhan}</strong></p>
+              <p><ShoppingBag size={18} /><span>Phương thức nhận</span><strong>{isPickup ? 'Đến lấy tại nhà hàng' : 'Giao tận nơi'}</strong></p>
+              <p><MapPin size={18} /><span>{isPickup ? 'Địa điểm nhận' : 'Địa chỉ'}</span><strong>{displayAddress}</strong></p>
+              <p><CalendarClock size={18} /><span>Thời gian nhận</span><strong>{form.loaiThoiGianNhan === 'HEN_GIO' ? formatReceiveTime(form.thoiGianNhanMongMuon) : 'Giao sớm nhất'}</strong></p>
+              <p><CreditCard size={18} /><span>Thanh toán</span><strong>{form.phuongThucThanhToan === 'COD' ? 'COD' : 'VietQR'}</strong></p>
             </div>
 
-            <div className="delivery-confirm-items">
-              {cart.items.map((item) => <p key={itemId(item)}><span>{item.soLuong} × {localizedFoodName(item, language, 'Món ăn')}</span><strong>{formatMoney(Number(item.gia || 0) * Number(item.soLuong || 0))}</strong></p>)}
+            <div className="delivery-confirm-items-title">Danh sách món hàng ({cart.count} món)</div>
+            <div className="delivery-confirm-items delivery-confirm-items-v2">
+              {cart.items.map((item) => (
+                <article key={itemId(item)}>
+                  <div className="delivery-confirm-item-image">{item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} /> : <ShoppingBag size={20} />}</div>
+                  <strong>{item.soLuong} × {localizedFoodName(item, language, 'Món ăn')}</strong>
+                  <b>{formatMoney(Number(item.gia || 0) * Number(item.soLuong || 0))}</b>
+                </article>
+              ))}
             </div>
-            <div className="delivery-confirm-money">
+            <div className="delivery-confirm-money delivery-confirm-money-v2">
               <p><span>Tạm tính</span><strong>{formatMoney(cart.total)}</strong></p>
               <p><span>Giảm giá</span><strong>-{formatMoney(promotionDiscount)}</strong></p>
               <p><span>Phí giao hàng</span><strong>{formatMoney(deliveryFee)}</strong></p>
@@ -781,6 +788,7 @@ export default function DeliveryCheckout() {
               <button type="button" className="secondary" onClick={() => setConfirmOpen(false)} disabled={submitting}>Quay lại</button>
               <button type="button" className="primary" onClick={createOrder} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={18} /> : <CheckCircle2 size={18} />}{submitting ? 'Đang tạo đơn...' : 'Xác nhận đặt hàng'}</button>
             </div>
+            <small className="delivery-confirm-footnote">Đơn hàng chỉ được tạo sau khi bạn xác nhận.</small>
           </div>
         </div>
       ) : null}

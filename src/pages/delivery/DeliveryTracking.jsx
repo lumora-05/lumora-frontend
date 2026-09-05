@@ -36,6 +36,7 @@ import {
 } from '../../utils/delivery';
 import { formatDate } from '../../utils/formatDate';
 import { formatMoney } from '../../utils/formatMoney';
+import { imageUrl } from '../../utils/imageUrl';
 import { formatDistanceMeters, formatDurationSeconds } from '../../utils/mapUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import { localizedFoodName } from '../../utils/localizedContent';
@@ -89,6 +90,7 @@ export default function DeliveryTracking() {
   const [error, setError] = useState('');
   const [qr, setQr] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [qrAutoRequested, setQrAutoRequested] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [canceling, setCanceling] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -129,6 +131,29 @@ export default function DeliveryTracking() {
       setQr(null);
     }
   }, [order?.trangThaiThanhToan]);
+
+  useEffect(() => {
+    const deliveryStatus = String(order?.trangThaiGiaoHang || '').toUpperCase();
+    const paymentStatus = String(order?.trangThaiThanhToan || '').toUpperCase();
+    const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
+    if (!order || qr || qrLoading || qrAutoRequested) return;
+    if (paymentMethod !== 'VIETQR' || deliveryStatus !== 'CHO_THANH_TOAN' || paymentStatus !== 'CHO_THANH_TOAN') return;
+
+    let active = true;
+    setQrAutoRequested(true);
+    setQrLoading(true);
+    deliveryApi.createVietQr(trackingCode)
+      .then((response) => {
+        if (active) setQr(unwrapDeliveryResponse(response));
+      })
+      .catch(() => {
+        // Vẫn giữ nút tạo lại ở giao diện cũ nếu QR tự động chưa tải được.
+      })
+      .finally(() => {
+        if (active) setQrLoading(false);
+      });
+    return () => { active = false; };
+  }, [order, qr, qrLoading, qrAutoRequested, trackingCode]);
 
   useEffect(() => {
     const status = order?.trangThaiGiaoHang;
@@ -243,6 +268,154 @@ export default function DeliveryTracking() {
     && status === 'CHO_THANH_TOAN'
     && paymentStatus === 'CHO_THANH_TOAN';
   const failureReason = order.lyDoTuChoi || order.lyDoGiaoThatBai;
+  const paymentMethod = String(order.phuongThucThanhToan || '').toUpperCase();
+  const isPayOsPending = !failed && paymentMethod === 'VIETQR' && status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN';
+  const isPayOsPaidFlow = !failed && paymentMethod === 'VIETQR' && paymentStatus === 'DA_THANH_TOAN'
+    && ['CHO_XAC_NHAN', 'CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(status);
+  const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.soLuong || 0), 0);
+  const paidProgressIndex = status === 'DANG_CHUAN_BI' ? 3 : 2;
+  const compactFlowSteps = [
+    { label: 'Đã tạo đơn', icon: Check },
+    { label: 'Đã thanh toán', icon: Check },
+    { label: 'Chờ nhà hàng xác nhận', icon: PackageCheck },
+    { label: 'Đang chuẩn bị', icon: ChefHat },
+  ];
+
+  if (isPayOsPending) {
+    return (
+      <main className="delivery-public-page delivery-flow-page">
+        <DeliveryPublicHeader homeStyle />
+        <section className="delivery-public-container delivery-payflow-page">
+          <Link className="delivery-flow-back" to="/menu"><ArrowLeft size={18} /> Quay lại</Link>
+          <div className="delivery-payflow-grid">
+            <section className="delivery-payflow-main-card">
+              <div className="delivery-flow-title">
+                <span><PackageCheck size={27} /></span>
+                <div><h1>Theo dõi đơn hàng</h1><p>Kiểm tra trạng thái và hoàn tất thanh toán</p></div>
+              </div>
+
+              <div className="delivery-flow-order-meta">
+                <div><small>Mã đơn hàng</small><strong>{order.maDonHangHienThi || '—'}</strong></div>
+                <button type="button" onClick={() => copyText(order.maDonHangHienThi, 'Đã sao chép mã đơn.')} aria-label="Sao chép mã đơn"><Copy size={18} /></button>
+                <div className="delivery-flow-meta-status"><small>Trạng thái hiện tại</small><span><Clock3 size={18} /> Chờ thanh toán</span></div>
+              </div>
+
+              <div className="delivery-payos-waiting-banner">
+                <span>!</span>
+                <div><strong>Đang chờ PayOS xác nhận tự động</strong><small>Sau khi bạn quét mã và thanh toán, hệ thống sẽ tự động xác nhận giao dịch.</small></div>
+              </div>
+
+              <div className="delivery-flow-timeline four">
+                {[
+                  { label: 'Đã tạo đơn', icon: Check, state: 'done', sub: formatDate(order.thoiGianDat) },
+                  { label: 'Chờ thanh toán', icon: Clock3, state: 'active', sub: 'Đang xử lý...' },
+                  { label: 'Chờ nhà hàng xác nhận', icon: PackageCheck, state: '', sub: '' },
+                  { label: 'Đang chuẩn bị', icon: ChefHat, state: '', sub: '' },
+                ].map(({ label, icon: Icon, state, sub }) => (
+                  <div key={label} className={state}>
+                    <span><Icon size={19} /></span><strong>{label}</strong>{sub ? <small>{sub}</small> : null}
+                  </div>
+                ))}
+              </div>
+
+              <h2 className="delivery-flow-section-title">Thông tin đơn hàng</h2>
+              <div className="delivery-flow-info-list">
+                <p><UserRound size={19} /><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
+                <p><MapPin size={19} /><span>Địa chỉ nhận hàng</span><strong>{order.phuongThucNhanHang === 'TU_DEN_LAY' ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p>
+                <p><CreditCard size={19} /><span>Tổng tiền</span><strong className="money">{formatMoney(order.tongThanhToan)}</strong></p>
+              </div>
+
+              {canCancel ? (
+                <details className="delivery-flow-cancel">
+                  <summary>Cần hủy đơn?</summary>
+                  <textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi nhà hàng xác nhận" />
+                  <button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={16} /> : <XCircle size={16} />} Hủy đơn</button>
+                </details>
+              ) : null}
+            </section>
+
+            <aside className="delivery-payos-card-v2">
+              <div className="delivery-payos-card-head"><div><CreditCard size={24} /><h2>Thanh toán VietQR (PayOS)</h2></div><b>PayOS</b></div>
+              <div className="delivery-payos-qr-panel">
+                {qr?.qrUrl ? <img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /> : <div className="delivery-payos-qr-loading">{qrLoading ? <LoaderCircle className="spin" size={28} /> : <CreditCard size={28} />}<span>{qrLoading ? 'Đang tạo mã thanh toán...' : 'Chưa tải được mã VietQR'}</span></div>}
+                <small>Số tiền thanh toán</small>
+                <strong>{formatMoney(qr?.amount ?? order.tongThanhToan)}</strong>
+                <div className="delivery-payos-transfer-content"><span>Nội dung chuyển khoản</span><div><b>{qr?.addInfo || order.maDonHangHienThi || '—'}</b>{(qr?.addInfo || order.maDonHangHienThi) ? <button type="button" onClick={() => copyText(qr?.addInfo || order.maDonHangHienThi, 'Đã sao chép nội dung chuyển khoản.')}><Copy size={17} /></button> : null}</div></div>
+              </div>
+              <div className="delivery-payos-guide"><strong>Hướng dẫn thanh toán</strong><ol><li>Mở ứng dụng ngân hàng</li><li>Quét mã QR</li><li>Hoàn tất chuyển khoản</li></ol></div>
+              <small className="delivery-payos-note">Mã QR sẽ tự động biến mất sau khi thanh toán thành công.</small>
+            </aside>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (isPayOsPaidFlow) {
+    return (
+      <main className="delivery-public-page delivery-flow-page">
+        <DeliveryPublicHeader homeStyle />
+        <section className="delivery-public-container delivery-paidflow-page">
+          <Link className="delivery-flow-back" to="/menu"><ArrowLeft size={18} /> Quay lại trang chủ</Link>
+          <div className="delivery-paidflow-heading">
+            <div className="delivery-flow-title large"><span><ShoppingBag size={27} /></span><div><h1>Theo dõi đơn hàng</h1><p>Đơn hàng đã được thanh toán thành công</p></div></div>
+            <div className="delivery-meal-banner"><img src="/delivery-icons/delivery-bike.png" alt="" aria-hidden="true" /><div><strong>Chúng tôi đang chuẩn bị món ngon cho bạn</strong><small>Cảm ơn bạn đã tin tưởng Lumora!</small></div><span>♡</span></div>
+          </div>
+
+          <div className="delivery-paidflow-grid">
+            <section className="delivery-paidflow-main-card">
+              <div className="delivery-paid-order-head"><div><small>Mã đơn hàng</small><h2>{order.maDonHangHienThi || '—'}</h2><p>Đặt lúc {formatDate(order.thoiGianDat)}</p></div><button type="button" onClick={() => document.getElementById('delivery-paid-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><ShoppingBag size={17} /> Chi tiết đơn hàng</button></div>
+
+              <div className="delivery-payos-success-banner"><span><Check size={22} /></span><div><strong>Đã được PayOS xác nhận tự động</strong><small>Thanh toán đã ghi nhận thành công. Đơn đang chờ nhà hàng xác nhận.</small></div><b>PayOS</b></div>
+
+              <div className="delivery-paid-status-grid">
+                <div><span><CreditCard size={23} /></span><p><small>Trạng thái thanh toán</small><strong className="success">Đã thanh toán</strong></p></div>
+                <div><span><PackageCheck size={23} /></span><p><small>Trạng thái đơn hàng</small><strong className="waiting">{deliveryStatusLabel(status)}</strong></p></div>
+              </div>
+
+              <div className="delivery-flow-timeline four paid">
+                {compactFlowSteps.map(({ label, icon: Icon }, index) => {
+                  const state = index < paidProgressIndex ? 'done' : index === paidProgressIndex ? 'active' : '';
+                  return <div key={label} className={state}><span><Icon size={19} /></span><strong>{label}</strong><small>{index === 0 ? formatDate(order.thoiGianDat) : index === 1 ? 'Đã ghi nhận' : index === paidProgressIndex ? 'Đang xử lý' : ''}</small></div>;
+                })}
+              </div>
+
+              <div className="delivery-paid-info-strip">
+                <div><MapPin size={22} /><p><small>Địa chỉ giao hàng</small><strong>{order.phuongThucNhanHang === 'TU_DEN_LAY' ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p></div>
+                <div><CreditCard size={22} /><p><small>Phương thức thanh toán</small><strong>VietQR</strong><span>Thanh toán qua PayOS</span></p></div>
+                <div><Clock3 size={22} /><p><small>Dự kiến giao</small><strong>{order.thoiGianNhanDuKienGiay ? formatDurationSeconds(order.thoiGianNhanDuKienGiay) : 'Đang cập nhật'}</strong><span>Tính từ khi nhà hàng xác nhận</span></p></div>
+              </div>
+
+              {canCancel ? (
+                <details className="delivery-flow-cancel compact">
+                  <summary>Cần hủy đơn?</summary>
+                  <textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi nhà hàng xác nhận" />
+                  <button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={16} /> : <XCircle size={16} />} Hủy đơn</button>
+                </details>
+              ) : null}
+            </section>
+
+            <aside id="delivery-paid-summary" className="delivery-paid-summary-card">
+              <div className="delivery-paid-summary-head"><h2>Tóm tắt đơn hàng</h2><span><Check size={16} /> Thanh toán thành công</span></div>
+              <strong className="delivery-paid-item-count">{itemCount} món ăn</strong>
+              <div className="delivery-paid-items">
+                {(order.items || []).map((item, index) => (
+                  <article key={`${item.maMonAn}-${index}`}>
+                    <div>{item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} /> : <ShoppingBag size={22} />}</div>
+                    <p><strong>{localizedFoodName(item, language, 'Món ăn')}</strong><b>{formatMoney(item.donGia ?? (Number(item.thanhTien || 0) / Math.max(1, Number(item.soLuong || 1))))}</b><small>{item.ghiChu || 'Ghi chú món...'}</small></p>
+                    <span>×{item.soLuong}</span><b>{formatMoney(item.thanhTien)}</b>
+                  </article>
+                ))}
+              </div>
+              <div className="delivery-paid-summary-money"><p><span>Tạm tính</span><strong>{formatMoney(order.tamTinh)}</strong></p>{Number(order.tienGiam || 0) > 0 ? <p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p> : null}<p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p><div><span>Tổng thanh toán</span><strong>{formatMoney(order.tongThanhToan)}</strong></div></div>
+              <button type="button" onClick={() => loadOrder({ silent: true })}><RefreshCw className={loading ? 'spin' : ''} size={19} /> Tiếp tục theo dõi</button>
+              <small>Chúng tôi sẽ cập nhật trạng thái đơn hàng theo thời gian thực.</small>
+            </aside>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="delivery-public-page">

@@ -872,3 +872,204 @@
 .delivery-home-menu .delivery-menu-load-more>button{min-height:44px;padding:0 20px;border:1px solid #efb08d;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#e85c17;background:#fff;font-size:12px;font-weight:850;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}
 .delivery-home-menu .delivery-menu-load-more>button:hover{background:#fff4ed;border-color:#e98249;transform:translateY(-1px)}
 @media(max-width:680px){.delivery-home-menu .delivery-menu-load-more>button{width:100%}}
+
+/* ===== 2026-09-05 · Luồng đặt món online / PayOS theo mockup LUMORA ===== */
+.delivery-public-page.delivery-flow-page,
+.delivery-checkout-flow-v2{--flow-orange:#ff5a0a;--flow-orange-2:#ff7714;--flow-ink:#0f2340;--flow-muted:#728095;--flow-line:#dfe6ee;--flow-soft:#fff8f2;--flow-green:#139847}
+
+/* Checkout */
+.delivery-checkout-flow-v2{width:min(1360px,calc(100% - 40px));grid-template-columns:minmax(0,1fr) 410px;gap:18px;padding-bottom:90px}
+.delivery-checkout-flow-v2 .delivery-checkout-main{gap:18px}
+.delivery-checkout-flow-v2 .delivery-checkout-card,
+.delivery-checkout-flow-v2 .delivery-order-summary{border-color:#dde4eb;border-radius:20px;box-shadow:0 12px 38px rgba(20,37,55,.055)}
+.delivery-checkout-flow-v2 .delivery-checkout-card{padding:28px}
+.delivery-checkout-flow-v2 .delivery-card-title{margin-bottom:24px}
+.delivery-checkout-flow-v2 .delivery-card-title>span{width:48px;height:48px;padding:0;border-radius:14px;color:var(--flow-orange);background:#fff0e7}
+.delivery-checkout-flow-v2 .delivery-card-title h2{color:var(--flow-ink);font-size:21px;letter-spacing:-.02em}
+.delivery-checkout-flow-v2 .delivery-card-title p{font-size:12px;color:#8794a6}
+.delivery-checkout-flow-v2 .delivery-checkout-subsection h3{color:#182c45;font-size:14px;margin-bottom:14px}
+.delivery-checkout-flow-v2 .delivery-form-grid.two{gap:18px}
+.delivery-checkout-flow-v2 .delivery-form-grid label{font-size:12px;color:#27394f}
+.delivery-checkout-flow-v2 .delivery-form-grid label>div{min-height:54px;border-radius:12px;border-color:#d5dee8}
+.delivery-checkout-flow-v2 .delivery-form-grid input{font-size:14px;font-weight:650;color:#27384d}
+.delivery-checkout-flow-v2 .delivery-receive-methods{gap:16px}
+.delivery-checkout-flow-v2 .delivery-receive-methods label{min-height:86px;padding:15px 46px 15px 18px;border-radius:12px}
+.delivery-checkout-flow-v2 .delivery-receive-methods label.active{border-color:var(--flow-orange);background:#fff9f5}
+.delivery-checkout-flow-v2 .delivery-receive-method-image{width:50px;height:50px}
+.delivery-checkout-flow-v2 .delivery-receive-methods strong{font-size:14px;color:#172b44}
+.delivery-checkout-flow-v2 .delivery-receive-methods small{font-size:11px;color:#8794a6}
+.delivery-checkout-flow-v2 .delivery-da-nang-notice{margin-bottom:15px;padding:16px 18px;border-color:#ffc6a7;border-radius:13px;background:#fff8f3;gap:12px}
+.delivery-checkout-flow-v2 .delivery-da-nang-notice>svg{color:var(--flow-orange)}
+.delivery-checkout-flow-v2 .delivery-da-nang-notice strong{font-size:12px;color:#a3481d}
+.delivery-checkout-flow-v2 .delivery-da-nang-notice span{font-size:10px;color:#8c796d}
+.delivery-checkout-flow-v2 .delivery-address-autocomplete{min-height:54px!important;border-radius:12px!important}
+.delivery-checkout-flow-v2 .delivery-address-autocomplete.open{border-color:var(--flow-orange)!important;box-shadow:0 0 0 3px rgba(255,90,10,.08)!important}
+.delivery-checkout-flow-v2 .delivery-address-autocomplete input{font-size:14px;font-weight:650}
+.delivery-checkout-flow-v2 .delivery-address-suggestion-menu{top:calc(100% + 5px);border-radius:12px!important;box-shadow:0 18px 42px rgba(23,36,50,.17)!important}
+.delivery-checkout-flow-v2 .delivery-address-suggestion-hint{min-height:43px;font-size:10px}
+.delivery-checkout-flow-v2 .delivery-address-suggestion-options button{min-height:52px}
+.delivery-checkout-flow-v2 .delivery-address-suggestion-options button strong{font-size:12px;color:#293b50}
+.delivery-checkout-flow-v2 .delivery-order-summary{top:92px;padding:25px}
+.delivery-checkout-flow-v2 .delivery-summary-head span{color:var(--flow-orange);font-size:10px}
+.delivery-checkout-flow-v2 .delivery-summary-head h2{color:#172b44;font-size:20px}
+.delivery-checkout-flow-v2 .delivery-summary-head>svg{color:var(--flow-orange)}
+.delivery-checkout-flow-v2 .delivery-summary-items article{grid-template-columns:58px minmax(0,1fr) auto;padding:18px 0}
+.delivery-checkout-flow-v2 .delivery-summary-image{width:58px;height:58px;border-radius:13px}
+.delivery-checkout-flow-v2 .delivery-summary-copy strong{font-size:13px;color:#1e3048}
+.delivery-checkout-flow-v2 .delivery-summary-copy span{color:var(--flow-orange);font-size:12px}
+.delivery-checkout-flow-v2 .delivery-summary-money{margin-top:22px;padding-top:8px;border-top:1px solid #edf0f3}
+.delivery-checkout-flow-v2 .delivery-summary-money p{padding:8px 0;font-size:12px}
+.delivery-checkout-flow-v2 .delivery-summary-money>div{margin-top:9px;padding-top:18px}
+.delivery-checkout-flow-v2 .delivery-summary-money>div span{color:#172b44;font-size:14px}
+.delivery-checkout-flow-v2 .delivery-summary-money>div strong{font-size:25px;color:#f05a16}
+.delivery-checkout-flow-v2 .delivery-submit-order{min-height:54px;border-radius:13px;background:linear-gradient(90deg,var(--flow-orange-2),var(--flow-orange));font-size:14px}
+.delivery-checkout-flow-v2 .delivery-submit-note{font-size:9px;color:#96a0ad}
+
+/* Modal xác nhận đặt hàng */
+.delivery-confirm-modal-v2{width:min(610px,100%);padding:28px 30px 22px;border-radius:18px;color:var(--flow-ink)}
+.delivery-confirm-modal-v2 .delivery-confirm-kicker{font-size:10px;color:var(--flow-orange);letter-spacing:.16em}
+.delivery-confirm-modal-v2 h2{font-size:28px;color:#10243f;margin-top:6px}
+.delivery-confirm-modal-v2 .delivery-confirm-intro{margin-top:5px;font-size:12px;color:#738198}
+.delivery-confirm-modal-v2 .delivery-confirm-info-list{margin-top:18px;padding:12px 18px;display:block;background:#fff;border-color:#dbe3eb;border-radius:12px}
+.delivery-confirm-modal-v2 .delivery-confirm-info-list p{display:grid;grid-template-columns:22px 145px minmax(0,1fr);gap:9px;align-items:start;padding:8px 0;background:transparent;border-radius:0}
+.delivery-confirm-modal-v2 .delivery-confirm-info-list p>svg{margin-top:1px;color:#60748e}
+.delivery-confirm-modal-v2 .delivery-confirm-info-list span{font-size:11px;letter-spacing:0;text-transform:none;color:#6f7e92;font-weight:650}
+.delivery-confirm-modal-v2 .delivery-confirm-info-list strong{margin:0;color:#152943;font-size:12px;line-height:1.45}
+.delivery-confirm-items-title{margin-top:18px;color:#1b2e46;font-size:13px;font-weight:900}
+.delivery-confirm-items-v2{margin-top:8px;padding:0;border:1px solid #e1e6ec;border-radius:11px;overflow:hidden}
+.delivery-confirm-items-v2 article{min-height:62px;padding:9px 11px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;background:#fff}
+.delivery-confirm-items-v2 article+article{border-top:1px solid #edf0f3}
+.delivery-confirm-item-image{width:48px;height:48px;overflow:hidden;border-radius:9px;display:grid;place-items:center;color:var(--flow-orange);background:#fff0e7}
+.delivery-confirm-item-image img{width:100%;height:100%;object-fit:cover}
+.delivery-confirm-items-v2 article>strong{font-size:12px;color:#1b2e46}
+.delivery-confirm-items-v2 article>b{font-size:12px;color:#1b2e46;white-space:nowrap}
+.delivery-confirm-money-v2{margin-top:10px}
+.delivery-confirm-money-v2 p{padding:5px 1px;font-size:11px}
+.delivery-confirm-money-v2>div{padding-top:10px;font-size:13px}
+.delivery-confirm-money-v2>div strong{font-size:24px;color:#f05a16}
+.delivery-confirm-modal-v2 .delivery-confirm-actions{margin-top:15px;grid-template-columns:1fr 1fr;gap:12px}
+.delivery-confirm-modal-v2 .delivery-confirm-actions button{min-height:48px;border-radius:10px;font-size:12px}
+.delivery-confirm-modal-v2 .delivery-confirm-actions button.primary{background:linear-gradient(90deg,var(--flow-orange-2),var(--flow-orange))}
+.delivery-confirm-footnote{display:block;margin-top:12px;text-align:center;color:#8290a2;font-size:9px}
+.delivery-confirm-footnote:before{content:"🔒";margin-right:6px}
+
+/* Trang theo dõi PayOS */
+.delivery-flow-page{background:#f8fafc;color:var(--flow-ink)}
+.delivery-flow-back{display:inline-flex;align-items:center;gap:8px;color:#5f6e82;text-decoration:none;font-size:13px;font-weight:750}
+.delivery-payflow-page,.delivery-paidflow-page{width:min(1450px,calc(100% - 40px));padding:24px 0 72px}
+.delivery-payflow-page>.delivery-flow-back,.delivery-paidflow-page>.delivery-flow-back{margin-bottom:22px}
+.delivery-payflow-grid,.delivery-paidflow-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.9fr);gap:18px;align-items:start}
+.delivery-payflow-main-card,.delivery-payos-card-v2,.delivery-paidflow-main-card,.delivery-paid-summary-card{border:1px solid #dde5ed;border-radius:18px;background:#fff;box-shadow:0 12px 38px rgba(23,42,62,.055)}
+.delivery-payflow-main-card,.delivery-paidflow-main-card{padding:24px}
+.delivery-flow-title{display:flex;align-items:center;gap:14px}
+.delivery-flow-title>span{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;color:var(--flow-orange);background:#fff1e8}
+.delivery-flow-title h1{margin:0;color:#132943;font-size:23px;letter-spacing:-.025em}
+.delivery-flow-title p{margin:4px 0 0;color:#7e8b9e;font-size:12px}
+.delivery-flow-title.large h1{font-size:31px}
+.delivery-flow-title.large p{font-size:14px}
+.delivery-flow-order-meta{margin-top:20px;padding:18px 20px;border:1px solid #dce4ed;border-radius:12px;display:grid;grid-template-columns:minmax(0,1fr) 38px minmax(220px,.72fr);align-items:center;gap:10px}
+.delivery-flow-order-meta small{display:block;color:#748398;font-size:11px;font-weight:650}
+.delivery-flow-order-meta strong{display:block;margin-top:6px;color:#122a49;font-size:25px;letter-spacing:.02em}
+.delivery-flow-order-meta>button{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;color:#61768e;background:transparent;cursor:pointer}
+.delivery-flow-meta-status{padding-left:20px;border-left:1px solid #dfe5ec}
+.delivery-flow-meta-status span{margin-top:6px;padding:8px 11px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;color:#e65a16;background:#fff0e7;font-size:12px;font-weight:850}
+.delivery-payos-waiting-banner{margin-top:16px;padding:17px 20px;border:1px solid #ff9b67;border-radius:11px;display:flex;align-items:center;gap:16px;background:#fff8f4}
+.delivery-payos-waiting-banner>span{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#ff6d12,#f14d05);font-size:27px;font-weight:900}
+.delivery-payos-waiting-banner strong,.delivery-payos-waiting-banner small{display:block}
+.delivery-payos-waiting-banner strong{color:#f15812;font-size:17px}
+.delivery-payos-waiting-banner small{margin-top:5px;color:#66778d;font-size:12px}
+.delivery-flow-timeline{margin:24px 10px 22px;display:grid;grid-template-columns:repeat(4,1fr)}
+.delivery-flow-timeline>div{position:relative;text-align:center;color:#8896a8}
+.delivery-flow-timeline>div:not(:last-child):after{content:"";position:absolute;z-index:0;top:22px;left:calc(50% + 25px);right:calc(-50% + 25px);height:2px;background:#d8e0e8;border-top:1px dashed #d8e0e8}
+.delivery-flow-timeline>div.done:not(:last-child):after{background:var(--flow-orange);border:0}
+.delivery-flow-timeline>div>span{position:relative;z-index:1;width:44px;height:44px;margin:0 auto 8px;border:2px solid #d9e1e9;border-radius:50%;display:grid;place-items:center;color:#7b8a9d;background:#f6f8fa}
+.delivery-flow-timeline>div.done>span{border-color:var(--flow-orange);color:#fff;background:linear-gradient(145deg,#ff7215,#f04f06)}
+.delivery-flow-timeline>div.active>span{border-color:var(--flow-orange);color:#fff;background:linear-gradient(145deg,#ff7215,#f04f06);box-shadow:0 0 0 6px rgba(255,93,8,.12)}
+.delivery-flow-timeline strong{display:block;color:#35465b;font-size:12px;line-height:1.25}
+.delivery-flow-timeline .active strong,.delivery-flow-timeline .done strong{color:#1f3148}
+.delivery-flow-timeline small{display:block;margin-top:4px;color:#8190a4;font-size:9px;line-height:1.3}
+.delivery-flow-section-title{margin:10px 0 10px;color:#1a2d46;font-size:15px}
+.delivery-flow-info-list{border:1px solid #dbe3eb;border-radius:11px;overflow:hidden}
+.delivery-flow-info-list p{margin:0;padding:13px 18px;display:grid;grid-template-columns:28px 150px minmax(0,1fr);gap:10px;align-items:center;color:#586b83}
+.delivery-flow-info-list p+p{border-top:1px solid #e7ebf0}
+.delivery-flow-info-list p>svg{color:#607691}
+.delivery-flow-info-list p span{font-size:11px}
+.delivery-flow-info-list p strong{color:#182d48;font-size:12px}
+.delivery-flow-info-list p strong.money{justify-self:end;color:#f05a16;font-size:24px}
+.delivery-flow-cancel{margin-top:14px;padding:10px 12px;border:1px dashed #e5bdab;border-radius:10px;background:#fffaf7}
+.delivery-flow-cancel summary{cursor:pointer;color:#a84b28;font-size:11px;font-weight:850}
+.delivery-flow-cancel textarea{width:100%;min-height:60px;margin-top:9px;padding:9px;border:1px solid #e5d2c8;border-radius:8px;box-sizing:border-box;resize:vertical;font:inherit;font-size:11px}
+.delivery-flow-cancel button{min-height:35px;margin-top:8px;padding:0 12px;border:0;border-radius:8px;display:inline-flex;align-items:center;gap:6px;color:#fff;background:#b54a32;font-size:10px;font-weight:850;cursor:pointer}
+.delivery-flow-cancel.compact{margin-top:16px}
+
+/* PayOS card waiting */
+.delivery-payos-card-v2{padding:22px}
+.delivery-payos-card-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.delivery-payos-card-head>div{display:flex;align-items:center;gap:10px}.delivery-payos-card-head svg{color:var(--flow-orange)}
+.delivery-payos-card-head h2{margin:0;color:#142a45;font-size:20px}
+.delivery-payos-card-head>b{color:#1760d7;font-size:21px;font-style:italic}
+.delivery-payos-qr-panel{margin-top:18px;padding:18px;border-radius:12px;background:linear-gradient(145deg,#f8fafc,#eef3f8);text-align:center}
+.delivery-payos-qr-panel>img{width:190px;height:190px;padding:9px;border-radius:8px;object-fit:contain;background:#fff;box-shadow:0 3px 12px rgba(20,34,49,.08)}
+.delivery-payos-qr-loading{width:190px;height:190px;margin:0 auto;padding:9px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#76859a;background:#fff}
+.delivery-payos-qr-loading span{font-size:10px}
+.delivery-payos-qr-panel>small{display:block;margin-top:10px;color:#697a90;font-size:11px}
+.delivery-payos-qr-panel>strong{display:block;margin-top:5px;color:#f05a16;font-size:26px}
+.delivery-payos-transfer-content{margin-top:14px;padding-top:13px;border-top:1px solid #dbe3eb;text-align:left}
+.delivery-payos-transfer-content>span{display:block;margin-bottom:7px;color:#67788e;font-size:11px;font-weight:750}
+.delivery-payos-transfer-content>div{min-height:43px;padding:0 10px;border:1px solid #d8e0e8;border-radius:9px;display:flex;align-items:center;background:#fff}
+.delivery-payos-transfer-content b{flex:1;color:#253a54;font-size:12px}
+.delivery-payos-transfer-content button{width:32px;height:32px;border:0;border-radius:7px;display:grid;place-items:center;color:#63768e;background:transparent;cursor:pointer}
+.delivery-payos-guide{margin-top:14px;padding:15px 18px;border:1px solid #ffba95;border-radius:11px;background:#fff9f5}
+.delivery-payos-guide strong{color:#f05a16;font-size:13px}
+.delivery-payos-guide ol{margin:8px 0 0 20px;padding:0;color:#66788e;font-size:11px;line-height:1.8}
+.delivery-payos-note{display:block;margin-top:12px;color:#78879a;font-size:9px}
+.delivery-payos-note:before{content:"ⓘ";margin-right:6px}
+
+/* PayOS card after paid */
+.delivery-paidflow-heading{margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:22px}
+.delivery-meal-banner{min-width:420px;padding:15px 20px;border:1px solid #ffc2a1;border-radius:12px;display:flex;align-items:center;gap:12px;background:#fff9f5}
+.delivery-meal-banner img{width:45px;height:45px;object-fit:contain}.delivery-meal-banner div{flex:1}.delivery-meal-banner strong,.delivery-meal-banner small{display:block}.delivery-meal-banner strong{color:#ef5912;font-size:13px}.delivery-meal-banner small{margin-top:4px;color:#7b899b;font-size:10px}.delivery-meal-banner>span{color:#ef5912;font-size:26px}
+.delivery-paid-order-head{display:flex;justify-content:space-between;align-items:start;gap:20px}
+.delivery-paid-order-head small{color:#738398;font-size:11px}.delivery-paid-order-head h2{margin:6px 0 4px;color:#f05a16;font-size:27px;letter-spacing:.03em}.delivery-paid-order-head p{margin:0;color:#75859a;font-size:11px}
+.delivery-paid-order-head>button{min-height:38px;padding:0 13px;border:1px solid #dce3eb;border-radius:9px;display:flex;align-items:center;gap:7px;color:#4d6077;background:#fff;font-size:10px;font-weight:850;cursor:pointer}
+.delivery-payos-success-banner{margin-top:18px;padding:15px 18px;border:1px solid #a9e2bf;border-radius:11px;display:flex;align-items:center;gap:13px;background:#effbf3}
+.delivery-payos-success-banner>span{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;background:#18a14e}.delivery-payos-success-banner>div{flex:1}.delivery-payos-success-banner strong,.delivery-payos-success-banner small{display:block}.delivery-payos-success-banner strong{color:#159846;font-size:15px}.delivery-payos-success-banner small{margin-top:4px;color:#708098;font-size:11px}.delivery-payos-success-banner>b{color:#155ed4;font-size:20px;font-style:italic}
+.delivery-paid-status-grid{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.delivery-paid-status-grid>div{min-height:72px;padding:12px 15px;border:1px solid #dce4ec;border-radius:11px;display:flex;align-items:center;gap:12px}.delivery-paid-status-grid>div>span{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--flow-orange);background:#fff1e8}.delivery-paid-status-grid p{margin:0}.delivery-paid-status-grid small{display:block;color:#7d8a9c;font-size:10px}.delivery-paid-status-grid strong{display:inline-flex;margin-top:5px;padding:5px 9px;border-radius:999px;font-size:10px}.delivery-paid-status-grid strong.success{color:#138b42;background:#e5f8ec}.delivery-paid-status-grid strong.waiting{color:#c56a0c;background:#fff3d9}
+.delivery-paidflow-main-card .delivery-flow-timeline{margin-top:22px}
+.delivery-paid-info-strip{margin-top:18px;padding:14px 16px;border:1px solid #dce4ec;border-radius:11px;display:grid;grid-template-columns:1.2fr .9fr .9fr}
+.delivery-paid-info-strip>div{padding:0 14px;display:flex;align-items:flex-start;gap:10px}.delivery-paid-info-strip>div:first-child{padding-left:0}.delivery-paid-info-strip>div+div{border-left:1px solid #e1e6ec}.delivery-paid-info-strip svg{flex:none;color:var(--flow-orange)}.delivery-paid-info-strip p{margin:0}.delivery-paid-info-strip small,.delivery-paid-info-strip strong,.delivery-paid-info-strip span{display:block}.delivery-paid-info-strip small{color:#7b8a9c;font-size:9px}.delivery-paid-info-strip strong{margin-top:4px;color:#1c314b;font-size:11px;line-height:1.45}.delivery-paid-info-strip span{margin-top:3px;color:#8794a5;font-size:8px}
+.delivery-paid-summary-card{padding:24px;scroll-margin-top:90px}
+.delivery-paid-summary-head{display:flex;align-items:center;justify-content:space-between;gap:15px}.delivery-paid-summary-head h2{margin:0;color:#152a45;font-size:20px}.delivery-paid-summary-head>span{padding:7px 10px;border-radius:9px;display:flex;align-items:center;gap:6px;color:#138d42;background:#e7f8ed;font-size:10px;font-weight:850}
+.delivery-paid-item-count{display:block;margin-top:18px;color:#1d3049;font-size:13px}
+.delivery-paid-items{margin-top:10px}.delivery-paid-items article{padding:13px 0;border-bottom:1px dashed #dfe4ea;display:grid;grid-template-columns:58px minmax(0,1fr) 30px auto;gap:10px;align-items:center}.delivery-paid-items article>div{width:58px;height:58px;overflow:hidden;border-radius:11px;display:grid;place-items:center;color:var(--flow-orange);background:#fff1e8}.delivery-paid-items article img{width:100%;height:100%;object-fit:cover}.delivery-paid-items article p{margin:0}.delivery-paid-items article p strong,.delivery-paid-items article p b,.delivery-paid-items article p small{display:block}.delivery-paid-items article p strong{color:#1c3049;font-size:12px}.delivery-paid-items article p b{margin-top:3px;color:#f05a16;font-size:11px}.delivery-paid-items article p small{margin-top:4px;color:#8793a3;font-size:9px}.delivery-paid-items article>span{color:#718096;font-size:10px}.delivery-paid-items article>b{color:#1a2f49;font-size:11px;white-space:nowrap}
+.delivery-paid-summary-money{margin-top:16px}.delivery-paid-summary-money p{margin:0;padding:7px 0;display:flex;justify-content:space-between;color:#6f7f93;font-size:11px}.delivery-paid-summary-money p strong{color:#22364e}.delivery-paid-summary-money>div{margin-top:8px;padding-top:15px;border-top:1px solid #e1e6ec;display:flex;justify-content:space-between;align-items:center;color:#172b45;font-size:13px;font-weight:900}.delivery-paid-summary-money>div strong{color:#f05a16;font-size:24px}
+.delivery-paid-summary-card>button{width:100%;min-height:49px;margin-top:18px;border:0;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;background:linear-gradient(90deg,#ff7213,#f04f06);font-size:13px;font-weight:900;cursor:pointer}.delivery-paid-summary-card>small{display:block;margin-top:10px;color:#8b97a7;text-align:center;font-size:9px;line-height:1.5}
+
+@media(max-width:1100px){
+  .delivery-checkout-flow-v2{width:min(100% - 32px,1180px);grid-template-columns:minmax(0,1fr) 360px}
+  .delivery-payflow-grid,.delivery-paidflow-grid{grid-template-columns:1fr 380px}
+  .delivery-meal-banner{min-width:360px}
+}
+@media(max-width:900px){
+  .delivery-checkout-flow-v2,.delivery-payflow-grid,.delivery-paidflow-grid{grid-template-columns:1fr}
+  .delivery-checkout-flow-v2 .delivery-order-summary{position:static}
+  .delivery-paidflow-heading{align-items:stretch;flex-direction:column}.delivery-meal-banner{min-width:0}
+  .delivery-paid-info-strip{grid-template-columns:1fr}.delivery-paid-info-strip>div{padding:10px 0}.delivery-paid-info-strip>div+div{border-left:0;border-top:1px solid #e1e6ec}
+}
+@media(max-width:680px){
+  .delivery-checkout-flow-v2{width:100%;padding-left:12px;padding-right:12px}
+  .delivery-checkout-flow-v2 .delivery-checkout-card{padding:20px}
+  .delivery-confirm-modal-v2{padding:24px 18px 18px}
+  .delivery-confirm-modal-v2 .delivery-confirm-info-list p{grid-template-columns:22px 105px minmax(0,1fr)}
+  .delivery-confirm-items-v2 article{grid-template-columns:44px minmax(0,1fr)}.delivery-confirm-items-v2 article>b{grid-column:2}
+  .delivery-payflow-page,.delivery-paidflow-page{width:100%;padding-left:12px;padding-right:12px;box-sizing:border-box}
+  .delivery-payflow-main-card,.delivery-payos-card-v2,.delivery-paidflow-main-card,.delivery-paid-summary-card{padding:18px}
+  .delivery-flow-order-meta{grid-template-columns:1fr 34px}.delivery-flow-meta-status{grid-column:1/-1;padding:12px 0 0;border-left:0;border-top:1px solid #e3e8ee}
+  .delivery-flow-timeline{margin-left:0;margin-right:0;overflow-x:auto;grid-template-columns:repeat(4,95px);padding-bottom:5px}
+  .delivery-flow-info-list p{grid-template-columns:24px 100px minmax(0,1fr);padding:11px 12px}
+  .delivery-flow-info-list p strong.money{font-size:18px}
+  .delivery-payos-qr-panel>img,.delivery-payos-qr-loading{width:170px;height:170px}
+  .delivery-paid-status-grid{grid-template-columns:1fr}.delivery-flow-title.large h1{font-size:26px}
+  .delivery-paid-items article{grid-template-columns:52px minmax(0,1fr) 26px}.delivery-paid-items article>b{grid-column:2/-1;text-align:right}
+}
