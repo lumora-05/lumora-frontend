@@ -626,8 +626,8 @@ export default function DeliveryCheckout() {
               <div className="delivery-da-nang-notice">
                 <MapPin size={18} />
                 <div>
-                  <strong>Hiện tại Lumora chỉ hỗ trợ giao hàng trong khu vực Đà Nẵng.</strong>
-                  <span>Vui lòng nhập địa chỉ cụ thể và chọn đúng gợi ý để hệ thống tính phí giao hàng.</span>
+                  <strong>Lumora giao hàng trong phạm vi 7 km quanh nhà hàng tại Đà Nẵng.</strong>
+                  <span>Nhập địa chỉ của bạn để kiểm tra khoảng cách và phí giao hàng.</span>
                 </div>
               </div>
               <div className="delivery-form-grid delivery-address-grid delivery-address-grid-single">
