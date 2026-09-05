@@ -666,6 +666,7 @@ Object.assign(EN_TEXT, {
   'Số điện thoại *': 'Phone number *',
   'Chọn khu vực trước, sau đó nhập địa chỉ cụ thể và chọn đúng gợi ý trên bản đồ': 'Choose your area first, then enter the specific address and select the correct map suggestion',
   'Lumora giao hàng trong phạm vi 7 km quanh nhà hàng tại Đà Nẵng.': 'Lumora delivers within a 7 km radius of the restaurant in Da Nang.',
+  'Lumora hỗ trợ giao hàng quanh nhà hàng tại Đà Nẵng.': 'Lumora supports delivery around the restaurant in Da Nang.',
   'Nhập địa chỉ của bạn để kiểm tra khoảng cách và phí giao hàng.': 'Enter your address to check the distance and delivery fee.',
   'Địa chỉ nhận hàng *': 'Delivery address *',
   'Nhập số nhà, tên đường (ví dụ: 123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng)': 'Enter house number and street (e.g. 123 Nguyen Van Linh, Hai Chau, Da Nang)',
@@ -841,6 +842,7 @@ const VI_TEXT = Object.entries(EN_TEXT).reduce((result, [vi, en]) => {
 
 
 const PATTERNS = [
+  [/^Lumora giao hàng trong phạm vi\s*(\d+(?:[.,]\d+)?)\s*km quanh nhà hàng tại Đà Nẵng\.?$/i, 'Lumora delivers within a $1 km radius of the restaurant in Da Nang.'],
   [/^Lượt gọi thêm\s*(\d+)\s*đã được gửi trực tiếp xuống bếp\.?$/i, 'Additional order $1 was sent directly to the kitchen.'],
   [/^Bạn muốn gửi yêu cầu thanh toán cho đơn\s+(DH\d+)\?\s*Nhân viên sẽ đến hỗ trợ tại\s+(.+)\.?$/i, 'Would you like to request payment for order $1? A staff member will assist you at $2.'],
   [/^(\d+)\s+sao$/i, '$1 stars'],

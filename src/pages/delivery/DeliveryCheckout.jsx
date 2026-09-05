@@ -21,6 +21,7 @@ import DeliveryPublicHeader from '../../components/delivery/DeliveryPublicHeader
 import GoogleMapsEmbed from '../../components/maps/GoogleMapsEmbed';
 import { deliveryApi } from '../../api/deliveryApi';
 import { promotionApi } from '../../api/promotionApi';
+import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { useCart } from '../../context/CartContext';
 import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { deliveryAreaLabel, normalizePhone, unwrapDeliveryResponse } from '../../utils/delivery';
@@ -208,6 +209,7 @@ export default function DeliveryCheckout() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
+  const [deliveryMaxDistanceKm, setDeliveryMaxDistanceKm] = useState(null);
   usePublicContentTranslations({ language, foods: cart.items });
   const [addressQuery, setAddressQuery] = useState(() => savedAddressMatchesDeliveryCity
     ? (savedAddress?.addressQuery || [savedAddress?.form?.soNha, savedAddress?.form?.tenDuong].filter(Boolean).join(' '))
@@ -256,6 +258,21 @@ export default function DeliveryCheckout() {
       })
       .catch(() => {
         if (active) setPromotions([]);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    systemSettingApi.getPublic()
+      .then((response) => {
+        if (!active) return;
+        const settings = systemSettingData(response);
+        const maxDistance = Number(settings?.deliveryMaxDistanceKm);
+        setDeliveryMaxDistanceKm(Number.isFinite(maxDistance) && maxDistance > 0 ? maxDistance : null);
+      })
+      .catch(() => {
+        if (active) setDeliveryMaxDistanceKm(null);
       });
     return () => { active = false; };
   }, []);
@@ -626,7 +643,9 @@ export default function DeliveryCheckout() {
               <div className="delivery-da-nang-notice">
                 <MapPin size={18} />
                 <div>
-                  <strong>Lumora giao hàng trong phạm vi 7 km quanh nhà hàng tại Đà Nẵng.</strong>
+                  <strong>{deliveryMaxDistanceKm != null
+                    ? `Lumora giao hàng trong phạm vi ${deliveryMaxDistanceKm} km quanh nhà hàng tại Đà Nẵng.`
+                    : 'Lumora hỗ trợ giao hàng quanh nhà hàng tại Đà Nẵng.'}</strong>
                   <span>Nhập địa chỉ của bạn để kiểm tra khoảng cách và phí giao hàng.</span>
                 </div>
               </div>
