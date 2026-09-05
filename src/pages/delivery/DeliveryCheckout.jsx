@@ -662,7 +662,7 @@ export default function DeliveryCheckout() {
             {quote?.quangDuongMet && quote?.diaChiDayDu ? (
               <div className="delivery-map-address">
                 <MapPin size={18} />
-                <div><strong>{quote.diaChiDayDu}</strong><small>Địa chỉ đã được backend xác thực trước khi đặt hàng.</small></div>
+                <div><strong>{quote.diaChiDayDu}</strong><small>Địa chỉ đã được xác thực trước khi đặt hàng.</small></div>
               </div>
             ) : null}
             {quote?.encodedPolyline ? <GoogleMapsEmbed routeGeometry={quote.encodedPolyline} destinationLabel={quote.diaChiDayDu} /> : null}
