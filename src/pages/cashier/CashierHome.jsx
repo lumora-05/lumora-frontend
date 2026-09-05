@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Armchair,
   ArrowDownUp,
   CalendarDays,
   Clock3,
   Eye,
   Hourglass,
   Lightbulb,
-  ListFilter,
   Printer,
   RefreshCw,
   Search,
@@ -213,7 +211,16 @@ export default function CashierHome({ mode = 'queue' }) {
           <div className="cashier-invoice-card cashier-focused-card cashier-reference-card">
             <div className="cashier-reference-summary">
               <div className="cashier-reference-summary-left">
-                <span className="cashier-reference-list-icon"><ListFilter size={18} /></span>
+                <span className="cashier-reference-list-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="3" y="3.25" width="2.8" height="2.8" rx="0.8" fill="currentColor" />
+                    <rect x="3" y="8.6" width="2.8" height="2.8" rx="0.8" fill="currentColor" />
+                    <rect x="3" y="13.95" width="2.8" height="2.8" rx="0.8" fill="currentColor" />
+                    <path d="M8 4.65H17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                    <path d="M8 10H17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                    <path d="M8 15.35H17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                  </svg>
+                </span>
                 <strong>Danh sách yêu cầu thanh toán</strong>
                 <span className="cashier-reference-result-pill">{filtered.length} kết quả</span>
               </div>
@@ -258,7 +265,15 @@ export default function CashierHome({ mode = 'queue' }) {
                         </td>
                         <td>
                           <div className="cashier-reference-table-cell">
-                            <span className="cashier-reference-seat"><Armchair size={18} /></span>
+                            <span className="cashier-reference-seat">
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M4.2 16.7V6.1C4.2 4.25 5.7 2.75 7.55 2.75H12.45C14.3 2.75 15.8 4.25 15.8 6.1V16.7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M4.35 7.3H15.65" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+                                <rect x="6.55" y="9.45" width="2.1" height="3.15" rx="0.65" fill="currentColor" />
+                                <rect x="11.35" y="9.45" width="2.1" height="3.15" rx="0.65" fill="currentColor" />
+                                <path d="M6.2 16.7V15.25C6.2 14.2 7.05 13.35 8.1 13.35H11.9C12.95 13.35 13.8 14.2 13.8 15.25V16.7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </span>
                             <strong>{rowTableName(order)}</strong>
                             {order?.__sharedBill ? <small>Bill chung</small> : null}
                           </div>
