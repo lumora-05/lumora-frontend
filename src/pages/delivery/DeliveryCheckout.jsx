@@ -13,7 +13,6 @@ import {
   TicketPercent,
   Trash2,
   UserRound,
-  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -52,18 +51,6 @@ function toLocalInputValue(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function formatReceiveTime(value) {
-  if (!value) return 'Giao sớm nhất';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 
 const DELIVERY_CITY = 'Đà Nẵng';
@@ -200,7 +187,6 @@ export default function DeliveryCheckout() {
   const { language } = useLanguage();
   const requestIdRef = useRef(createRequestId());
   const [submitting, setSubmitting] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [customer, setCustomer] = useState(getCustomerUser());
   const savedAddress = useMemo(initialDeliveryAddress, []);
   const savedAddressMatchesDeliveryCity = !savedAddress?.form?.tinhThanh
@@ -418,12 +404,6 @@ export default function DeliveryCheckout() {
   const itemCountLabel = useMemo(() => `${cart.count} suất món`, [cart.count]);
   const minScheduledTime = useMemo(() => toLocalInputValue(new Date(Date.now() + 30 * 60 * 1000)), []);
   const maxScheduledTime = useMemo(() => toLocalInputValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), []);
-  const displayAddress = isPickup ? RESTAURANT_PICKUP_ADDRESS : quote?.diaChiDayDu || selectedAddressLabel || [
-    addressQuery.trim(),
-    form.phuongXa,
-    form.tinhThanh,
-  ].filter(Boolean).join(', ');
-
   function updateField(field) {
     return (event) => {
       const value = event.target.value;
@@ -501,18 +481,13 @@ export default function DeliveryCheckout() {
 
   function submit(event) {
     event.preventDefault();
-    const error = validateBeforeConfirm();
-    if (error) {
-      toast.error(error);
-      return;
-    }
-    setConfirmOpen(true);
+    if (submitting) return;
+    createOrder();
   }
 
   async function createOrder() {
     const error = validateBeforeConfirm();
     if (error) {
-      setConfirmOpen(false);
       toast.error(error);
       return;
     }
@@ -555,7 +530,6 @@ export default function DeliveryCheckout() {
       sessionStorage.setItem('lumora_delivery_last_token', trackingToken);
       sessionStorage.setItem(`lumora_delivery_order_${trackingToken}`, JSON.stringify(order));
       cart.clear();
-      setConfirmOpen(false);
       toast.success(
         form.phuongThucThanhToan === 'COD'
           ? 'Đã gửi đơn. Vui lòng chờ nhà hàng xác nhận.'
@@ -745,60 +719,13 @@ export default function DeliveryCheckout() {
             <div><span>Tổng thanh toán</span><strong>{isPickup || quote ? formatMoney(total) : formatMoney(cart.total)}</strong></div>
           </div>
           <button className="delivery-submit-order" type="submit" disabled={submitting}>
-            <CheckCircle2 size={19} /> Xem lại & xác nhận
+            {submitting ? <LoaderCircle className="spin" size={19} /> : <CheckCircle2 size={19} />}
+            {submitting ? 'Đang tạo đơn...' : 'Đặt hàng'}
           </button>
-          <small className="delivery-submit-note">Chưa tạo đơn ở bước này. Bạn sẽ được xem lại toàn bộ thông tin trước khi xác nhận đặt hàng.</small>
+          <small className="delivery-submit-note">Kiểm tra thông tin đơn hàng trước khi đặt món.</small>
         </aside>
       </form>
 
-      {confirmOpen ? (
-        <div className="delivery-confirm-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !submitting && setConfirmOpen(false)}>
-          <div className="delivery-confirm-modal delivery-confirm-modal-v2" role="dialog" aria-modal="true" aria-labelledby="delivery-confirm-title" onMouseDown={(event) => event.stopPropagation()}>
-            <header className="delivery-confirm-header">
-              <button type="button" className="delivery-confirm-close" onClick={() => !submitting && setConfirmOpen(false)} disabled={submitting} aria-label="Đóng"><X size={18} /></button>
-              <span className="delivery-confirm-kicker">Kiểm tra lần cuối</span>
-              <h2 id="delivery-confirm-title">Xác nhận đặt hàng</h2>
-              <p className="delivery-confirm-intro">Đơn chỉ được tạo sau khi bạn xác nhận. Nhà hàng sẽ tiếp nhận và xác nhận trước khi bếp chế biến.</p>
-            </header>
-
-            <div className="delivery-confirm-body">
-              <div className="delivery-confirm-info delivery-confirm-info-list">
-                <p><UserRound size={18} /><span>Người nhận</span><strong>{form.tenNguoiNhan}</strong></p>
-                <p><Phone size={18} /><span>Số điện thoại</span><strong>{form.soDienThoaiNhan}</strong></p>
-                <p><ShoppingBag size={18} /><span>Phương thức nhận</span><strong>{isPickup ? 'Đến lấy tại nhà hàng' : 'Giao tận nơi'}</strong></p>
-                <p><MapPin size={18} /><span>{isPickup ? 'Địa điểm nhận' : 'Địa chỉ'}</span><strong>{displayAddress}</strong></p>
-                <p><CalendarClock size={18} /><span>Thời gian nhận</span><strong>{form.loaiThoiGianNhan === 'HEN_GIO' ? formatReceiveTime(form.thoiGianNhanMongMuon) : 'Giao sớm nhất'}</strong></p>
-                <p><CreditCard size={18} /><span>Thanh toán</span><strong>{form.phuongThucThanhToan === 'COD' ? 'COD' : 'VietQR'}</strong></p>
-              </div>
-
-              <div className="delivery-confirm-items-title">Danh sách món hàng ({cart.count} món)</div>
-              <div className="delivery-confirm-items delivery-confirm-items-v2">
-                {cart.items.map((item) => (
-                  <article key={itemId(item)}>
-                    <div className="delivery-confirm-item-image">{item?.hinhAnh ? <img src={imageUrl(item.hinhAnh)} alt={localizedFoodName(item, language, 'Món ăn')} /> : <ShoppingBag size={20} />}</div>
-                    <strong>{item.soLuong} × {localizedFoodName(item, language, 'Món ăn')}</strong>
-                    <b>{formatMoney(Number(item.gia || 0) * Number(item.soLuong || 0))}</b>
-                  </article>
-                ))}
-              </div>
-              <div className="delivery-confirm-money delivery-confirm-money-v2">
-                <p><span>Tạm tính</span><strong>{formatMoney(cart.total)}</strong></p>
-                <p><span>Giảm giá</span><strong>-{formatMoney(promotionDiscount)}</strong></p>
-                <p><span>Phí giao hàng</span><strong>{formatMoney(deliveryFee)}</strong></p>
-                <div><span>Tổng thanh toán</span><strong>{formatMoney(total)}</strong></div>
-              </div>
-            </div>
-
-            <footer className="delivery-confirm-footer">
-              <div className="delivery-confirm-actions">
-                <button type="button" className="secondary" onClick={() => setConfirmOpen(false)} disabled={submitting}>Quay lại</button>
-                <button type="button" className="primary" onClick={createOrder} disabled={submitting}>{submitting ? <LoaderCircle className="spin" size={18} /> : <CheckCircle2 size={18} />}{submitting ? 'Đang tạo đơn...' : 'Xác nhận đặt hàng'}</button>
-              </div>
-              <small className="delivery-confirm-footnote">Đơn hàng chỉ được tạo sau khi bạn xác nhận.</small>
-            </footer>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }
