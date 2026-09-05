@@ -144,7 +144,7 @@ export default function CashierLayout() {
   const [title, subtitle] = headerMeta;
 
   return (
-    <div className="app-shell cashier-shell">
+    <div className={`app-shell cashier-shell${location.pathname === '/cashier' ? ' cashier-landing-shell' : ''}`}>
       <Sidebar
         title="Thu ngân"
         items={navigationItems}

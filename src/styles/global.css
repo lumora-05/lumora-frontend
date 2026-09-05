@@ -4576,3 +4576,615 @@
   .cashier-payment-success-meta p+ p{border-left:0!important;border-top:1px solid #e1e7ee;padding-left:0!important;padding-top:10px!important}
   .cashier-payment-success-actions{grid-template-columns:1fr!important}
 }
+
+/* ===== Cashier payment queue – approved reference 2026-09-05 ===== */
+.cashier-landing-shell{
+  grid-template-columns:243px minmax(0,1fr);
+  background:#fbfaf7;
+}
+.cashier-landing-shell .admin-sidebar{
+  width:243px;
+  padding:18px 13px 16px;
+  background:linear-gradient(180deg,#0c1b2b 0%,#071725 100%);
+}
+.cashier-landing-shell .admin-sidebar .brand{
+  min-height:82px;
+  margin-bottom:9px;
+  padding-bottom:11px;
+}
+.cashier-landing-shell .admin-sidebar .brand-logo-image{
+  width:154px;
+  height:70px;
+}
+.cashier-landing-shell .admin-sidebar nav{
+  gap:7px;
+}
+.cashier-landing-shell .admin-sidebar a{
+  min-height:55px;
+  padding:0 16px;
+  border-radius:11px;
+  font-size:16px;
+  gap:13px;
+}
+.cashier-landing-shell .admin-sidebar a.active{
+  background:linear-gradient(135deg,#ff6a00 0%,#ff4d00 100%);
+  box-shadow:0 11px 24px rgba(255,88,12,.26);
+}
+.cashier-landing-shell .admin-sidebar .sidebar-logout{
+  min-height:54px;
+  margin:12px 3px 0;
+  border-radius:12px;
+  padding:0 17px;
+  font-size:15px;
+}
+.cashier-payment-landing-header{
+  position:sticky;
+  top:0;
+  z-index:25;
+  height:103px!important;
+  min-height:103px!important;
+  padding:0 28px 0 23px!important;
+  border-bottom:1px solid #eee7df!important;
+  background:#fff!important;
+  display:grid!important;
+  grid-template-columns:minmax(430px,1fr) minmax(260px,.72fr) auto;
+  align-items:center;
+  gap:24px;
+}
+.cashier-payment-landing-header .cashier-title-wrap{
+  gap:16px;
+}
+.cashier-payment-title-icon{
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  border-radius:15px;
+  display:grid;
+  place-items:center;
+  color:#c54d16;
+  background:linear-gradient(145deg,#fff0e4,#fff8f3);
+}
+.cashier-payment-title-icon svg{stroke-width:2.1}
+.cashier-payment-landing-header .cashier-role-title{
+  gap:4px;
+}
+.cashier-payment-landing-header .cashier-role-title>span{
+  color:#111827;
+  font-size:31px;
+  line-height:1.05;
+  letter-spacing:-.025em;
+  font-weight:900;
+}
+.cashier-payment-landing-header .cashier-role-title small{
+  color:#65748a;
+  font-size:15px;
+  font-weight:600;
+}
+.cashier-payment-tagline{
+  justify-self:center;
+  color:#f19b69;
+  font-family:"Segoe Script","Brush Script MT","Lucida Handwriting",cursive;
+  font-size:20px;
+  line-height:1.05;
+  font-style:italic;
+  font-weight:500;
+  text-align:center;
+  transform:rotate(-4deg);
+  opacity:.82;
+  white-space:nowrap;
+}
+.cashier-payment-landing-header .cashier-header-actions{
+  gap:15px;
+}
+.cashier-payment-landing-header .cashier-notification-link{
+  width:43px;
+  height:43px;
+  color:#111827;
+}
+.cashier-payment-landing-header .cashier-notification-link>span{
+  right:-1px;
+  top:-2px;
+  min-width:18px;
+  height:18px;
+  font-size:9px;
+}
+.cashier-payment-landing-header .cashier-profile-mini{
+  gap:11px;
+  padding:3px 1px;
+}
+.cashier-payment-landing-header .cashier-avatar{
+  width:48px!important;
+  height:48px!important;
+}
+.cashier-payment-landing-header .cashier-profile-mini strong{
+  font-size:15px;
+  color:#121827;
+}
+.cashier-payment-landing-header .cashier-profile-mini span{
+  margin-top:3px;
+  color:#69768a;
+  font-size:13px;
+}
+
+.cashier-reference-page{
+  min-height:calc(100vh - 103px)!important;
+  padding:23px 25px 38px 23px!important;
+  background:
+    radial-gradient(circle at 80% 14%,rgba(244,183,135,.10),transparent 24%),
+    linear-gradient(180deg,#fbfaf8 0%,#fffdfb 100%)!important;
+}
+.cashier-reference-error{
+  margin-bottom:16px;
+}
+.cashier-reference-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 306px;
+  gap:20px;
+  align-items:start;
+  width:100%;
+}
+.cashier-reference-card{
+  border:1px solid #efe8e1!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(80,53,29,.045)!important;
+  overflow:hidden!important;
+}
+.cashier-reference-summary{
+  min-height:81px;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  border-bottom:1px solid #edf0f4;
+  background:#fff;
+}
+.cashier-reference-summary-left{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+.cashier-reference-list-icon{
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+  border-radius:7px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:linear-gradient(135deg,#ff6a00,#ff4d00);
+  box-shadow:0 5px 13px rgba(255,88,10,.17);
+}
+.cashier-reference-summary-left>strong{
+  color:#151b29;
+  font-size:20px;
+  line-height:1.2;
+  font-weight:900;
+  white-space:nowrap;
+}
+.cashier-reference-result-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:0 13px;
+  border-radius:999px;
+  background:#fff0e6;
+  color:#b8531b;
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.cashier-reference-sort{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#768399;
+  font-size:13px;
+  white-space:nowrap;
+}
+.cashier-reference-sort>svg{color:#5e6c82;flex:0 0 auto}
+.cashier-reference-sort>span{font-weight:650}
+.cashier-reference-sort select{
+  width:252px;
+  height:43px;
+  padding:0 36px 0 14px;
+  border:1px solid #e0e5ec;
+  border-radius:11px;
+  background:#fff;
+  color:#263246;
+  outline:0;
+  font-size:13px;
+  font-weight:750;
+  box-shadow:0 2px 6px rgba(15,23,42,.025);
+}
+.cashier-reference-table{
+  width:100%!important;
+  min-width:0!important;
+  table-layout:fixed;
+}
+.cashier-reference-table th{
+  height:53px;
+  padding:0 14px!important;
+  background:#f7f8fa!important;
+  color:#526177!important;
+  border-bottom:1px solid #e9edf2!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  text-align:left;
+}
+.cashier-reference-table th:nth-child(1){width:13.5%}
+.cashier-reference-table th:nth-child(2){width:13.5%}
+.cashier-reference-table th:nth-child(3){width:7.5%}
+.cashier-reference-table th:nth-child(4){width:12.5%}
+.cashier-reference-table th:nth-child(5){width:16.5%}
+.cashier-reference-table th:nth-child(6){width:16.5%}
+.cashier-reference-table th:nth-child(7){width:20%}
+.cashier-reference-table td{
+  height:88px;
+  padding:13px 14px!important;
+  color:#172034!important;
+  border-bottom:1px solid #e9edf2!important;
+  background:#fff;
+  font-size:14px;
+}
+.cashier-reference-table tbody tr:hover td{
+  background:#fffaf7;
+}
+.cashier-reference-table tbody tr:last-child td{
+  border-bottom:0!important;
+}
+.cashier-reference-row-urgent td{
+  background:#fffafa;
+}
+.cashier-reference-row-urgent td:first-child{
+  box-shadow:inset 3px 0 #ff3939;
+}
+.cashier-reference-row-warning td:first-child{
+  box-shadow:inset 3px 0 #ff8a1c;
+}
+.cashier-reference-row-neutral td:first-child,
+.cashier-reference-row-normal td:first-child{
+  box-shadow:inset 3px 0 #ffc844;
+}
+.cashier-reference-order-cell{
+  display:grid;
+  gap:5px;
+}
+.cashier-reference-order-cell .cashier-invoice-code{
+  color:#a84212!important;
+  font-size:15px;
+  font-weight:900;
+}
+.cashier-reference-order-cell small{
+  color:#7c8da5;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.cashier-reference-table-cell{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.cashier-reference-seat{
+  width:39px;
+  height:39px;
+  flex:0 0 39px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  color:#c86122;
+  background:#fff0e3;
+}
+.cashier-reference-table-cell>strong{
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.cashier-reference-table-cell>small{
+  display:none;
+}
+.cashier-reference-table td:nth-child(3){font-weight:700;color:#283247!important}
+.cashier-reference-table td:nth-child(4)>strong{
+  color:#121b2e;
+  font-size:15px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.cashier-reference-state{
+  min-height:36px!important;
+  padding:0 12px!important;
+  gap:7px;
+  background:#fff2d5!important;
+  color:#ad5f10!important;
+  font-size:12px!important;
+  font-weight:850!important;
+}
+.cashier-reference-state svg{
+  color:#f59e0b;
+  flex:0 0 auto;
+}
+.cashier-reference-table .cashier-wait-time{
+  gap:7px;
+  font-size:13px;
+  line-height:1.25;
+  font-weight:800;
+  white-space:normal;
+}
+.cashier-reference-table .cashier-wait-time svg{
+  flex:0 0 auto;
+}
+.cashier-reference-table .cashier-row-actions{
+  gap:7px;
+  width:100%;
+  justify-content:flex-start;
+}
+.cashier-reference-table .cashier-icon-action{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border:1px solid #e0e5eb;
+  border-radius:11px;
+  color:#334155;
+  background:#fff;
+  box-shadow:none;
+}
+.cashier-reference-table .cashier-icon-action:hover{
+  transform:none;
+  border-color:#f3b182;
+  color:#e75e13;
+  background:#fff9f5;
+}
+.cashier-reference-table .cashier-pay-now{
+  min-height:43px;
+  padding:0 10px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#ff6a00,#ff4d00);
+  box-shadow:0 8px 17px rgba(255,80,5,.16);
+  font-size:12px;
+  font-weight:850;
+}
+.cashier-reference-table td:nth-child(7){
+  padding-left:10px!important;
+  padding-right:12px!important;
+}
+.cashier-reference-footer{
+  min-height:79px;
+  padding:0 20px!important;
+  border-top:1px solid #edf0f4!important;
+  color:#718099!important;
+  font-size:13px!important;
+  background:#fff;
+}
+.cashier-reference-footer .cashier-pagination{
+  gap:8px;
+}
+.cashier-reference-footer .cashier-pagination button{
+  min-width:45px;
+  height:45px;
+  border:1px solid #e2e7ed;
+  border-radius:11px;
+  color:#8b97a8;
+  background:#fff;
+  font-size:15px;
+}
+.cashier-reference-footer .cashier-pagination button.active{
+  background:linear-gradient(135deg,#ff6a00,#ff4d00);
+  border-color:#ff5a08;
+  color:#fff;
+  box-shadow:0 7px 15px rgba(255,85,6,.16);
+}
+.cashier-reference-side{
+  display:grid;
+  gap:14px;
+  align-content:start;
+}
+.cashier-reference-filter-card{
+  padding:18px 18px 19px;
+  border:1px solid #efe8e1;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 9px 26px rgba(80,53,29,.045);
+}
+.cashier-reference-filter-card h2{
+  margin:0 0 15px;
+  color:#151b29;
+  font-size:23px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:-.02em;
+}
+.cashier-reference-search,
+.cashier-reference-date{
+  height:47px;
+  margin-bottom:10px;
+  padding:0 13px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid #dde4ec;
+  border-radius:10px;
+  background:#fff;
+  color:#53647b;
+  box-shadow:0 2px 5px rgba(15,23,42,.018);
+}
+.cashier-reference-search:focus-within,
+.cashier-reference-date:focus-within,
+.cashier-reference-status select:focus{
+  border-color:#f2ad78;
+  box-shadow:0 0 0 3px rgba(249,115,22,.08);
+}
+.cashier-reference-search input,
+.cashier-reference-date input{
+  width:100%;
+  min-width:0;
+  height:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#273449;
+  font:inherit;
+  font-size:13px;
+  font-weight:650;
+}
+.cashier-reference-search input::placeholder{
+  color:#8b99ad;
+}
+.cashier-reference-date input{
+  color:#2b374a;
+}
+.cashier-reference-status{
+  display:grid;
+  gap:6px;
+  margin:2px 0 12px;
+}
+.cashier-reference-status>span{
+  color:#8a97aa;
+  font-size:12px;
+  font-weight:650;
+}
+.cashier-reference-status select{
+  width:100%;
+  height:47px;
+  padding:0 12px;
+  border:1px solid #dde4ec;
+  border-radius:10px;
+  background:#fff;
+  color:#263247;
+  outline:0;
+  font-size:13px;
+  font-weight:800;
+}
+.cashier-reference-reload{
+  width:100%;
+  height:48px;
+  border:0;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  background:linear-gradient(135deg,#ff7200,#ff4c00);
+  color:#fff;
+  font-size:14px;
+  font-weight:850;
+  cursor:pointer;
+  box-shadow:0 9px 18px rgba(255,80,5,.17);
+}
+.cashier-reference-reload:hover{filter:brightness(.98)}
+.cashier-reference-reload:disabled{opacity:.6;cursor:not-allowed}
+.cashier-reference-tip{
+  min-height:106px;
+  padding:17px 18px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  border:1px solid #ffe2ca;
+  border-radius:15px;
+  background:linear-gradient(135deg,#fff8f0 0%,#ffead8 100%);
+}
+.cashier-reference-tip-icon{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  display:grid;
+  place-items:center;
+  color:#ff8a00;
+}
+.cashier-reference-tip strong{
+  display:block;
+  margin-top:1px;
+  color:#a84613;
+  font-size:14px;
+  font-weight:900;
+}
+.cashier-reference-tip p{
+  margin:5px 0 0;
+  color:#687589;
+  font-size:12px;
+  line-height:1.55;
+  font-weight:600;
+}
+.cashier-reference-visual{
+  position:relative;
+  min-height:316px;
+  overflow:hidden;
+  border-radius:16px 0 0 0;
+  background:transparent;
+}
+.cashier-reference-visual::after{
+  content:"";
+  position:absolute;
+  inset:auto 0 0 0;
+  height:225px;
+  z-index:1;
+  background:linear-gradient(180deg,rgba(255,253,250,1) 0%,rgba(255,253,250,.18) 31%,rgba(255,253,250,0) 54%);
+  pointer-events:none;
+}
+.cashier-reference-visual img{
+  position:absolute;
+  right:-34px;
+  bottom:-18px;
+  z-index:0;
+  width:360px;
+  height:285px;
+  object-fit:cover;
+  object-position:50% 58%;
+  border-radius:28px 0 0 0;
+  filter:brightness(1.06) saturate(.88) sepia(.02);
+}
+.cashier-reference-script{
+  position:absolute;
+  left:14px;
+  top:34px;
+  z-index:2;
+  color:#ff8754;
+  font-family:"Segoe Script","Brush Script MT","Lucida Handwriting",cursive;
+  font-size:27px;
+  line-height:1.04;
+  font-style:italic;
+  font-weight:500;
+  transform:rotate(-8deg);
+  opacity:.94;
+}
+
+@media(max-width:1350px){
+  .cashier-payment-tagline{display:none}
+  .cashier-payment-landing-header{grid-template-columns:minmax(390px,1fr) auto}
+  .cashier-reference-layout{grid-template-columns:minmax(0,1fr) 280px;gap:16px}
+  .cashier-reference-sort>span{display:none}
+  .cashier-reference-sort select{width:220px}
+  .cashier-reference-table th,.cashier-reference-table td{padding-left:11px!important;padding-right:11px!important}
+  .cashier-reference-table td:nth-child(7){padding-left:8px!important;padding-right:9px!important}
+  .cashier-reference-table .cashier-pay-now{padding-left:8px;padding-right:8px}
+}
+@media(max-width:1120px){
+  .cashier-reference-layout{grid-template-columns:1fr}
+  .cashier-reference-side{grid-template-columns:minmax(0,1fr) minmax(260px,.65fr);align-items:start}
+  .cashier-reference-visual{display:none}
+}
+@media(max-width:1000px){
+  .cashier-landing-shell{grid-template-columns:1fr}
+  .cashier-payment-landing-header{height:92px!important;min-height:92px!important;padding:0 18px!important}
+  .cashier-payment-title-icon{width:52px;height:52px;flex-basis:52px}
+  .cashier-payment-landing-header .cashier-role-title>span{font-size:26px}
+  .cashier-reference-page{min-height:calc(100vh - 92px)!important;padding:18px!important}
+}
+@media(max-width:760px){
+  .cashier-payment-landing-header{display:flex!important;justify-content:space-between;gap:10px}
+  .cashier-payment-title-icon{display:none}
+  .cashier-payment-landing-header .cashier-role-title>span{font-size:21px}
+  .cashier-payment-landing-header .cashier-role-title small{display:none}
+  .cashier-reference-side{grid-template-columns:1fr}
+  .cashier-reference-summary{min-height:auto;padding:15px;align-items:flex-start;flex-direction:column}
+  .cashier-reference-summary-left{width:100%;flex-wrap:wrap}
+  .cashier-reference-summary-left>strong{font-size:17px;white-space:normal}
+  .cashier-reference-sort{width:100%}
+  .cashier-reference-sort select{width:100%}
+  .cashier-reference-card{overflow:visible!important}
+  .cashier-reference-footer{min-height:auto;padding:14px!important;align-items:stretch!important}
+}
