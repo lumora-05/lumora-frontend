@@ -188,7 +188,6 @@ export default function CashierHome({ mode = 'queue' }) {
     }
     return (
       <div className="cashier-row-actions">
-        <Link className="cashier-icon-action" to={`/cashier/invoices/${id}`} title="Kiểm tra đơn"><Eye size={17} /></Link>
         <Link className="cashier-pay-now" to={`/cashier/payment/${id}`}><WalletCards size={16} />Thanh toán</Link>
       </div>
     );

@@ -521,7 +521,7 @@ export default function Payment() {
   return (
     <section className="page cashier-page cashier-workspace cashier-pos-payment-page">
       <div className="cashier-pos-context-row">
-        <Link className="cashier-back-button cashier-pos-back-button" to={`/cashier/invoices/${orderId}`}><ArrowLeft size={17} />Quay lại</Link>
+        <Link className="cashier-back-button cashier-pos-back-button" to="/cashier"><ArrowLeft size={17} />Quay lại</Link>
         <div className="cashier-pos-context-meta">
           <div className="cashier-pos-context-item compact"><Banknote size={21} /><strong>{tableLabel}</strong></div>
           <span className="cashier-pos-context-divider" />

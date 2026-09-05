@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Award, Printer, TicketPercent, WalletCards, X } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { paymentApi } from '../../api/paymentApi';
 import { promotionApi } from '../../api/promotionApi';
@@ -8,6 +8,7 @@ import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { formatMoney } from '../../utils/formatMoney';
 import {
   PAID_STATUSES,
+  PAYMENT_REQUEST_STATUSES,
   dateTimeText,
   discountOf,
   guestCountOf,
@@ -86,6 +87,12 @@ export default function Invoice() {
 
   if (loading || !order) {
     return <section className="page cashier-page"><div className="cashier-table-empty cashier-loading-card">Đang tải chi tiết hóa đơn...</div></section>;
+  }
+
+  // Đơn đang chờ thanh toán đi thẳng tới màn hình thanh toán,
+  // không dùng trang chi tiết trung gian nữa.
+  if (PAYMENT_REQUEST_STATUSES.includes(order?.trangThai)) {
+    return <Navigate to={`/cashier/payment/${orderId}`} replace />;
   }
 
   const paid = PAID_STATUSES.includes(order?.trangThai) || Boolean(payment);
