@@ -1073,3 +1073,128 @@
   .delivery-paid-status-grid{grid-template-columns:1fr}.delivery-flow-title.large h1{font-size:26px}
   .delivery-paid-items article{grid-template-columns:52px minmax(0,1fr) 26px}.delivery-paid-items article>b{grid-column:2/-1;text-align:right}
 }
+
+/* 2026-09 flow fixes: keep confirmation actions visible and make PayOS stages resilient. */
+.delivery-confirm-modal.delivery-confirm-modal-v2{
+  width:min(610px,calc(100vw - 36px));
+  max-height:min(90dvh,760px);
+  padding:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  border-radius:18px;
+}
+.delivery-confirm-header{
+  position:relative;
+  flex:0 0 auto;
+  padding:24px 30px 12px;
+  background:#fff;
+  border-bottom:1px solid #eef1f4;
+}
+.delivery-confirm-header .delivery-confirm-close{top:18px;right:22px}
+.delivery-confirm-modal-v2 .delivery-confirm-header h2{margin:5px 44px 0 0;font-size:27px;line-height:1.15}
+.delivery-confirm-modal-v2 .delivery-confirm-header .delivery-confirm-intro{margin:6px 44px 0 0;line-height:1.45}
+.delivery-confirm-body{
+  min-height:0;
+  padding:0 30px 14px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.delivery-confirm-body .delivery-confirm-info-list{margin-top:14px}
+.delivery-confirm-body .delivery-confirm-items-title{margin-top:14px}
+.delivery-confirm-footer{
+  flex:0 0 auto;
+  padding:12px 30px 14px;
+  border-top:1px solid #edf0f3;
+  background:#fff;
+  box-shadow:0 -8px 20px rgba(21,37,55,.045);
+}
+.delivery-confirm-modal-v2 .delivery-confirm-footer .delivery-confirm-actions{margin-top:0}
+.delivery-confirm-modal-v2 .delivery-confirm-footer .delivery-confirm-actions button.primary{color:#fff;opacity:1}
+.delivery-confirm-modal-v2 .delivery-confirm-footer .delivery-confirm-actions button.primary:disabled{opacity:.6}
+.delivery-confirm-footer .delivery-confirm-footnote{margin-top:8px}
+
+.delivery-payos-retry{
+  min-height:36px;
+  margin:10px auto 0;
+  padding:0 13px;
+  border:1px solid #ff9c68;
+  border-radius:9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  color:#e75b18;
+  background:#fff;
+  font:inherit;
+  font-size:10px;
+  font-weight:850;
+  cursor:pointer;
+}
+.delivery-payos-retry:hover{background:#fff6f1}
+
+.delivery-flow-timeline{
+  grid-template-columns:repeat(var(--delivery-flow-step-count,4),minmax(78px,1fr));
+}
+.delivery-paidflow-main-card .delivery-flow-timeline{
+  overflow-x:auto;
+  padding:4px 2px 8px;
+  scrollbar-width:thin;
+}
+.delivery-paid-state-note{
+  margin-top:14px;
+  padding:12px 14px;
+  border:1px solid #f4c3aa;
+  border-radius:10px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  color:#e75b18;
+  background:#fff8f4;
+}
+.delivery-paid-state-note>svg{flex:none;margin-top:1px}
+.delivery-paid-state-note strong,.delivery-paid-state-note small{display:block}
+.delivery-paid-state-note strong{color:#d95416;font-size:11px}
+.delivery-paid-state-note small{margin-top:3px;color:#77879a;font-size:9px;line-height:1.45}
+.delivery-paid-transport-box{
+  margin-top:14px;
+  padding:12px 14px;
+  border:1px solid #dce4ec;
+  border-radius:10px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 14px;
+  background:#fbfcfd;
+}
+.delivery-paid-transport-box>div{display:flex;align-items:flex-start;gap:9px;color:#667a92}
+.delivery-paid-transport-box span,.delivery-paid-transport-box small,.delivery-paid-transport-box strong{display:block}
+.delivery-paid-transport-box small{font-size:9px;color:#8390a1}
+.delivery-paid-transport-box strong{margin-top:3px;color:#20354e;font-size:10px;line-height:1.4}
+.delivery-paid-review{
+  margin-top:16px;
+  padding:14px;
+  border:1px solid #e0e6ec;
+  border-radius:11px;
+  background:#fffaf7;
+}
+.delivery-paid-review>strong{display:block;color:#1c314b;font-size:12px}
+.delivery-paid-review>small{display:block;margin-top:8px;color:#708096;font-size:10px}
+.delivery-paid-review .delivery-review-stars{margin-top:10px}
+.delivery-paid-review textarea{width:100%;min-height:76px;margin-top:10px;padding:10px;border:1px solid #dfe5eb;border-radius:9px;box-sizing:border-box;resize:vertical;font:inherit;font-size:10px}
+.delivery-paid-review>button{width:100%;min-height:38px;margin-top:9px;border:0;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;background:linear-gradient(90deg,#ff7213,#f04f06);font:inherit;font-size:10px;font-weight:850;cursor:pointer}
+
+@media(max-width:680px){
+  .delivery-confirm-backdrop{padding:10px;align-items:center}
+  .delivery-confirm-modal.delivery-confirm-modal-v2{width:100%;max-height:94dvh;border-radius:18px}
+  .delivery-confirm-header{padding:20px 18px 11px}
+  .delivery-confirm-header .delivery-confirm-close{top:14px;right:14px}
+  .delivery-confirm-modal-v2 .delivery-confirm-header h2{font-size:24px;margin-right:40px}
+  .delivery-confirm-modal-v2 .delivery-confirm-header .delivery-confirm-intro{margin-right:0}
+  .delivery-confirm-body{padding:0 18px 12px}
+  .delivery-confirm-footer{padding:10px 18px 12px}
+  .delivery-confirm-modal-v2 .delivery-confirm-actions{grid-template-columns:1fr 1fr}
+  .delivery-confirm-modal-v2 .delivery-confirm-actions button{min-height:44px}
+  .delivery-flow-timeline{grid-template-columns:repeat(var(--delivery-flow-step-count,4),95px)}
+  .delivery-paid-transport-box{grid-template-columns:1fr}
+}

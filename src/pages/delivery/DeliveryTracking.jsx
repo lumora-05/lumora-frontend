@@ -269,17 +269,79 @@ export default function DeliveryTracking() {
     && paymentStatus === 'CHO_THANH_TOAN';
   const failureReason = order.lyDoTuChoi || order.lyDoGiaoThatBai;
   const paymentMethod = String(order.phuongThucThanhToan || '').toUpperCase();
+  const receiveMethod = String(order.phuongThucNhanHang || 'GIAO_TAN_NOI').toUpperCase();
+  const receiveType = String(order.loaiThoiGianNhan || '').toUpperCase();
+  const isPickupOrder = receiveMethod === 'TU_DEN_LAY';
+  const isScheduledOrder = receiveType === 'HEN_GIO';
   const isPayOsPending = !failed && paymentMethod === 'VIETQR' && status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN';
+  const paidFlowStatuses = ['CHO_XAC_NHAN', 'CHO_DEN_GIO', 'DANG_CHUAN_BI', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT', 'HOAN_THANH'];
   const isPayOsPaidFlow = !failed && paymentMethod === 'VIETQR' && paymentStatus === 'DA_THANH_TOAN'
-    && ['CHO_XAC_NHAN', 'CHO_DEN_GIO', 'DANG_CHUAN_BI'].includes(status);
+    && paidFlowStatuses.includes(status);
   const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.soLuong || 0), 0);
-  const paidProgressIndex = status === 'DANG_CHUAN_BI' ? 3 : 2;
-  const compactFlowSteps = [
-    { label: 'Đã tạo đơn', icon: Check },
-    { label: 'Đã thanh toán', icon: Check },
-    { label: 'Chờ nhà hàng xác nhận', icon: PackageCheck },
-    { label: 'Đang chuẩn bị', icon: ChefHat },
-  ];
+
+  const compactFlowSteps = (() => {
+    const result = [
+      { code: 'DA_DAT', label: 'Đã tạo đơn', icon: Check },
+      { code: 'DA_THANH_TOAN', label: 'Đã thanh toán', icon: Check },
+      { code: 'CHO_XAC_NHAN', label: 'Chờ nhà hàng xác nhận', icon: PackageCheck },
+    ];
+    if (isScheduledOrder) result.push({ code: 'CHO_DEN_GIO', label: 'Chờ đến giờ chuẩn bị', icon: Clock3 });
+    result.push({ code: 'DANG_CHUAN_BI', label: 'Đang chuẩn bị', icon: ChefHat });
+    if (isPickupOrder) {
+      result.push({ code: 'CHO_KHACH_NHAN', label: 'Sẵn sàng nhận', icon: PackageCheck });
+    } else {
+      result.push({ code: 'CHO_TAI_XE_NHAN', label: 'Sẵn sàng giao', icon: PackageCheck });
+      result.push({ code: 'DANG_GIAO', label: 'Đang giao', icon: Truck });
+    }
+    result.push({ code: 'HOAN_THANH', label: isPickupOrder ? 'Đã nhận món' : 'Hoàn thành', icon: Check });
+    return result;
+  })();
+
+  const paidTimelineStatus = status === 'CHO_BAN_GIAO'
+    ? 'CHO_TAI_XE_NHAN'
+    : status === 'CHO_DOI_SOAT'
+      ? 'DANG_GIAO'
+      : status;
+  const paidProgressIndex = Math.max(0, compactFlowSteps.findIndex((step) => step.code === paidTimelineStatus));
+
+  const paidFlowCopy = (() => {
+    if (status === 'CHO_XAC_NHAN') return {
+      title: 'Thanh toán thành công, đang chờ nhà hàng xác nhận',
+      subtitle: 'Nhà hàng sẽ kiểm tra đơn trước khi chuyển sang khâu chuẩn bị.',
+    };
+    if (status === 'CHO_DEN_GIO') return {
+      title: 'Đơn đã được xác nhận, đang chờ đến giờ chuẩn bị',
+      subtitle: 'Hệ thống sẽ chuyển món xuống bếp đúng thời điểm cần chuẩn bị.',
+    };
+    if (status === 'DANG_CHUAN_BI') return {
+      title: 'Nhà hàng đang chuẩn bị món của bạn',
+      subtitle: 'Bếp đang chế biến các món trong đơn.',
+    };
+    if (status === 'CHO_KHACH_NHAN') return {
+      title: 'Món đã sẵn sàng để bạn đến nhận',
+      subtitle: 'Vui lòng đến Lumora để nhận món theo thông tin đơn hàng.',
+    };
+    if (['CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO'].includes(status)) return {
+      title: 'Món đã sẵn sàng để giao',
+      subtitle: 'Nhà hàng đang chờ bàn giao đơn cho đơn vị vận chuyển.',
+    };
+    if (status === 'DANG_GIAO') return {
+      title: 'Đơn hàng đang được giao đến bạn',
+      subtitle: 'Bạn có thể tiếp tục theo dõi trạng thái giao hàng tại đây.',
+    };
+    if (status === 'CHO_DOI_SOAT') return {
+      title: 'Đơn đã giao, hệ thống đang hoàn tất đối soát',
+      subtitle: 'Trạng thái sẽ tự động cập nhật sau khi hoàn tất.',
+    };
+    if (status === 'HOAN_THANH') return {
+      title: isPickupOrder ? 'Bạn đã nhận món thành công' : 'Đơn hàng đã giao thành công',
+      subtitle: 'Cảm ơn bạn đã đặt món tại Lumora.',
+    };
+    return {
+      title: 'Đơn hàng đang được xử lý',
+      subtitle: 'Trạng thái sẽ tự động cập nhật theo thời gian thực.',
+    };
+  })();
 
   if (isPayOsPending) {
     return (
@@ -338,6 +400,7 @@ export default function DeliveryTracking() {
               <div className="delivery-payos-card-head"><div><CreditCard size={24} /><h2>Thanh toán VietQR (PayOS)</h2></div><b>PayOS</b></div>
               <div className="delivery-payos-qr-panel">
                 {qr?.qrUrl ? <img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /> : <div className="delivery-payos-qr-loading">{qrLoading ? <LoaderCircle className="spin" size={28} /> : <CreditCard size={28} />}<span>{qrLoading ? 'Đang tạo mã thanh toán...' : 'Chưa tải được mã VietQR'}</span></div>}
+                {!qr?.qrUrl && !qrLoading ? <button className="delivery-payos-retry" type="button" onClick={generateQr}><RefreshCw size={16} /> Thử tạo lại mã QR</button> : null}
                 <small>Số tiền thanh toán</small>
                 <strong>{formatMoney(qr?.amount ?? order.tongThanhToan)}</strong>
                 <div className="delivery-payos-transfer-content"><span>Nội dung chuyển khoản</span><div><b>{qr?.addInfo || order.maDonHangHienThi || '—'}</b>{(qr?.addInfo || order.maDonHangHienThi) ? <button type="button" onClick={() => copyText(qr?.addInfo || order.maDonHangHienThi, 'Đã sao chép nội dung chuyển khoản.')}><Copy size={17} /></button> : null}</div></div>
@@ -359,32 +422,53 @@ export default function DeliveryTracking() {
           <Link className="delivery-flow-back" to="/menu"><ArrowLeft size={18} /> Quay lại trang chủ</Link>
           <div className="delivery-paidflow-heading">
             <div className="delivery-flow-title large"><span><ShoppingBag size={27} /></span><div><h1>Theo dõi đơn hàng</h1><p>Đơn hàng đã được thanh toán thành công</p></div></div>
-            <div className="delivery-meal-banner"><img src="/delivery-icons/delivery-bike.png" alt="" aria-hidden="true" /><div><strong>Chúng tôi đang chuẩn bị món ngon cho bạn</strong><small>Cảm ơn bạn đã tin tưởng Lumora!</small></div><span>♡</span></div>
+            <div className="delivery-meal-banner"><img src="/delivery-icons/delivery-bike.png" alt="" aria-hidden="true" /><div><strong>{paidFlowCopy.title}</strong><small>{paidFlowCopy.subtitle}</small></div><span>♡</span></div>
           </div>
 
           <div className="delivery-paidflow-grid">
             <section className="delivery-paidflow-main-card">
               <div className="delivery-paid-order-head"><div><small>Mã đơn hàng</small><h2>{order.maDonHangHienThi || '—'}</h2><p>Đặt lúc {formatDate(order.thoiGianDat)}</p></div><button type="button" onClick={() => document.getElementById('delivery-paid-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><ShoppingBag size={17} /> Chi tiết đơn hàng</button></div>
 
-              <div className="delivery-payos-success-banner"><span><Check size={22} /></span><div><strong>Đã được PayOS xác nhận tự động</strong><small>Thanh toán đã ghi nhận thành công. Đơn đang chờ nhà hàng xác nhận.</small></div><b>PayOS</b></div>
+              <div className="delivery-payos-success-banner"><span><Check size={22} /></span><div><strong>Đã được PayOS xác nhận tự động</strong><small>Thanh toán đã được ghi nhận thành công qua PayOS.</small></div><b>PayOS</b></div>
 
               <div className="delivery-paid-status-grid">
                 <div><span><CreditCard size={23} /></span><p><small>Trạng thái thanh toán</small><strong className="success">Đã thanh toán</strong></p></div>
                 <div><span><PackageCheck size={23} /></span><p><small>Trạng thái đơn hàng</small><strong className="waiting">{deliveryStatusLabel(status)}</strong></p></div>
               </div>
 
-              <div className="delivery-flow-timeline four paid">
-                {compactFlowSteps.map(({ label, icon: Icon }, index) => {
+              <div className="delivery-flow-timeline paid" style={{ '--delivery-flow-step-count': compactFlowSteps.length }}>
+                {compactFlowSteps.map(({ code, label, icon: Icon }, index) => {
                   const state = index < paidProgressIndex ? 'done' : index === paidProgressIndex ? 'active' : '';
-                  return <div key={label} className={state}><span><Icon size={19} /></span><strong>{label}</strong><small>{index === 0 ? formatDate(order.thoiGianDat) : index === 1 ? 'Đã ghi nhận' : index === paidProgressIndex ? 'Đang xử lý' : ''}</small></div>;
+                  const sub = index === 0
+                    ? formatDate(order.thoiGianDat)
+                    : index === 1
+                      ? 'Đã ghi nhận'
+                      : index === paidProgressIndex
+                        ? (code === 'CHO_DEN_GIO' ? 'Đã xác nhận' : code === 'HOAN_THANH' ? 'Đã hoàn tất' : 'Đang xử lý')
+                        : '';
+                  return <div key={code} className={state}><span><Icon size={19} /></span><strong>{label}</strong>{sub ? <small>{sub}</small> : null}</div>;
                 })}
               </div>
 
               <div className="delivery-paid-info-strip">
-                <div><MapPin size={22} /><p><small>Địa chỉ giao hàng</small><strong>{order.phuongThucNhanHang === 'TU_DEN_LAY' ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p></div>
+                <div><MapPin size={22} /><p><small>{isPickupOrder ? 'Địa điểm nhận' : 'Địa chỉ giao hàng'}</small><strong>{isPickupOrder ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p></div>
                 <div><CreditCard size={22} /><p><small>Phương thức thanh toán</small><strong>VietQR</strong><span>Thanh toán qua PayOS</span></p></div>
-                <div><Clock3 size={22} /><p><small>Dự kiến giao</small><strong>{order.thoiGianNhanDuKienGiay ? formatDurationSeconds(order.thoiGianNhanDuKienGiay) : 'Đang cập nhật'}</strong><span>Tính từ khi nhà hàng xác nhận</span></p></div>
+                <div><Clock3 size={22} /><p><small>{isPickupOrder ? 'Dự kiến nhận' : 'Dự kiến giao'}</small><strong>{order.thoiGianNhanDuKienGiay ? formatDurationSeconds(order.thoiGianNhanDuKienGiay) : 'Đang cập nhật'}</strong><span>{status === 'CHO_DEN_GIO' ? 'Đang chờ đến giờ chuẩn bị' : 'Cập nhật theo tiến độ thực tế'}</span></p></div>
               </div>
+
+              <div className="delivery-paid-state-note">
+                {status === 'HOAN_THANH' ? <Check size={19} /> : status === 'DANG_GIAO' ? <Truck size={19} /> : status === 'DANG_CHUAN_BI' ? <ChefHat size={19} /> : <Clock3 size={19} />}
+                <div><strong>{paidFlowCopy.title}</strong><small>{paidFlowCopy.subtitle}</small></div>
+              </div>
+
+              {order.maVanChuyen || order.tenNguoiGiao || order.donViVanChuyen ? (
+                <div className="delivery-paid-transport-box">
+                  <div><PackageCheck size={18} /><span><small>Mã vận đơn</small><strong>{order.maVanChuyen || 'Đang cập nhật'}</strong></span></div>
+                  <div><Truck size={18} /><span><small>Đơn vị vận chuyển</small><strong>{order.donViVanChuyen || 'Đang điều phối'}</strong></span></div>
+                  {order.tenNguoiGiao ? <div><UserRound size={18} /><span><small>Người giao</small><strong>{order.tenNguoiGiao}</strong></span></div> : null}
+                  {order.soDienThoaiNguoiGiaoChe ? <div><Phone size={18} /><span><small>Liên hệ</small><strong>{order.soDienThoaiNguoiGiaoChe}</strong></span></div> : null}
+                </div>
+              ) : null}
 
               {canCancel ? (
                 <details className="delivery-flow-cancel compact">
@@ -408,8 +492,24 @@ export default function DeliveryTracking() {
                 ))}
               </div>
               <div className="delivery-paid-summary-money"><p><span>Tạm tính</span><strong>{formatMoney(order.tamTinh)}</strong></p>{Number(order.tienGiam || 0) > 0 ? <p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p> : null}<p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p><div><span>Tổng thanh toán</span><strong>{formatMoney(order.tongThanhToan)}</strong></div></div>
-              <button type="button" onClick={() => loadOrder({ silent: true })}><RefreshCw className={loading ? 'spin' : ''} size={19} /> Tiếp tục theo dõi</button>
-              <small>Chúng tôi sẽ cập nhật trạng thái đơn hàng theo thời gian thực.</small>
+              <button type="button" onClick={() => loadOrder({ silent: true })}><RefreshCw className={loading ? 'spin' : ''} size={19} /> {status === 'HOAN_THANH' ? 'Cập nhật trạng thái' : 'Tiếp tục theo dõi'}</button>
+              {status === 'HOAN_THANH' ? (
+                <div className="delivery-paid-review">
+                  <strong>Đánh giá trải nghiệm</strong>
+                  {reviewSubmitted ? <small>Cảm ơn bạn đã gửi đánh giá cho LUMORA.</small> : (
+                    <>
+                      <div className="delivery-review-stars" aria-label="Chọn số sao">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button key={star} type="button" className={reviewRating >= star ? 'active' : ''} onClick={() => setReviewRating(star)} aria-label={`${star} sao`}><Star size={20} /></button>
+                        ))}
+                      </div>
+                      <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} maxLength={500} placeholder="Chia sẻ cảm nhận của bạn (không bắt buộc)" />
+                      <button type="button" onClick={submitReview} disabled={reviewSubmitting}>{reviewSubmitting ? <LoaderCircle className="spin" size={17} /> : <Star size={17} />}{reviewSubmitting ? 'Đang gửi...' : 'Gửi đánh giá'}</button>
+                    </>
+                  )}
+                </div>
+              ) : null}
+              <small>{status === 'HOAN_THANH' ? 'Cảm ơn bạn đã đặt món tại Lumora.' : 'Chúng tôi sẽ cập nhật trạng thái đơn hàng theo thời gian thực.'}</small>
             </aside>
           </div>
         </section>

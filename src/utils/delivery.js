@@ -77,9 +77,9 @@ export function deliveryAreaLabel(area) {
   const code = String(area || '').toUpperCase();
   if (code === 'NOI_THANH') return 'Nội thành';
   if (code === 'LAN_CAN') return 'Khu vực lân cận';
-  if (code === 'BAN_KINH_3KM') return 'Trong 3 km';
-  if (code === 'BAN_KINH_6KM') return 'Từ 3 đến 6 km';
-  if (code === 'BAN_KINH_10KM') return 'Từ 6 đến 10 km';
+  if (code === 'BAN_KINH_3KM') return 'Phạm vi giao hàng mức 1';
+  if (code === 'BAN_KINH_6KM') return 'Phạm vi giao hàng mức 2';
+  if (code === 'BAN_KINH_10KM') return 'Phạm vi giao hàng mức 3';
   return area || 'Chưa xác định';
 }
 
