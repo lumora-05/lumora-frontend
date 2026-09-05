@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowDownUp,
-  CalendarDays,
   Clock3,
   Eye,
   Hourglass,
-  Lightbulb,
   Printer,
-  RefreshCw,
   Search,
   WalletCards,
 } from 'lucide-react';
@@ -158,7 +154,8 @@ export default function CashierHome({ mode = 'queue' }) {
         return PAID_STATUSES.includes(order?.trangThai) || CANCELED_STATUSES.includes(order?.trangThai);
       })
       .filter((order) => {
-        const relevantTime = historyMode ? rowPaymentTime(order) : rowRequestTime(order);
+        if (!historyMode) return true;
+        const relevantTime = rowPaymentTime(order);
         return !date || localDateValue(relevantTime) === date;
       })
       .filter((order) => {
@@ -224,13 +221,15 @@ export default function CashierHome({ mode = 'queue' }) {
                 <strong>Danh sách yêu cầu thanh toán</strong>
                 <span className="cashier-reference-result-pill">{filtered.length} kết quả</span>
               </div>
-              <div className="cashier-reference-sort" aria-label="Sắp xếp danh sách">
-                <ArrowDownUp size={18} />
-                <span>Sắp xếp:</span>
-                <select defaultValue="request-time">
-                  <option value="request-time">Thời gian yêu cầu (mới nhất)</option>
-                </select>
-              </div>
+              <label className="cashier-reference-top-search">
+                <Search size={19} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Tìm mã đơn, bàn..."
+                  aria-label="Tìm mã đơn hoặc bàn"
+                />
+              </label>
             </div>
 
             <div className="cashier-table-scroll cashier-desktop-list">
@@ -332,45 +331,6 @@ export default function CashierHome({ mode = 'queue' }) {
             </div>
           </div>
 
-          <aside className="cashier-reference-side">
-            <section className="cashier-reference-filter-card">
-              <h2>Tìm kiếm &amp; lọc</h2>
-
-              <label className="cashier-reference-search">
-                <Search size={19} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm mã đơn, bàn..." />
-              </label>
-
-              <label className="cashier-reference-date">
-                <CalendarDays size={18} />
-                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-              </label>
-
-              <label className="cashier-reference-status">
-                <span>Trạng thái</span>
-                <select value="ALL" onChange={() => {}} aria-label="Trạng thái">
-                  <option value="ALL">Tất cả</option>
-                </select>
-              </label>
-
-              <button type="button" className="cashier-reference-reload" onClick={load} disabled={loading}>
-                <RefreshCw size={18} />Tải lại
-              </button>
-            </section>
-
-            <section className="cashier-reference-tip">
-              <span className="cashier-reference-tip-icon"><Lightbulb size={27} /></span>
-              <div>
-                <strong>Mẹo nhỏ</strong>
-                <p>Xử lý thanh toán kịp thời giúp khách hàng có trải nghiệm tốt hơn.</p>
-              </div>
-            </section>
-
-            <div className="cashier-reference-visual" aria-hidden="true">
-              <div className="cashier-reference-script">Good Food<br />Good Mood</div>
-              <img src="/dish-dessert.png" alt="" />
-            </div>
-          </aside>
         </div>
       </section>
     );

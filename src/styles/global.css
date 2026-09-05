@@ -5398,3 +5398,64 @@
   .cashier-reference-card{overflow:visible!important}
   .cashier-reference-footer{min-height:auto;padding:14px!important;align-items:stretch!important}
 }
+
+/* ===== Cashier payment queue: full-width list + search in header 2026-09-05 ===== */
+.cashier-reference-layout{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:0!important;
+}
+.cashier-reference-summary{
+  padding-left:18px;
+  padding-right:18px;
+}
+.cashier-reference-top-search{
+  width:min(340px,34vw);
+  height:43px;
+  flex:0 0 auto;
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid #dde4ec;
+  border-radius:11px;
+  background:#fff;
+  color:#53647b;
+  box-shadow:0 2px 6px rgba(15,23,42,.025);
+}
+.cashier-reference-top-search:focus-within{
+  border-color:#f2ad78;
+  box-shadow:0 0 0 3px rgba(249,115,22,.08);
+}
+.cashier-reference-top-search input{
+  width:100%;
+  min-width:0;
+  height:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#273449;
+  font:inherit;
+  font-size:13px;
+  font-weight:650;
+}
+.cashier-reference-top-search input::placeholder{color:#8b99ad}
+
+/* The list now owns the whole content area, matching the approved mockup. */
+.cashier-reference-card{width:100%}
+.cashier-reference-table th:nth-child(1){width:14%}
+.cashier-reference-table th:nth-child(2){width:13%}
+.cashier-reference-table th:nth-child(3){width:8%}
+.cashier-reference-table th:nth-child(4){width:13%}
+.cashier-reference-table th:nth-child(5){width:16%}
+.cashier-reference-table th:nth-child(6){width:17%}
+.cashier-reference-table th:nth-child(7){width:19%}
+
+@media(max-width:760px){
+  .cashier-reference-summary{
+    align-items:stretch;
+  }
+  .cashier-reference-top-search{
+    width:100%;
+    box-sizing:border-box;
+  }
+}
