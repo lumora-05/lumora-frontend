@@ -20,8 +20,8 @@ function cashierOnlineAlert(event) {
   if (type === 'DELIVERY_ORDER_PENDING_CONFIRMATION') {
     return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Có đơn online mới ${code} · cần thu ngân kiểm tra và xác nhận.` };
   }
-  if (type === 'DELIVERY_PAYMENT_CONFIRMED') {
-    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã ghi nhận VietQR · cần xác nhận để chuyển xuống bếp.` };
+  if (['DELIVERY_PAYMENT_CONFIRMED', 'DELIVERY_PAYOS_PAYMENT_CONFIRMED'].includes(type)) {
+    return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã thanh toán VietQR · cần xác nhận để chuyển xuống bếp.` };
   }
   if (type === 'DELIVERY_READY_FOR_HANDOVER') {
     return { key: `${type}-${data?.maDonHang || 'latest'}`, message: `Đơn ${code} đã hoàn thành chế biến · sẵn sàng bàn giao cho tài xế.` };

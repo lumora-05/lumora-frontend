@@ -87,6 +87,7 @@ export function useStaffOperationalAlerts(role, event) {
       'DELIVERY_ORDER_WAITING_PAYMENT',
       'DELIVERY_ORDER_PENDING_CONFIRMATION',
       'DELIVERY_PAYMENT_CONFIRMED',
+      'DELIVERY_PAYOS_PAYMENT_CONFIRMED',
       'DELIVERY_READY_FOR_HANDOVER',
       'PICKUP_READY',
     ].includes(type)) {

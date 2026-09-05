@@ -559,7 +559,7 @@ export default function DeliveryCheckout() {
       toast.success(
         form.phuongThucThanhToan === 'COD'
           ? 'Đã gửi đơn. Vui lòng chờ nhà hàng xác nhận.'
-          : 'Đã tạo đơn. Vui lòng thanh toán VietQR, sau đó nhà hàng sẽ xác nhận.',
+          : 'Đã tạo đơn. Vui lòng thanh toán VietQR. Hệ thống sẽ tự xác nhận khi PayOS ghi nhận giao dịch.',
       );
       navigate(`/menu/orders/${encodeURIComponent(trackingToken)}`, {
         replace: true,
@@ -716,7 +716,7 @@ export default function DeliveryCheckout() {
               </label>
               <label className={form.phuongThucThanhToan === 'VIETQR' ? 'active' : ''}>
                 <input type="radio" name="payment" value="VIETQR" checked={form.phuongThucThanhToan === 'VIETQR'} onChange={updateField('phuongThucThanhToan')} />
-                <span><CreditCard size={22} /></span><div><strong>Chuyển khoản VietQR</strong><small>Sau khi ghi nhận thanh toán, đơn chuyển sang chờ nhà hàng xác nhận</small></div><CheckCircle2 size={20} />
+                <span><CreditCard size={22} /></span><div><strong>Chuyển khoản VietQR</strong><small>PayOS tự xác nhận thanh toán; sau đó đơn chuyển sang chờ nhà hàng xác nhận</small></div><CheckCircle2 size={20} />
               </label>
             </div>
             <label className="delivery-order-note"><span>Ghi chú chung cho đơn</span><textarea value={form.ghiChuDonHang} onChange={updateField('ghiChuDonHang')} maxLength={255} placeholder="Ví dụ: Không lấy dụng cụ nhựa..." /></label>

@@ -49,8 +49,6 @@ function currentRole(user) {
 
 function initialActionForm() {
   return {
-    transactionCode: '',
-    paymentNote: '',
     reason: '',
     handoverNote: '',
     refundTransactionCode: '',
@@ -447,7 +445,10 @@ export default function DeliveryOrderManage() {
                         
 
                         {isVietQr && currentStatus === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN' ? (
-                          <div className="delivery-action-block"><label>Mã giao dịch VietQR *<input value={form.transactionCode} onChange={(event) => setForm((current) => ({ ...current, transactionCode: event.target.value }))} maxLength={100} placeholder="Ví dụ: MB202608060001" /></label><label>Ghi chú xác nhận<input value={form.paymentNote} onChange={(event) => setForm((current) => ({ ...current, paymentNote: event.target.value }))} maxLength={500} placeholder="Đã kiểm tra tài khoản" /></label><small>Sau khi ghi nhận thanh toán, đơn chuyển sang bước chờ nhà hàng xác nhận. Bếp chưa nhận món ở bước này.</small><button type="button" disabled={Boolean(actionLoading) || !form.transactionCode.trim()} onClick={() => runAction('payment', () => deliveryApi.confirmVietQr(deliveryOrderId(selected), { maGiaoDich: form.transactionCode.trim(), ghiChu: form.paymentNote.trim() || null }), 'Đã ghi nhận VietQR; đơn đang chờ nhà hàng xác nhận')}><Banknote size={17} />{actionLoading === 'payment' ? 'Đang xử lý...' : 'Ghi nhận đã nhận tiền'}</button></div>
+                          <div className="delivery-action-block">
+                            <strong>Đang chờ PayOS xác nhận thanh toán</strong>
+                            <small>Khách đang thanh toán qua VietQR. Hệ thống sẽ tự chuyển đơn sang chờ nhà hàng xác nhận ngay khi PayOS báo giao dịch thành công.</small>
+                          </div>
                         ) : null}
 
                         {currentStatus === 'CHO_XAC_NHAN' ? (

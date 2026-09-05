@@ -96,7 +96,7 @@ export default function DeliveryTracking() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(() => localStorage.getItem(`lumora_delivery_review_${trackingCode}`) === '1');
   usePublicContentTranslations({ language, foods: order?.items });
-  const deliverySocketEvent = useWebSocket(trackingCode ? [`/topic/customer/menu/${trackingCode}`] : []);
+  const deliverySocketEvent = useWebSocket(trackingCode ? [`/topic/customer/delivery/${trackingCode}`] : []);
 
   const loadOrder = useCallback(async ({ silent = false } = {}) => {
     if (!trackingCode) return;
@@ -123,6 +123,12 @@ export default function DeliveryTracking() {
     if (!deliverySocketEvent) return;
     loadOrder({ silent: true });
   }, [deliverySocketEvent, loadOrder]);
+
+  useEffect(() => {
+    if (String(order?.trangThaiThanhToan || '').toUpperCase() !== 'CHO_THANH_TOAN') {
+      setQr(null);
+    }
+  }, [order?.trangThaiThanhToan]);
 
   useEffect(() => {
     const status = order?.trangThaiGiaoHang;
@@ -325,7 +331,8 @@ export default function DeliveryTracking() {
             {order.thoiGianGiaoThanhCong ? <div className="delivery-eta"><Check size={19} /><span><small>Giao thành công</small><strong>{formatDate(order.thoiGianGiaoThanhCong)}</strong></span></div> : null}
 
             {showQrButton ? <button className="delivery-qr-button" type="button" onClick={generateQr} disabled={qrLoading}>{qrLoading ? <LoaderCircle className="spin" size={18} /> : <CreditCard size={18} />} Tạo mã VietQR</button> : null}
-            {qr ? <div className="delivery-qr-box"><img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /><strong>{formatMoney(qr.amount)}</strong><small>{qr.bankName} · {qr.accountNo}</small><small>Nội dung: {qr.addInfo}</small></div> : null}
+            {qr ? <div className="delivery-qr-box"><img src={qr.qrUrl} alt="Mã VietQR thanh toán đơn giao hàng" /><strong>{formatMoney(qr.amount)}</strong><small>{qr.bankName} · {qr.accountNo}</small><small>Nội dung: {qr.addInfo}</small><small>Thanh toán sẽ được hệ thống tự động xác nhận sau khi PayOS ghi nhận giao dịch thành công.</small></div> : null}
+            {String(order.phuongThucThanhToan || '').toUpperCase() === 'VIETQR' && paymentStatus === 'DA_THANH_TOAN' ? <div className="delivery-eta"><Check size={19} /><span><small>VietQR</small><strong>Đã được PayOS xác nhận tự động</strong></span></div> : null}
 
             {canCancel ? (
               <div className="delivery-cancel-box"><strong>Cần hủy đơn?</strong><small>Bạn có thể tự hủy khi đơn chưa được nhà hàng xác nhận. Nếu VietQR đã thanh toán, hệ thống sẽ ghi nhận khoản cần hoàn.</small><textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} maxLength={500} placeholder="Nhập lý do hủy trước khi nhà hàng xác nhận" /><button type="button" onClick={cancelOrder} disabled={canceling}>{canceling ? <LoaderCircle className="spin" size={17} /> : <XCircle size={17} />} Hủy đơn</button></div>
