@@ -599,9 +599,7 @@ export default function DeliveryCheckout() {
             <div className="delivery-card-title"><span><MapPin size={20} /></span><div><h2>Thông tin nhận hàng</h2><p>Nhập thông tin người nhận và chọn cách nhận món</p></div></div>
 
             <div className="delivery-checkout-subsection">
-              <div className="delivery-recipient-heading-row">
-                <div><h3>Người nhận</h3>{customer ? <p>Đã tự điền từ tài khoản <strong>{customer.hoTen}</strong>.</p> : <p>Không cần tài khoản để đặt món. <Link to="/login?next=/menu/checkout">Đăng nhập</Link> nếu muốn tự điền thông tin.</p>}</div>
-              </div>
+              
               <div className="delivery-form-grid two">
                 <label><span>Họ tên người nhận *</span><div><UserRound size={18} /><input required value={form.tenNguoiNhan} onChange={updateField('tenNguoiNhan')} maxLength={120} placeholder="Nguyễn Văn A" /></div></label>
                 <label><span>Số điện thoại *</span><div><Phone size={18} /><input required value={form.soDienThoaiNhan} onChange={updateField('soDienThoaiNhan')} maxLength={20} placeholder="0901234567" inputMode="tel" /></div></label>
