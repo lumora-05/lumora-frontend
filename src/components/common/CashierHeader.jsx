@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, Menu, UserRound } from 'lucide-react';
+import { Bell, ChevronDown, CreditCard, LogOut, Menu, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../../context/ToastContext';
@@ -55,6 +55,7 @@ export default function CashierHeader({ title, subtitle, attentionCount = 0, onO
   useStaffOperationalAlerts('CASHIER', event);
 
   const queueCount = Math.max(0, Number(attentionCount) || 0);
+  const paymentLanding = title === 'Thanh toán';
 
   useEffect(() => {
     const alert = cashierOnlineAlert(event);
@@ -64,14 +65,19 @@ export default function CashierHeader({ title, subtitle, attentionCount = 0, onO
   }, [event, toast]);
 
   return (
-    <header className="topbar admin-topbar cashier-topbar">
+    <header className={`topbar admin-topbar cashier-topbar${paymentLanding ? ' cashier-payment-landing-header' : ''}`}>
       <div className="cashier-title-wrap">
         <button type="button" className="cashier-menu-button" onClick={onOpenMenu} aria-label="Mở menu thu ngân"><Menu size={22} /></button>
+        {paymentLanding ? <span className="cashier-payment-title-icon"><CreditCard size={27} /></span> : null}
         <div className="cashier-role-title">
           <span>{title || 'THU NGÂN'}</span>
           <small>{subtitle || 'Quản lý hóa đơn và thanh toán'}</small>
         </div>
       </div>
+
+      {paymentLanding ? (
+        <div className="cashier-payment-tagline" aria-hidden="true">Ẩm thực kết nối<br />những khoảnh khắc đẹp</div>
+      ) : null}
 
       <div className="cashier-header-actions">
         <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} công việc cần theo dõi`}>

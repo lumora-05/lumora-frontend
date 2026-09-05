@@ -1,5 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock3, Eye, Printer, RefreshCw, Search, WalletCards } from 'lucide-react';
+import {
+  Armchair,
+  ArrowDownUp,
+  CalendarDays,
+  Clock3,
+  Eye,
+  Hourglass,
+  Lightbulb,
+  ListFilter,
+  Printer,
+  RefreshCw,
+  Search,
+  WalletCards,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
@@ -186,29 +199,181 @@ export default function CashierHome({ mode = 'queue' }) {
     );
   }
 
+  if (!historyMode) {
+    return (
+      <section className="page cashier-page cashier-workspace cashier-reference-page">
+        {loadError ? (
+          <div className="cashier-load-error cashier-reference-error">
+            <span>{loadError}</span>
+            <button type="button" onClick={load}>Thử lại</button>
+          </div>
+        ) : null}
+
+        <div className="cashier-reference-layout">
+          <div className="cashier-invoice-card cashier-focused-card cashier-reference-card">
+            <div className="cashier-reference-summary">
+              <div className="cashier-reference-summary-left">
+                <span className="cashier-reference-list-icon"><ListFilter size={18} /></span>
+                <strong>Danh sách yêu cầu thanh toán</strong>
+                <span className="cashier-reference-result-pill">{filtered.length} kết quả</span>
+              </div>
+              <div className="cashier-reference-sort" aria-label="Sắp xếp danh sách">
+                <ArrowDownUp size={18} />
+                <span>Sắp xếp:</span>
+                <select defaultValue="request-time">
+                  <option value="request-time">Thời gian yêu cầu (mới nhất)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="cashier-table-scroll cashier-desktop-list">
+              <table className="cashier-invoice-table cashier-reference-table">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Bàn</th>
+                    <th>Số món</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian chờ</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan="7" className="cashier-table-empty">Đang tải dữ liệu...</td></tr>
+                  ) : rows.length === 0 ? (
+                    <tr><td colSpan="7" className="cashier-table-empty">Hiện không có bàn nào yêu cầu thanh toán.</td></tr>
+                  ) : rows.map((order) => {
+                    const info = statusInfo(order?.trangThai);
+                    const id = orderIdOf(order);
+                    const elapsed = elapsedInfo(rowRequestTime(order), now);
+                    return (
+                      <tr key={id} className={`cashier-reference-row cashier-reference-row-${elapsed.tone}`}>
+                        <td>
+                          <div className="cashier-reference-order-cell">
+                            <strong className="cashier-invoice-code">{rowDocumentCode(order, false)}</strong>
+                            <small>{dateTimeText(rowRequestTime(order))}</small>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="cashier-reference-table-cell">
+                            <span className="cashier-reference-seat"><Armchair size={18} /></span>
+                            <strong>{rowTableName(order)}</strong>
+                            {order?.__sharedBill ? <small>Bill chung</small> : null}
+                          </div>
+                        </td>
+                        <td>{rowItemCount(order)}</td>
+                        <td><strong>{formatMoney(rowTotal(order))}</strong></td>
+                        <td>
+                          <span className={`cashier-state-pill cashier-tone-${info.tone} cashier-reference-state`}>
+                            <Hourglass size={15} />{info.label}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`cashier-wait-time ${elapsed.tone}`}><Clock3 size={18} />{elapsed.label}</span>
+                        </td>
+                        <td>{renderActions(order)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="cashier-mobile-list">
+              {loading ? <div className="cashier-table-empty">Đang tải dữ liệu...</div> : rows.length === 0 ? (
+                <div className="cashier-table-empty">Hiện không có bàn nào yêu cầu thanh toán.</div>
+              ) : rows.map((order) => {
+                const info = statusInfo(order?.trangThai);
+                const id = orderIdOf(order);
+                const elapsed = elapsedInfo(rowRequestTime(order), now);
+                return (
+                  <article key={id} className={`cashier-mobile-item ${elapsed.tone}`}>
+                    <header>
+                      <div><strong>{rowTableName(order)}</strong><span>{rowDocumentCode(order, false)}{order?.__sharedBill ? ' · Bill chung' : ''}</span></div>
+                      <span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span>
+                    </header>
+                    <div className="cashier-mobile-item-grid">
+                      <p><span>Số món</span><b>{rowItemCount(order)}</b></p>
+                      <p><span>Tổng tiền</span><b>{formatMoney(rowTotal(order))}</b></p>
+                      <p className="wide"><span>Thời gian chờ</span><b>{elapsed.label}</b></p>
+                    </div>
+                    <footer>{renderActions(order)}</footer>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="cashier-table-footer cashier-reference-footer">
+              <span>Hiển thị {rows.length ? (safePage - 1) * PAGE_SIZE + 1 : 0}–{Math.min(safePage * PAGE_SIZE, filtered.length)} trong {filtered.length} kết quả</span>
+              <div className="cashier-pagination">
+                <button disabled={safePage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+                {pageItems.map((item) => typeof item === 'string'
+                  ? <span key={item}>…</span>
+                  : <button key={item} className={safePage === item ? 'active' : ''} onClick={() => setPage(item)}>{item}</button>)}
+                <button disabled={safePage === totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>›</button>
+              </div>
+            </div>
+          </div>
+
+          <aside className="cashier-reference-side">
+            <section className="cashier-reference-filter-card">
+              <h2>Tìm kiếm &amp; lọc</h2>
+
+              <label className="cashier-reference-search">
+                <Search size={19} />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm mã đơn, bàn..." />
+              </label>
+
+              <label className="cashier-reference-date">
+                <CalendarDays size={18} />
+                <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+              </label>
+
+              <label className="cashier-reference-status">
+                <span>Trạng thái</span>
+                <select value="ALL" onChange={() => {}} aria-label="Trạng thái">
+                  <option value="ALL">Tất cả</option>
+                </select>
+              </label>
+
+              <button type="button" className="cashier-reference-reload" onClick={load} disabled={loading}>
+                <RefreshCw size={18} />Tải lại
+              </button>
+            </section>
+
+            <section className="cashier-reference-tip">
+              <span className="cashier-reference-tip-icon"><Lightbulb size={27} /></span>
+              <div>
+                <strong>Mẹo nhỏ</strong>
+                <p>Xử lý thanh toán kịp thời giúp khách hàng có trải nghiệm tốt hơn.</p>
+              </div>
+            </section>
+
+            <div className="cashier-reference-visual" aria-hidden="true">
+              <div className="cashier-reference-script">Good Food<br />Good Mood</div>
+              <img src="/reservation-hero.png" alt="" />
+            </div>
+          </aside>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="page cashier-page cashier-workspace">
-      {!historyMode ? (
-        <div className="cashier-page-heading cashier-page-heading-actions">
-          <span className="cashier-heading-badge"><WalletCards size={17} />{queueCount} yêu cầu đang chờ</span>
-        </div>
-      ) : null}
-
       <div className="cashier-filterbar cashier-filterbar-modern">
         <label className="cashier-search cashier-search-wide">
           <Search size={18} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm mã đơn, hóa đơn hoặc bàn..." />
         </label>
         <input className="cashier-date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-        {historyMode ? (
-          <select className="cashier-status-select" value={historyStatus} onChange={(event) => setHistoryStatus(event.target.value)}>
-            <option value="ALL">Tất cả giao dịch</option>
-            <option value="PAID">Đã thanh toán</option>
-            <option value="CANCELED">Đã hủy</option>
-          </select>
-        ) : (
-          <button type="button" className="cashier-reload-button" onClick={load} disabled={loading}><RefreshCw size={17} />Tải lại</button>
-        )}
+        <select className="cashier-status-select" value={historyStatus} onChange={(event) => setHistoryStatus(event.target.value)}>
+          <option value="ALL">Tất cả giao dịch</option>
+          <option value="PAID">Đã thanh toán</option>
+          <option value="CANCELED">Đã hủy</option>
+        </select>
       </div>
 
       {loadError ? (
@@ -221,22 +386,21 @@ export default function CashierHome({ mode = 'queue' }) {
       <div className="cashier-invoice-card cashier-focused-card">
         <div className="cashier-list-summary">
           <div>
-            <strong>{historyMode ? 'Giao dịch đã kết thúc' : 'Yêu cầu cần xử lý'}</strong>
+            <strong>Giao dịch đã kết thúc</strong>
             <span>{filtered.length} kết quả</span>
           </div>
-          {!historyMode ? <small>Danh sách được sắp theo thời gian yêu cầu tăng dần.</small> : null}
         </div>
 
         <div className="cashier-table-scroll cashier-desktop-list">
           <table className="cashier-invoice-table">
             <thead>
               <tr>
-                <th>{historyMode ? 'Mã hóa đơn' : 'Mã đơn'}</th>
+                <th>Mã hóa đơn</th>
                 <th>Bàn</th>
                 <th>Số món</th>
                 <th>Tổng tiền</th>
                 <th>Trạng thái</th>
-                <th>{historyMode ? 'Thời gian' : 'Thời gian chờ'}</th>
+                <th>Thời gian</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -244,23 +408,18 @@ export default function CashierHome({ mode = 'queue' }) {
               {loading ? (
                 <tr><td colSpan="7" className="cashier-table-empty">Đang tải dữ liệu...</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan="7" className="cashier-table-empty">{historyMode ? 'Chưa có giao dịch phù hợp.' : 'Hiện không có bàn nào yêu cầu thanh toán.'}</td></tr>
+                <tr><td colSpan="7" className="cashier-table-empty">Chưa có giao dịch phù hợp.</td></tr>
               ) : rows.map((order) => {
                 const info = statusInfo(order?.trangThai);
                 const id = orderIdOf(order);
-                const elapsed = elapsedInfo(rowRequestTime(order), now);
                 return (
-                  <tr key={id} className={!historyMode && elapsed.tone === 'urgent' ? 'cashier-urgent-row' : ''}>
-                    <td><strong className="cashier-invoice-code">{rowDocumentCode(order, historyMode)}</strong></td>
+                  <tr key={id}>
+                    <td><strong className="cashier-invoice-code">{rowDocumentCode(order, true)}</strong></td>
                     <td><strong>{rowTableName(order)}</strong>{order?.__sharedBill ? <small> · Bill chung</small> : null}</td>
                     <td>{rowItemCount(order)}</td>
                     <td><strong>{formatMoney(rowTotal(order))}</strong></td>
                     <td><span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span></td>
-                    <td>
-                      {historyMode ? dateTimeText(rowPaymentTime(order)) : (
-                        <span className={`cashier-wait-time ${elapsed.tone}`}><Clock3 size={15} />{elapsed.label}</span>
-                      )}
-                    </td>
+                    <td>{dateTimeText(rowPaymentTime(order))}</td>
                     <td>{renderActions(order)}</td>
                   </tr>
                 );
@@ -271,21 +430,20 @@ export default function CashierHome({ mode = 'queue' }) {
 
         <div className="cashier-mobile-list">
           {loading ? <div className="cashier-table-empty">Đang tải dữ liệu...</div> : rows.length === 0 ? (
-            <div className="cashier-table-empty">{historyMode ? 'Chưa có giao dịch phù hợp.' : 'Hiện không có bàn nào yêu cầu thanh toán.'}</div>
+            <div className="cashier-table-empty">Chưa có giao dịch phù hợp.</div>
           ) : rows.map((order) => {
             const info = statusInfo(order?.trangThai);
             const id = orderIdOf(order);
-            const elapsed = elapsedInfo(rowRequestTime(order), now);
             return (
-              <article key={id} className={`cashier-mobile-item ${!historyMode ? elapsed.tone : ''}`}>
+              <article key={id} className="cashier-mobile-item">
                 <header>
-                  <div><strong>{rowTableName(order)}</strong><span>{rowDocumentCode(order, historyMode)}{order?.__sharedBill ? ' · Bill chung' : ''}</span></div>
+                  <div><strong>{rowTableName(order)}</strong><span>{rowDocumentCode(order, true)}{order?.__sharedBill ? ' · Bill chung' : ''}</span></div>
                   <span className={`cashier-state-pill cashier-tone-${info.tone}`}>{info.label}</span>
                 </header>
                 <div className="cashier-mobile-item-grid">
                   <p><span>Số món</span><b>{rowItemCount(order)}</b></p>
                   <p><span>Tổng tiền</span><b>{formatMoney(rowTotal(order))}</b></p>
-                  <p className="wide"><span>{historyMode ? 'Thời gian' : 'Thời gian chờ'}</span><b>{historyMode ? dateTimeText(rowPaymentTime(order)) : elapsed.label}</b></p>
+                  <p className="wide"><span>Thời gian</span><b>{dateTimeText(rowPaymentTime(order))}</b></p>
                 </div>
                 <footer>{renderActions(order)}</footer>
               </article>
