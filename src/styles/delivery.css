@@ -1198,3 +1198,144 @@
   .delivery-flow-timeline{grid-template-columns:repeat(var(--delivery-flow-step-count,4),95px)}
   .delivery-paid-transport-box{grid-template-columns:1fr}
 }
+
+/* 2026-09-05 compact pending PayOS tracking layout */
+@media (min-width:901px){
+  .delivery-payflow-page{
+    width:min(1320px,calc(100% - 40px));
+    padding:18px 0 52px;
+  }
+  .delivery-payflow-page>.delivery-flow-back{margin-bottom:16px}
+
+  .delivery-payflow-page .delivery-payflow-grid{
+    grid-template-columns:minmax(0,1fr) minmax(330px,390px);
+    gap:16px;
+  }
+  .delivery-payflow-page .delivery-payflow-main-card{padding:20px}
+  .delivery-payflow-page .delivery-payos-card-v2{padding:18px}
+
+  .delivery-payflow-page .delivery-flow-title{gap:12px}
+  .delivery-payflow-page .delivery-flow-title>span{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+  .delivery-payflow-page .delivery-flow-title h1{font-size:21px}
+  .delivery-payflow-page .delivery-flow-title p{
+    margin-top:3px;
+    font-size:11px;
+  }
+
+  .delivery-payflow-page .delivery-flow-order-meta{
+    margin-top:16px;
+    padding:14px 16px;
+    grid-template-columns:minmax(0,1fr) 34px minmax(190px,.66fr);
+  }
+  .delivery-payflow-page .delivery-flow-order-meta strong{
+    margin-top:4px;
+    font-size:22px;
+  }
+  .delivery-payflow-page .delivery-flow-meta-status{padding-left:16px}
+  .delivery-payflow-page .delivery-flow-meta-status span{
+    margin-top:4px;
+    padding:7px 10px;
+    font-size:11px;
+  }
+
+  .delivery-payflow-page .delivery-payos-waiting-banner{
+    margin-top:14px;
+    padding:13px 16px;
+    gap:13px;
+  }
+  .delivery-payflow-page .delivery-payos-waiting-banner>span{
+    width:44px;
+    height:44px;
+    font-size:22px;
+  }
+  .delivery-payflow-page .delivery-payos-waiting-banner strong{font-size:15px}
+  .delivery-payflow-page .delivery-payos-waiting-banner small{
+    margin-top:3px;
+    font-size:11px;
+  }
+
+  .delivery-payflow-page .delivery-flow-timeline{
+    margin:18px 8px 16px;
+  }
+  .delivery-payflow-page .delivery-flow-timeline>div:not(:last-child):after{
+    top:19px;
+    left:calc(50% + 22px);
+    right:calc(-50% + 22px);
+  }
+  .delivery-payflow-page .delivery-flow-timeline>div>span{
+    width:38px;
+    height:38px;
+    margin-bottom:6px;
+  }
+  .delivery-payflow-page .delivery-flow-timeline strong{font-size:11px}
+  .delivery-payflow-page .delivery-flow-timeline small{
+    margin-top:3px;
+    font-size:8.5px;
+  }
+
+  .delivery-payflow-page .delivery-flow-section-title{
+    margin:8px 0;
+    font-size:14px;
+  }
+  .delivery-payflow-page .delivery-flow-info-list p{
+    padding:10px 14px;
+    grid-template-columns:25px 132px minmax(0,1fr);
+    gap:8px;
+  }
+  .delivery-payflow-page .delivery-flow-info-list p span{font-size:10.5px}
+  .delivery-payflow-page .delivery-flow-info-list p strong{font-size:11.5px}
+  .delivery-payflow-page .delivery-flow-info-list p strong.money{font-size:20px}
+
+  .delivery-payflow-page .delivery-payos-card-head{gap:12px}
+  .delivery-payflow-page .delivery-payos-card-head>div{gap:8px}
+  .delivery-payflow-page .delivery-payos-card-head h2{font-size:18px}
+  .delivery-payflow-page .delivery-payos-card-head>b{font-size:19px}
+
+  .delivery-payflow-page .delivery-payos-qr-panel{
+    margin-top:14px;
+    padding:14px;
+  }
+  .delivery-payflow-page .delivery-payos-qr-panel>img,
+  .delivery-payflow-page .delivery-payos-qr-loading{
+    width:150px;
+    height:150px;
+    padding:8px;
+  }
+  .delivery-payflow-page .delivery-payos-qr-loading{gap:7px}
+  .delivery-payflow-page .delivery-payos-qr-panel>small{
+    margin-top:8px;
+    font-size:10px;
+  }
+  .delivery-payflow-page .delivery-payos-qr-panel>strong{
+    margin-top:3px;
+    font-size:23px;
+  }
+  .delivery-payflow-page .delivery-payos-transfer-content{
+    margin-top:11px;
+    padding-top:11px;
+  }
+  .delivery-payflow-page .delivery-payos-transfer-content>span{
+    margin-bottom:6px;
+    font-size:10px;
+  }
+  .delivery-payflow-page .delivery-payos-transfer-content>div{min-height:39px}
+
+  .delivery-payflow-page .delivery-payos-guide{
+    margin-top:11px;
+    padding:12px 14px;
+  }
+  .delivery-payflow-page .delivery-payos-guide strong{font-size:12px}
+  .delivery-payflow-page .delivery-payos-guide ol{
+    margin-top:6px;
+    font-size:10px;
+    line-height:1.65;
+  }
+  .delivery-payflow-page .delivery-payos-note{
+    margin-top:9px;
+    font-size:8.5px;
+  }
+}
