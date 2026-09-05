@@ -11,6 +11,7 @@ import {
   actionPriority,
   callNumber,
   formatClock,
+  hasPendingConfirmation,
   isActiveOrder,
   itemCount,
   itemName,
@@ -47,6 +48,8 @@ const PREPARING_ITEM_STATUSES = new Set([
 ]);
 
 function queueGroup(order) {
+  if (hasPendingConfirmation(order)) return 'CONFIRM';
+
   const orderStatusGroup = orderGroup(order);
   if (orderStatusGroup === 'PAYMENT') return 'PAYMENT';
 
@@ -97,6 +100,7 @@ function buildOrderGroups(orders) {
 
 function queueGroupOfRows(rows) {
   const groups = rows.map(queueGroup);
+  if (groups.includes('CONFIRM')) return 'CONFIRM';
   if (groups.includes('PAYMENT')) return 'PAYMENT';
   if (groups.includes('READY')) return 'READY';
   if (groups.includes('PREPARING')) return 'PREPARING';
@@ -105,11 +109,15 @@ function queueGroupOfRows(rows) {
 
 function matchesGroupTab(group, tab) {
   const queue = queueGroupOfRows(group.rows);
-  if (tab === 'ACTION') return ['READY', 'PAYMENT'].includes(queue);
+  if (tab === 'ACTION') return ['CONFIRM', 'READY', 'PAYMENT'].includes(queue);
   return queue === tab;
 }
 
 function groupPriority(group) {
+  if (group.rows.some((order) => queueGroup(order) === 'CONFIRM')) {
+    const oldest = Math.min(...group.rows.map((order) => new Date(orderCreatedAt(order) || 0).getTime()));
+    return [0, Number.isFinite(oldest) ? oldest : 0];
+  }
   return group.rows
     .map(actionPriority)
     .sort((a, b) => a[0] - b[0] || a[1] - b[1])[0] || [99, 0];
@@ -216,8 +224,8 @@ export default function TableStatus() {
 
   function renderOrderCard(order, nested = false) {
     const id = orderId(order);
-    const meta = statusMeta(order.trangThai);
-    const group = orderGroup(order);
+    const group = queueGroup(order);
+    const meta = group === 'CONFIRM' ? statusMeta('CHO_XAC_NHAN') : statusMeta(order.trangThai);
     const items = (order.chiTietDonHang || []).filter((item) => String(item?.trangThaiMon || '').toUpperCase() !== 'DA_HUY');
     const readyCount = pendingReadyCount(order);
     const call = latestCall(order);
@@ -228,7 +236,7 @@ export default function TableStatus() {
       : elapsedTone === 'warning'
         ? '/waiter-icons/table-chair-preparing.png'
         : TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png';
-    const buttonLabel = group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
+    const buttonLabel = group === 'CONFIRM' ? 'Kiểm tra & xác nhận' : group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
 
     return (
       <article className={`waiter-order-feed-card ${nested ? 'waiter-shared-order-row' : ''} ${meta.tone} ${group === 'READY' ? 'priority-card' : ''} wait-${elapsedTone}`} key={id}>
@@ -288,7 +296,7 @@ export default function TableStatus() {
         </div>
 
         <div className="waiter-action-note">
-          <strong>Thứ tự ưu tiên:</strong> món đã sẵn sàng → bàn chờ thanh toán → món đang chế biến.
+          <strong>Thứ tự ưu tiên:</strong> đơn chờ xác nhận → món đã sẵn sàng → bàn chờ thanh toán → món đang chế biến.
         </div>
 
         <div className="waiter-order-feed">

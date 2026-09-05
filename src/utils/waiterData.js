@@ -1,5 +1,5 @@
 export const WAITER_STATUS_META = {
-  CHO_XAC_NHAN: { label: 'Đang chuyển xuống bếp', tone: 'confirmed', group: 'PREPARING', priority: 4 },
+  CHO_XAC_NHAN: { label: 'Chờ phục vụ xác nhận', tone: 'new', group: 'CONFIRM', priority: 0 },
   DA_XAC_NHAN: { label: 'Đã chuyển xuống bếp', tone: 'confirmed', group: 'PREPARING', priority: 4 },
   DANG_CHUAN_BI: { label: 'Đang chuẩn bị', tone: 'confirmed', group: 'PREPARING', priority: 4 },
   DANG_CHE_BIEN: { label: 'Đang chế biến', tone: 'preparing', group: 'PREPARING', priority: 4 },
@@ -74,6 +74,13 @@ export function isActiveOrder(order) {
   return !['DA_THANH_TOAN', 'DA_HUY'].includes(order?.trangThai);
 }
 
+export function hasPendingConfirmation(order) {
+  if (String(order?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN') return true;
+  return (order?.chiTietDonHang || []).some(
+    (item) => String(item?.trangThaiMon || item?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN',
+  );
+}
+
 export function readyItems(order) {
   return (order?.chiTietDonHang || []).filter((item) => READY_ITEM_STATUSES.has(itemStatus(item)));
 }
@@ -100,7 +107,7 @@ export function waitLabel(value) {
 
 export function waitTone(value, group) {
   const minutes = waitMinutes(value) ?? 0;
-  const urgentLimit = group === 'READY' ? 5 : group === 'NEW' ? 8 : group === 'PAYMENT' ? 5 : 20;
+  const urgentLimit = group === 'READY' ? 5 : ['NEW', 'CONFIRM'].includes(group) ? 8 : group === 'PAYMENT' ? 5 : 20;
   const warningLimit = Math.max(2, Math.floor(urgentLimit * 0.6));
   if (minutes >= urgentLimit) return 'urgent';
   if (minutes >= warningLimit) return 'warning';

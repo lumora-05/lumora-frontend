@@ -28,6 +28,7 @@ import {
 } from '../../utils/waiterData';
 
 const ITEM_STATUS_LABELS = {
+  CHO_XAC_NHAN: 'Chờ phục vụ xác nhận',
   CHO_BEP: 'Chờ bếp',
   DANG_NAU: 'Đang chế biến',
   DANG_CHE_BIEN: 'Đang chế biến',
@@ -41,6 +42,7 @@ const ITEM_STATUS_LABELS = {
 };
 
 const STEPS = [
+  { label: 'Chờ phục vụ xác nhận', icon: Clock3 },
   { label: 'Đã chuyển xuống bếp', icon: UtensilsCrossed },
   { label: 'Đang chế biến', icon: Clock3 },
   { label: 'Sẵn sàng phục vụ', icon: UtensilsCrossed },
@@ -48,10 +50,11 @@ const STEPS = [
 ];
 
 function orderStep(status) {
-  if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return 0;
-  if (['DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 1;
-  if (['SAN_SANG', 'SAN_SANG_PHUC_VU'].includes(status)) return 2;
-  if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN', 'DA_THANH_TOAN'].includes(status)) return 3;
+  if (status === 'CHO_XAC_NHAN') return 0;
+  if (status === 'DA_XAC_NHAN') return 1;
+  if (['DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 2;
+  if (['SAN_SANG', 'SAN_SANG_PHUC_VU'].includes(status)) return 3;
+  if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN', 'DA_THANH_TOAN'].includes(status)) return 4;
   return 0;
 }
 
@@ -70,6 +73,7 @@ export default function OrderDetail() {
   const readOnly = new URLSearchParams(location.search).get('readonly') === '1';
   const [order, setOrder] = useState(null);
   const [requestingPayment, setRequestingPayment] = useState(false);
+  const [confirmingOrder, setConfirmingOrder] = useState(false);
   const [servingIds, setServingIds] = useState(new Set());
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -96,6 +100,20 @@ export default function OrderDetail() {
   const currentStep = useMemo(() => orderStep(order?.trangThai), [order?.trangThai]);
   const callGroups = useMemo(() => order ? groupItemsByCall(order) : [], [order]);
 
+
+  async function confirmPendingOrder() {
+    if (!order || confirmingOrder || readOnly) return;
+    try {
+      setConfirmingOrder(true);
+      const response = await orderApi.confirmCustomerOrder(orderId);
+      toast.success(messageOf(response, 'Đã xác nhận và chuyển món xuống bếp'));
+      await load();
+    } catch (error) {
+      toast.error(errorMessageOf(error, 'Không thể xác nhận đơn hàng'));
+    } finally {
+      setConfirmingOrder(false);
+    }
+  }
 
   async function requestPayment() {
     if (order?.trangThai !== 'DA_PHUC_VU') {
@@ -182,6 +200,9 @@ export default function OrderDetail() {
   const items = order.chiTietDonHang || [];
   const meta = statusMeta(order.trangThai);
   const allReady = items.filter((item) => READY_ITEM_STATUSES.has(itemStatus(item)));
+  const pendingConfirmationItems = items.filter((item) => itemStatus(item) === 'CHO_XAC_NHAN');
+  const pendingWholeOrder = String(order?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN';
+  const needsConfirmation = pendingWholeOrder || pendingConfirmationItems.length > 0;
   const createdAt = orderCreatedAt(order);
 
   return (
@@ -200,6 +221,13 @@ export default function OrderDetail() {
           </div>
           <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
         </div>
+
+        {needsConfirmation && !readOnly ? (
+          <div className="waiter-action-note">
+            <strong>{pendingWholeOrder ? 'Đơn đang chờ phục vụ xác nhận.' : `${pendingConfirmationItems.length} món gọi thêm đang chờ xác nhận.`}</strong>
+            {' '}Kiểm tra món và ghi chú trước khi chuyển xuống bếp.
+          </div>
+        ) : null}
 
         <div className="waiter-service-stepper">
             {STEPS.map((step, index) => {
@@ -243,7 +271,15 @@ export default function OrderDetail() {
                         const cancelled = isCancelledItem(item);
                         const canApproveAsWaiter = String(item?.trangThaiTruocHuy || '').toUpperCase() === 'CHO_BEP';
                         const deciding = String(decisionId) === id;
-                        const statusTone = cancelled ? 'cancelled' : pendingCancellation ? 'cancellation' : canServe ? 'ready' : status === 'DA_PHUC_VU' ? 'served' : 'neutral';
+                        const statusTone = cancelled
+                          ? 'cancelled'
+                          : pendingCancellation
+                            ? 'cancellation'
+                            : status === 'CHO_XAC_NHAN'
+                              ? 'pending'
+                              : canServe
+                                ? 'ready'
+                                : status === 'DA_PHUC_VU' ? 'served' : 'neutral';
                         return (
                           <tr key={id || index} className={cancelled ? 'waiter-cancelled-row' : ''}>
                             <td>{index + 1}</td>
@@ -283,7 +319,7 @@ export default function OrderDetail() {
                                     </button>
                                   ) : cancelled ? (
                                     <span className="waiter-item-managed cancelled">Đã hủy</span>
-                                  ) : <span className="waiter-item-managed">{status === 'DA_PHUC_VU' ? 'Đã hoàn tất' : 'Bếp đang xử lý'}</span>}
+                                  ) : <span className="waiter-item-managed">{status === 'CHO_XAC_NHAN' ? 'Chờ xác nhận' : status === 'DA_PHUC_VU' ? 'Đã hoàn tất' : 'Bếp đang xử lý'}</span>}
                                 </div>
                               </td>
                             ) : null}
@@ -304,7 +340,16 @@ export default function OrderDetail() {
             <span>Ghi chú của đơn</span>
             <textarea value={order.ghiChu || ''} readOnly placeholder="Không có ghi chú" />
           </label>
-          {!readOnly && order.trangThai === 'DA_PHUC_VU' ? (
+          {!readOnly && needsConfirmation ? (
+            <button className="waiter-service-primary" disabled={confirmingOrder} onClick={confirmPendingOrder}>
+              {confirmingOrder ? <Loader2 size={18} className="spin" /> : <CheckCircle2 size={18} />}
+              {confirmingOrder
+                ? 'Đang xác nhận...'
+                : pendingWholeOrder
+                  ? 'Xác nhận & chuyển xuống bếp'
+                  : `Xác nhận ${pendingConfirmationItems.length} món gọi thêm`}
+            </button>
+          ) : !readOnly && order.trangThai === 'DA_PHUC_VU' ? (
             <button className="waiter-service-primary waiter-payment-request" disabled={requestingPayment} onClick={requestPayment}>
               {requestingPayment ? <Loader2 size={18} className="spin" /> : <CreditCard size={18} />}
               {requestingPayment ? 'Đang gửi yêu cầu...' : 'Khách yêu cầu thanh toán'}

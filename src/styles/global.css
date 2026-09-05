@@ -1674,15 +1674,15 @@
 .waiter-service-stepper{
   position:relative; 
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:0;
   margin:24px 12px 28px;
 }
 .waiter-service-stepper:before{
   content:"";
   position:absolute;
-  left:12.5%;
-  right:12.5%;
+  left:10%;
+  right:10%;
   top:23px;
   height:2px;
   background:#e2e8f0;
@@ -2887,7 +2887,7 @@
 .waiter-call-section-head>button{height:38px;border:0;border-radius:9px;padding:0 13px;background:#16a34a;color:#fff;font-weight:900;display:flex;align-items:center;gap:7px;cursor:pointer}
 .waiter-call-section-head>button:disabled{opacity:.6;cursor:not-allowed}
 .waiter-service-action-table th:last-child,.waiter-service-action-table td:last-child{text-align:right}
-.waiter-item-status{display:inline-flex;padding:6px 9px;border-radius:8px;font-size:12px;font-weight:850}.waiter-item-status.ready{background:#dcfce7;color:#15803d}.waiter-item-status.served{background:#e0f2fe;color:#0369a1}.waiter-item-status.neutral{background:#f1f5f9;color:#64748b}
+.waiter-item-status{display:inline-flex;padding:6px 9px;border-radius:8px;font-size:12px;font-weight:850}.waiter-item-status.pending{background:#fff1e8;color:#ea580c}.waiter-item-status.ready{background:#dcfce7;color:#15803d}.waiter-item-status.served{background:#e0f2fe;color:#0369a1}.waiter-item-status.neutral{background:#f1f5f9;color:#64748b}
 .waiter-item-serve{height:36px;border:0;border-radius:8px;padding:0 11px;background:#16a34a;color:#fff;font-weight:850;display:inline-flex;align-items:center;gap:6px;cursor:pointer}.waiter-item-serve:disabled{opacity:.6;cursor:not-allowed}
 .waiter-item-managed{color:#94a3b8;font-size:12px;font-weight:750}
 .waiter-history-filters{display:flex;align-items:center;gap:10px}.waiter-history-filters>select,.waiter-history-pagination select{height:40px;border:1px solid #dbe2ea;border-radius:9px;background:#fff;padding:0 11px;color:#334155;font-weight:750}

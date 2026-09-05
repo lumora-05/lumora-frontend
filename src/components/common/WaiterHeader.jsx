@@ -39,6 +39,7 @@ import {
   reservationTime,
 } from '../../utils/reservations';
 import {
+  hasPendingConfirmation,
   orderCreatedAt,
   orderGroup,
   orderId,
@@ -48,11 +49,11 @@ import {
 } from '../../utils/waiterData';
 
 const ORDER_NOTIFICATION_META = {
-  KITCHEN: {
+  CONFIRM: {
     icon: ReceiptText,
-    tone: 'blue',
-    title: 'Đơn đã chuyển xuống bếp',
-    description: 'Khách vừa gửi đơn và đơn đã được chuyển đến bếp.',
+    tone: 'orange',
+    title: 'Đơn chờ xác nhận',
+    description: 'Khách vừa gửi đơn hoặc gọi thêm món, cần phục vụ kiểm tra trước khi chuyển xuống bếp.',
   },
   READY: {
     icon: CheckCircle2,
@@ -90,8 +91,7 @@ function serviceRequestTime(item) {
 }
 
 function orderNotificationGroup(order) {
-  const status = String(order?.trangThai || '').toUpperCase();
-  if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return 'KITCHEN';
+  if (hasPendingConfirmation(order)) return 'CONFIRM';
   return orderGroup(order);
 }
 
@@ -164,13 +164,23 @@ export default function WaiterHeader({ title, subtitle, attentionCount = 0, onOp
       const data = realtimeOrderData(event);
       const id = data?.maDonHang ?? data?.id;
       const tableName = data?.banAn?.tenBan || data?.tenBan || (data?.maBan ? `Bàn ${data.maBan}` : 'Một bàn');
-      if (type === 'NEW_ORDER') {
-        toast.info(`${tableName} vừa gửi đơn${id ? ` #${id}` : ''}. Đơn đã chuyển xuống bếp.`, {
+      if (type === 'ORDER_WAITING_CONFIRMATION') {
+        toast.info(`${tableName} vừa gửi đơn${id ? ` #${id}` : ''}. Vui lòng kiểm tra và xác nhận trước khi chuyển xuống bếp.`, {
+          id: `waiter-confirm-order-${id || event?.body?.createdAt || 'latest'}`,
+          duration: 6000,
+        });
+      } else if (type === 'ORDER_ITEMS_WAITING_CONFIRMATION') {
+        toast.info(`${tableName} vừa gọi thêm món${id ? ` cho đơn #${id}` : ''}. Món mới đang chờ phục vụ xác nhận.`, {
+          id: `waiter-confirm-items-${id || 'latest'}-${data?.lanGoi || event?.body?.createdAt || ''}`,
+          duration: 6000,
+        });
+      } else if (type === 'NEW_ORDER') {
+        toast.info(`Đơn${id ? ` #${id}` : ''} của ${tableName} đã được tạo và chuyển xuống bếp.`, {
           id: `waiter-new-order-${id || event?.body?.createdAt || 'latest'}`,
           duration: 5000,
         });
       } else if (type === 'ORDER_ITEMS_ADDED') {
-        toast.info(`${tableName} vừa gọi thêm món${id ? ` cho đơn #${id}` : ''}. Món mới đã chuyển xuống bếp.`, {
+        toast.info(`${tableName} vừa có món gọi thêm${id ? ` cho đơn #${id}` : ''}. Món mới đã chuyển xuống bếp.`, {
           id: `waiter-added-items-${id || 'latest'}-${data?.lanGoi || event?.body?.createdAt || ''}`,
           duration: 5000,
         });

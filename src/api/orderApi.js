@@ -35,6 +35,7 @@ export const orderApi = {
   customerOpenOrdersByQrToken: (qrToken) => axiosClient.get(`/customer/qr/${encodeToken(qrToken)}/orders`),
   customerRequestPayment: (qrToken, id) => axiosClient.post(`/customer/qr/${encodeToken(qrToken)}/orders/${id}/request-payment`),
   waiterRequestPayment: (id) => axiosClient.post(`/orders/${id}/request-payment`),
+  confirmCustomerOrder: (id) => axiosClient.post(`/orders/${id}/confirm`),
   getAll: () => axiosClient.get('/orders'),
   getPaymentRequests: () => axiosClient.get('/orders/payment-requests'),
   getPaymentRequestCount: () => axiosClient.get('/orders/payment-requests/count'),

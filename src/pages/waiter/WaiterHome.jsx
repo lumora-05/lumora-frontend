@@ -9,6 +9,7 @@ import { useToast, errorMessageOf, messageOf } from '../../context/ToastContext'
 import { fetchReservationHoldMap, reservationHoldTime } from '../../utils/reservationHolds';
 import {
   formatClock,
+  hasPendingConfirmation,
   isActiveOrder,
   itemCount,
   orderCreatedAt,
@@ -23,7 +24,7 @@ import {
 
 const STATUS_META = {
   empty: { label: 'Trống', tone: 'empty' },
-  new: { label: 'Có đơn mới', tone: 'new' },
+  new: { label: 'Chờ xác nhận', tone: 'new' },
   serving: { label: 'Đang phục vụ', tone: 'serving' },
   payment: { label: 'Chờ thanh toán', tone: 'payment' },
   reserved: { label: 'Sắp có lịch', tone: 'reserved' },
@@ -52,7 +53,7 @@ function primaryTableId(table) {
 }
 
 function tableVisualStatus(table, orders, reservationHold) {
-  if (orders?.some((order) => orderGroup(order) === 'NEW')) return 'new';
+  if (orders?.some((order) => hasPendingConfirmation(order) || ['NEW', 'CONFIRM'].includes(orderGroup(order)))) return 'new';
   if (orders?.some((order) => orderGroup(order) === 'PAYMENT')) return 'payment';
   if (orders?.length) return 'serving';
   if (table?.trangThai === 'DANG_THANH_TOAN') return 'payment';

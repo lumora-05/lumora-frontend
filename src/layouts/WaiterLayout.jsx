@@ -10,11 +10,11 @@ import { systemSettingApi, systemSettingData } from '../api/systemSettingApi';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { imageUrl } from '../utils/imageUrl';
 import { serviceRequestStatus, unwrapServiceRequestList } from '../utils/serviceRequests';
-import { isActiveOrder, orderGroup, pendingReadyCount, unwrapList } from '../utils/waiterData';
+import { hasPendingConfirmation, isActiveOrder, orderGroup, pendingReadyCount, unwrapList } from '../utils/waiterData';
 import { canCheckIn, currentLocalDate, reservationData, reservationStatus } from '../utils/reservations';
 
 const pageMeta = {
-  '/waiter/orders': ['Đơn cần xử lý', 'Theo dõi đơn đã chuyển bếp, món sẵn sàng và yêu cầu thanh toán'],
+  '/waiter/orders': ['Đơn cần xử lý', 'Xác nhận đơn khách gửi, theo dõi món sẵn sàng và yêu cầu thanh toán'],
   '/waiter/tables': ['Sơ đồ bàn', 'Theo dõi trạng thái bàn và thao tác chuyển, ghép hoặc tách bàn'],
   '/waiter/order-entry': ['Gọi món tại bàn', 'Tạo đơn và gửi món trực tiếp xuống bếp cho bàn đang phục vụ'],
   '/waiter/reservations': ['Đặt bàn', 'Theo dõi khách sắp đến, check-in và xếp bàn thực tế'],
@@ -88,13 +88,13 @@ export default function WaiterLayout() {
       const noShowGraceMinutes = Math.max(Number(brandSettings?.reservationNoShowGraceMinutes) || 15, 0);
 
       setOrderAttentionCount(orders.filter((order) => (
-        ['READY', 'PAYMENT'].includes(orderGroup(order)) || pendingReadyCount(order) > 0
+        hasPendingConfirmation(order)
+        || ['READY', 'PAYMENT'].includes(orderGroup(order))
+        || pendingReadyCount(order) > 0
       )).length);
-      setOrderNotificationCount(orders.filter((order) => {
-        const status = String(order?.trangThai || '').toUpperCase();
-        if (['CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(status)) return true;
-        return ['READY', 'PAYMENT'].includes(orderGroup(order));
-      }).length);
+      setOrderNotificationCount(orders.filter((order) => (
+        hasPendingConfirmation(order) || ['READY', 'PAYMENT'].includes(orderGroup(order))
+      )).length);
       setServiceAttentionCount(serviceRequests.filter((item) => (
         ['MOI', 'DA_TIEP_NHAN'].includes(serviceRequestStatus(item))
       )).length);

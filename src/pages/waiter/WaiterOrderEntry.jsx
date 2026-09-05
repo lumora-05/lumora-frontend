@@ -76,7 +76,7 @@ function nextCallNumber(order) {
 
 function statusLabel(status) {
   const labels = {
-    CHO_XAC_NHAN: 'Đang chuyển xuống bếp',
+    CHO_XAC_NHAN: 'Chờ phục vụ xác nhận',
     DA_XAC_NHAN: 'Đã chuyển xuống bếp',
     DANG_CHUAN_BI: 'Đang chuẩn bị',
     DANG_CHE_BIEN: 'Đang chế biến',

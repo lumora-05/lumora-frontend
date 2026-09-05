@@ -32,8 +32,8 @@ import {
 } from '../../utils/orderCancellation';
 
 const STATUS_LABEL = {
-  CHO_XAC_NHAN: 'Đang chuyển xuống bếp',
-  DA_XAC_NHAN: 'Đã chuyển xuống bếp',
+  CHO_XAC_NHAN: 'Chờ nhân viên xác nhận',
+  DA_XAC_NHAN: 'Đã xác nhận · chuyển xuống bếp',
   DANG_CHUAN_BI: 'Đang chuẩn bị',
   DANG_CHE_BIEN: 'Đang chế biến',
   SAN_SANG: 'Sẵn sàng phục vụ',
@@ -47,6 +47,7 @@ const STATUS_LABEL = {
 };
 
 const ITEM_STATUS_LABEL = {
+  CHO_XAC_NHAN: 'Chờ nhân viên xác nhận',
   CHO_BEP: 'Chờ bếp',
   DANG_NAU: 'Đang chế biến',
   DANG_CHE_BIEN: 'Đang chế biến',
@@ -60,7 +61,8 @@ const ITEM_STATUS_LABEL = {
 };
 
 const STEPS = [
-  { label: 'Đã chuyển xuống bếp', description: 'Đơn hàng đã được gửi trực tiếp đến bộ phận bếp' },
+  { label: 'Chờ nhân viên xác nhận', description: 'Nhân viên phục vụ đang kiểm tra đơn trước khi chuyển xuống bếp' },
+  { label: 'Đã chuyển xuống bếp', description: 'Nhân viên đã xác nhận và chuyển món đến bộ phận bếp' },
   { label: 'Đang chế biến', description: 'Bếp đang chuẩn bị món ăn' },
   { label: 'Sẵn sàng phục vụ', description: 'Bếp đã hoàn thành và đang chờ nhân viên mang món ra' },
   { label: 'Đã phục vụ', description: 'Món ăn đã được mang đến bàn' },
@@ -78,10 +80,11 @@ const PAYMENT_PENDING_STATUSES = new Set(['CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN
 const PROMOTION_EDIT_STATUSES = new Set(['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN']);
 
 function statusStep(status) {
-  if (status === 'DA_THANH_TOAN') return 4;
-  if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'].includes(status)) return 3;
-  if (['SAN_SANG', 'SAN_SANG_PHUC_VU', 'DA_HOAN_THANH'].includes(status)) return 2;
-  if (['DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 1;
+  if (status === 'DA_THANH_TOAN') return 5;
+  if (['DA_PHUC_VU', 'CHO_THANH_TOAN', 'SAN_SANG_THANH_TOAN'].includes(status)) return 4;
+  if (['SAN_SANG', 'SAN_SANG_PHUC_VU', 'DA_HOAN_THANH'].includes(status)) return 3;
+  if (['DANG_CHUAN_BI', 'DANG_CHE_BIEN'].includes(status)) return 2;
+  if (status === 'DA_XAC_NHAN') return 1;
   return 0;
 }
 
@@ -225,8 +228,8 @@ export default function OrderSuccess() {
   const totalItemLines = orders.reduce((sum, item) => sum + (item?.chiTietDonHang || []).length, 0);
 
   const pageMessage = useMemo(() => {
-    if (location.state?.isAdditionalCall) return `Lượt gọi thêm ${location.state?.callNumber || ''} đã được gửi trực tiếp xuống bếp.`;
-    if (location.state && location.state.isAdditionalCall === false) return 'Đơn hàng đã được gửi thành công và chuyển trực tiếp xuống bếp.';
+    if (location.state?.isAdditionalCall) return `Lượt gọi thêm ${location.state?.callNumber || ''} đã được gửi và đang chờ nhân viên phục vụ xác nhận.`;
+    if (location.state && location.state.isAdditionalCall === false) return 'Đơn hàng đã được gửi thành công và đang chờ nhân viên phục vụ xác nhận.';
     return 'Theo dõi tiến trình xử lý đơn hàng theo thời gian thực.';
   }, [location.state]);
 
