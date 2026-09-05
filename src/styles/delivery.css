@@ -442,6 +442,15 @@
 .delivery-search-empty{padding:16px 12px;color:#89939e;text-align:center;font-size:11px;font-weight:700}
 .delivery-admin-address-warning{margin-top:12px;padding:10px 12px;border:1px solid #f4d4c3;border-radius:11px;color:#a6532b;background:#fff8f4;font-size:11px;line-height:1.5}
 
+/* Checkout giao hàng trong Đà Nẵng: ẩn lựa chọn tỉnh/phường, chỉ yêu cầu địa chỉ cụ thể. */
+.delivery-da-nang-notice{margin-bottom:14px;padding:12px 13px;border:1px solid #f6c9ad;border-radius:12px;display:flex;align-items:flex-start;gap:10px;color:#8b4a25;background:#fff8f2}
+.delivery-da-nang-notice>svg{flex:none;margin-top:1px;color:#f0641a}
+.delivery-da-nang-notice>div{min-width:0}
+.delivery-da-nang-notice strong,.delivery-da-nang-notice span{display:block}
+.delivery-da-nang-notice strong{font-size:11px;line-height:1.45;color:#8a431f}
+.delivery-da-nang-notice span{margin-top:3px;font-size:9px;line-height:1.5;color:#8f7768}
+.delivery-address-grid-single,.delivery-address-grid-single.delivery-form-grid{grid-template-columns:1fr!important}
+
 /* Address autocomplete: khách phải chọn một kết quả cụ thể trước khi tính phí. */
 .delivery-address-autocomplete-field{position:relative}
 .delivery-address-autocomplete{position:relative!important;overflow:visible!important;transition:border-color .18s ease,box-shadow .18s ease}

@@ -3,9 +3,7 @@ import {
   Banknote,
   CalendarClock,
   CheckCircle2,
-  ChevronDown,
   CreditCard,
-  Home,
   LoaderCircle,
   MapPin,
   Minus,
@@ -67,7 +65,7 @@ function formatReceiveTime(value) {
 }
 
 
-const VIETNAM_ADMIN_API = 'https://provinces.open-api.vn/api/v2';
+const DELIVERY_CITY = 'Đà Nẵng';
 const RESTAURANT_PICKUP_ADDRESS = '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng';
 
 function normalizeAdminText(value) {
@@ -78,10 +76,6 @@ function normalizeAdminText(value) {
     .replace(/Đ/g, 'D')
     .toLowerCase()
     .trim();
-}
-
-function provinceDisplayName(value) {
-  return String(value || '').replace(/^(thành phố|tỉnh)\s+/i, '').trim();
 }
 
 function suggestionStreetText(suggestion, fallback = '') {
@@ -101,82 +95,6 @@ function splitStreetText(value) {
   const match = text.match(/^([^\s,]*\d[^\s,]*)\s+(.+)$/u);
   if (!match) return { soNha: '', tenDuong: text };
   return { soNha: match[1].trim(), tenDuong: match[2].trim() };
-}
-
-function SearchableAddressSelect({
-  label,
-  value,
-  placeholder,
-  options,
-  loading = false,
-  disabled = false,
-  emptyText = 'Không tìm thấy dữ liệu phù hợp.',
-  onChange,
-  onSelect,
-}) {
-  const [open, setOpen] = useState(false);
-  const fieldRef = useRef(null);
-  const query = normalizeAdminText(value);
-  const filteredOptions = useMemo(() => {
-    const rows = Array.isArray(options) ? options : [];
-    if (!query) return rows;
-    return rows.filter((option) => normalizeAdminText(option.label).includes(query));
-  }, [options, query]);
-
-  useEffect(() => {
-    function handlePointerDown(event) {
-      if (!fieldRef.current?.contains(event.target)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handlePointerDown);
-    return () => document.removeEventListener('mousedown', handlePointerDown);
-  }, []);
-
-  return (
-    <label className="delivery-search-field">
-      <span>{label} *</span>
-      <div ref={fieldRef} className={`delivery-search-select ${open ? 'open' : ''} ${disabled ? 'disabled' : ''}`}>
-        <MapPin size={18} />
-        <input
-          required
-          value={value}
-          onChange={(event) => {
-            onChange(event.target.value);
-            if (!open) setOpen(true);
-          }}
-          onFocus={() => !disabled && setOpen(true)}
-          onClick={() => !disabled && setOpen(true)}
-          placeholder={placeholder}
-          autoComplete="off"
-          disabled={disabled}
-          aria-expanded={open}
-        />
-        {loading ? <LoaderCircle className="spin delivery-search-status" size={17} /> : <ChevronDown className="delivery-search-chevron" size={18} />}
-        {open && !disabled ? (
-          <div className="delivery-search-menu" role="listbox">
-            <div className="delivery-search-hint">Gõ để tìm kiếm</div>
-            <div className="delivery-search-options">
-              {filteredOptions.length ? filteredOptions.map((option) => (
-                <button
-                  key={option.code ?? option.label}
-                  type="button"
-                  className={normalizeAdminText(option.label) === query ? 'active' : ''}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    onSelect(option);
-                    setOpen(false);
-                  }}
-                >
-                  {option.label}
-                </button>
-              )) : (
-                <div className="delivery-search-empty">{loading ? 'Đang tải dữ liệu...' : emptyText}</div>
-              )}
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </label>
-  );
 }
 
 function DeliveryAddressAutocomplete({
@@ -208,7 +126,7 @@ function DeliveryAddressAutocomplete({
 
   return (
     <label className="delivery-form-wide delivery-address-autocomplete-field">
-      <span>Số nhà, tên đường *</span>
+      <span>Địa chỉ nhận hàng *</span>
       <div ref={fieldRef} className={`delivery-address-autocomplete ${open ? 'open' : ''} ${selected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}>
         <MapPin size={18} />
         <input
@@ -219,7 +137,7 @@ function DeliveryAddressAutocomplete({
             if (!disabled) setOpen(true);
           }}
           onFocus={() => !disabled && setOpen(true)}
-          placeholder={disabled ? 'Chọn Tỉnh / Thành phố và Phường / Xã trước' : 'Ví dụ: 137 Nguyễn Thị Thập'}
+          placeholder="Nhập số nhà, tên đường (ví dụ: 123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng)"
           autoComplete="off"
           disabled={disabled}
           aria-expanded={open}
@@ -284,32 +202,29 @@ export default function DeliveryCheckout() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [customer, setCustomer] = useState(getCustomerUser());
   const savedAddress = useMemo(initialDeliveryAddress, []);
-  const [quote, setQuote] = useState(() => (savedAddress?.addressSelectionToken ? savedAddress?.quote || null : null));
+  const savedAddressMatchesDeliveryCity = !savedAddress?.form?.tinhThanh
+    || normalizeAdminText(savedAddress.form.tinhThanh) === normalizeAdminText(DELIVERY_CITY);
+  const [quote, setQuote] = useState(() => (savedAddressMatchesDeliveryCity && savedAddress?.addressSelectionToken ? savedAddress?.quote || null : null));
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState('');
   const [promotions, setPromotions] = useState([]);
   usePublicContentTranslations({ language, foods: cart.items });
-  const [addressQuery, setAddressQuery] = useState(() => savedAddress?.addressQuery
-    || [savedAddress?.form?.soNha, savedAddress?.form?.tenDuong].filter(Boolean).join(' '));
+  const [addressQuery, setAddressQuery] = useState(() => savedAddressMatchesDeliveryCity
+    ? (savedAddress?.addressQuery || [savedAddress?.form?.soNha, savedAddress?.form?.tenDuong].filter(Boolean).join(' '))
+    : '');
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressSuggestionLoading, setAddressSuggestionLoading] = useState(false);
   const [addressSuggestionError, setAddressSuggestionError] = useState('');
-  const [addressSelectionToken, setAddressSelectionToken] = useState(() => savedAddress?.addressSelectionToken || '');
-  const [selectedAddressLabel, setSelectedAddressLabel] = useState(() => savedAddress?.selectedAddressLabel || '');
-  const [provinces, setProvinces] = useState([]);
-  const [wards, setWards] = useState([]);
-  const [provinceLoading, setProvinceLoading] = useState(true);
-  const [wardLoading, setWardLoading] = useState(false);
-  const [adminAddressError, setAdminAddressError] = useState('');
-  const wardCacheRef = useRef(new Map());
+  const [addressSelectionToken, setAddressSelectionToken] = useState(() => savedAddressMatchesDeliveryCity ? (savedAddress?.addressSelectionToken || '') : '');
+  const [selectedAddressLabel, setSelectedAddressLabel] = useState(() => savedAddressMatchesDeliveryCity ? (savedAddress?.selectedAddressLabel || '') : '');
   const [form, setForm] = useState({
     tenNguoiNhan: '',
     soDienThoaiNhan: '',
-    soNha: savedAddress?.form?.soNha || '',
-    tenDuong: savedAddress?.form?.tenDuong || '',
-    phuongXa: savedAddress?.form?.phuongXa || '',
-    tinhThanh: savedAddress?.form?.tinhThanh || '',
-    thongTinDiaChi: savedAddress?.form?.thongTinDiaChi || '',
+    soNha: savedAddressMatchesDeliveryCity ? (savedAddress?.form?.soNha || '') : '',
+    tenDuong: savedAddressMatchesDeliveryCity ? (savedAddress?.form?.tenDuong || '') : '',
+    phuongXa: savedAddressMatchesDeliveryCity ? (savedAddress?.form?.phuongXa || '') : '',
+    tinhThanh: DELIVERY_CITY,
+    thongTinDiaChi: '',
     ghiChuGiaoHang: '',
     phuongThucNhanHang: 'GIAO_TAN_NOI',
     maCodeKhuyenMai: '',
@@ -333,84 +248,6 @@ export default function DeliveryCheckout() {
 
   useEffect(() => {
     let active = true;
-    setProvinceLoading(true);
-    fetch(`${VIETNAM_ADMIN_API}/p/`)
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      })
-      .then((rows) => {
-        if (!active) return;
-        const values = (Array.isArray(rows) ? rows : []).map((row) => ({
-          code: row.code,
-          label: provinceDisplayName(row.name),
-        }));
-        setProvinces(values);
-        setAdminAddressError('');
-      })
-      .catch(() => {
-        if (!active) return;
-        setProvinces([]);
-        setAdminAddressError('Không tải được danh sách tỉnh/thành. Bạn vẫn có thể nhập địa chỉ thủ công.');
-      })
-      .finally(() => {
-        if (active) setProvinceLoading(false);
-      });
-    return () => { active = false; };
-  }, []);
-
-  const selectedProvince = useMemo(() => {
-    const current = normalizeAdminText(form.tinhThanh);
-    if (!current) return null;
-    return provinces.find((province) => normalizeAdminText(province.label) === current) || null;
-  }, [form.tinhThanh, provinces]);
-
-  useEffect(() => {
-    let active = true;
-    if (!selectedProvince?.code) {
-      setWards([]);
-      setWardLoading(false);
-      return undefined;
-    }
-
-    const cacheKey = String(selectedProvince.code);
-    const cached = wardCacheRef.current.get(cacheKey);
-    if (cached) {
-      setWards(cached);
-      setWardLoading(false);
-      return undefined;
-    }
-
-    setWardLoading(true);
-    fetch(`${VIETNAM_ADMIN_API}/w/?province=${encodeURIComponent(selectedProvince.code)}`)
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      })
-      .then((rows) => {
-        if (!active) return;
-        const values = (Array.isArray(rows) ? rows : []).map((row) => ({
-          code: row.code,
-          label: String(row.name || '').trim(),
-        }));
-        wardCacheRef.current.set(cacheKey, values);
-        setWards(values);
-        setAdminAddressError('');
-      })
-      .catch(() => {
-        if (!active) return;
-        setWards([]);
-        setAdminAddressError('Không tải được danh sách phường/xã. Bạn vẫn có thể nhập địa chỉ thủ công.');
-      })
-      .finally(() => {
-        if (active) setWardLoading(false);
-      });
-
-    return () => { active = false; };
-  }, [selectedProvince?.code]);
-
-  useEffect(() => {
-    let active = true;
     promotionApi.getActive()
       .then((response) => {
         if (!active) return;
@@ -425,20 +262,15 @@ export default function DeliveryCheckout() {
 
   const isPickup = form.phuongThucNhanHang === 'TU_DEN_LAY';
 
-  const administrativeAddressReady = useMemo(() => [
-    form.tinhThanh,
-    form.phuongXa,
-  ].every((value) => String(value || '').trim()), [
-    form.tinhThanh,
-    form.phuongXa,
-  ]);
+  const deliveryCityReady = String(form.tinhThanh || '').trim() === DELIVERY_CITY;
+  const selectedAddressReady = deliveryCityReady && Boolean(String(form.phuongXa || '').trim());
 
   useEffect(() => {
     const query = addressQuery.trim();
-    if (!administrativeAddressReady || addressSelectionToken || query.length < 3) {
+    if (!deliveryCityReady || addressSelectionToken || query.length < 3) {
       setAddressSuggestions([]);
       setAddressSuggestionLoading(false);
-      if (query.length < 3 || !administrativeAddressReady) setAddressSuggestionError('');
+      if (query.length < 3 || !deliveryCityReady) setAddressSuggestionError('');
       return undefined;
     }
 
@@ -448,8 +280,7 @@ export default function DeliveryCheckout() {
       setAddressSuggestionError('');
       deliveryApi.addressSuggestions({
         query,
-        tinhThanh: form.tinhThanh.trim(),
-        phuongXa: form.phuongXa.trim(),
+        tinhThanh: DELIVERY_CITY,
       })
         .then((response) => {
           if (!active) return;
@@ -477,15 +308,13 @@ export default function DeliveryCheckout() {
       window.clearTimeout(timer);
     };
   }, [
-    administrativeAddressReady,
+    deliveryCityReady,
     addressQuery,
     addressSelectionToken,
-    form.tinhThanh,
-    form.phuongXa,
   ]);
 
   useEffect(() => {
-    if (isPickup || !addressSelectionToken || !administrativeAddressReady) {
+    if (isPickup || !addressSelectionToken || !selectedAddressReady) {
       setQuote(null);
       setQuoteLoading(false);
       return undefined;
@@ -539,7 +368,7 @@ export default function DeliveryCheckout() {
 
     return () => { active = false; };
   }, [
-    administrativeAddressReady,
+    selectedAddressReady,
     isPickup,
     addressSelectionToken,
     addressQuery,
@@ -593,7 +422,7 @@ export default function DeliveryCheckout() {
     setQuote(null);
     setQuoteError('');
     setQuoteLoading(false);
-    setForm((current) => ({ ...current, soNha: '', tenDuong: '' }));
+    setForm((current) => ({ ...current, soNha: '', tenDuong: '', phuongXa: '', tinhThanh: DELIVERY_CITY }));
     if (clearQuery) setAddressQuery('');
   }
 
@@ -605,7 +434,7 @@ export default function DeliveryCheckout() {
     setAddressSuggestionError('');
     setQuote(null);
     setQuoteError('');
-    setForm((current) => ({ ...current, soNha: '', tenDuong: '' }));
+    setForm((current) => ({ ...current, soNha: '', tenDuong: '', phuongXa: '', tinhThanh: DELIVERY_CITY }));
   }
 
   function chooseAddressSuggestion(suggestion) {
@@ -621,6 +450,8 @@ export default function DeliveryCheckout() {
       ...current,
       soNha: String(suggestion.soNha || parsed.soNha || '').trim(),
       tenDuong: String(suggestion.tenDuong || parsed.tenDuong || '').trim(),
+      phuongXa: String(suggestion.phuongXa || '').trim(),
+      tinhThanh: DELIVERY_CITY,
     }));
     setAddressSelectionToken(suggestion.selectionToken);
     setSelectedAddressLabel(String(suggestion.label || '').trim());
@@ -636,9 +467,10 @@ export default function DeliveryCheckout() {
     if (!/^\+?[0-9]{9,15}$/.test(phone)) return 'Số điện thoại nhận hàng không hợp lệ.';
     if (!form.tenNguoiNhan.trim()) return 'Vui lòng nhập họ tên người nhận.';
     if (!isPickup) {
-      if (!administrativeAddressReady) return 'Vui lòng chọn đầy đủ Tỉnh/Thành phố và Phường/Xã.';
-      if (!addressQuery.trim()) return 'Vui lòng nhập số nhà và tên đường.';
+      if (!deliveryCityReady) return 'Lumora hiện chỉ hỗ trợ giao hàng trong khu vực Đà Nẵng.';
+      if (!addressQuery.trim()) return 'Vui lòng nhập địa chỉ nhận hàng.';
       if (!addressSelectionToken) return 'Vui lòng chọn đúng địa chỉ trong danh sách gợi ý.';
+      if (!form.phuongXa.trim()) return 'Địa chỉ đã chọn chưa xác định được phường/xã. Vui lòng chọn gợi ý khác.';
       if (quoteLoading) return 'Hệ thống đang xác định địa chỉ và tính phí giao hàng.';
       if (quoteError) return quoteError;
       if (!quote) return 'Vui lòng chờ hệ thống xác thực địa chỉ và tính phí giao hàng.';
@@ -680,7 +512,7 @@ export default function DeliveryCheckout() {
         tenDuong: isPickup ? null : (form.tenDuong.trim() || null),
         phuongXa: isPickup ? null : form.phuongXa.trim(),
         tinhThanh: isPickup ? null : form.tinhThanh.trim(),
-        thongTinDiaChi: isPickup ? null : (form.thongTinDiaChi.trim() || null),
+        thongTinDiaChi: null,
         diaChiChiTiet: isPickup ? null : (suggestionStreetText({ label: selectedAddressLabel }, addressQuery) || null),
         googlePlaceId: null,
         googleFormattedAddress: null,
@@ -791,53 +623,24 @@ export default function DeliveryCheckout() {
             ) : (
             <div className="delivery-checkout-subsection">
               <h3>Địa chỉ nhận hàng</h3>
-              <p className="delivery-checkout-subsection-note">Chọn khu vực trước, sau đó nhập địa chỉ cụ thể và chọn đúng gợi ý trên bản đồ</p>
-              <div className="delivery-form-grid two delivery-address-grid">
-              <SearchableAddressSelect
-                label="Tỉnh / Thành phố"
-                value={form.tinhThanh}
-                placeholder="Chọn Tỉnh / Thành phố"
-                options={provinces}
-                loading={provinceLoading}
-                onChange={(value) => {
-                  setForm((current) => ({ ...current, tinhThanh: value, phuongXa: '' }));
-                  resetChosenAddress({ clearQuery: true });
-                }}
-                onSelect={(option) => {
-                  setForm((current) => ({ ...current, tinhThanh: option.label, phuongXa: '' }));
-                  resetChosenAddress({ clearQuery: true });
-                }}
-              />
-              <SearchableAddressSelect
-                label="Phường / Xã"
-                value={form.phuongXa}
-                placeholder={form.tinhThanh ? 'Chọn Phường / Xã' : 'Chọn Tỉnh / Thành phố trước'}
-                options={wards}
-                loading={wardLoading}
-                disabled={!form.tinhThanh.trim()}
-                emptyText={selectedProvince ? 'Không tìm thấy phường/xã phù hợp.' : 'Chọn một tỉnh/thành trong danh sách để tải phường/xã.'}
-                onChange={(value) => {
-                  setForm((current) => ({ ...current, phuongXa: value }));
-                  resetChosenAddress();
-                }}
-                onSelect={(option) => {
-                  setForm((current) => ({ ...current, phuongXa: option.label }));
-                  resetChosenAddress();
-                }}
-              />
-              <DeliveryAddressAutocomplete
-                value={addressQuery}
-                disabled={!administrativeAddressReady}
-                loading={addressSuggestionLoading}
-                suggestions={addressSuggestions}
-                error={addressSuggestionError}
-                selected={Boolean(addressSelectionToken)}
-                onChange={changeAddressQuery}
-                onSelect={chooseAddressSuggestion}
-              />
-              <label className="delivery-form-wide"><span>Thông tin chi tiết</span><div><Home size={18} /><input value={form.thongTinDiaChi} onChange={updateField('thongTinDiaChi')} maxLength={500} placeholder="Tòa nhà, tầng, cổng..." /></div></label>
-            </div>
-            {adminAddressError ? <div className="delivery-admin-address-warning">{adminAddressError}</div> : null}
+              <div className="delivery-da-nang-notice">
+                <MapPin size={18} />
+                <div>
+                  <strong>Hiện tại Lumora chỉ hỗ trợ giao hàng trong khu vực Đà Nẵng.</strong>
+                  <span>Vui lòng nhập địa chỉ cụ thể và chọn đúng gợi ý để hệ thống tính phí giao hàng.</span>
+                </div>
+              </div>
+              <div className="delivery-form-grid delivery-address-grid delivery-address-grid-single">
+                <DeliveryAddressAutocomplete
+                  value={addressQuery}
+                  loading={addressSuggestionLoading}
+                  suggestions={addressSuggestions}
+                  error={addressSuggestionError}
+                  selected={Boolean(addressSelectionToken)}
+                  onChange={changeAddressQuery}
+                  onSelect={chooseAddressSuggestion}
+                />
+              </div>
 
             {quote?.quangDuongMet && quote?.diaChiDayDu ? (
               <div className="delivery-map-address">
@@ -944,7 +747,6 @@ export default function DeliveryCheckout() {
               <p><span>Số điện thoại</span><strong>{form.soDienThoaiNhan}</strong></p>
               <p className="wide"><span>Phương thức nhận</span><strong>{isPickup ? 'Đến lấy tại nhà hàng' : 'Giao tận nơi'}</strong></p>
               <p className="wide"><span>{isPickup ? 'Địa điểm nhận' : 'Địa chỉ'}</span><strong>{displayAddress}</strong></p>
-              {!isPickup && form.thongTinDiaChi ? <p className="wide"><span>Chi tiết</span><strong>{form.thongTinDiaChi}</strong></p> : null}
               <p><span>Thời gian nhận</span><strong>{form.loaiThoiGianNhan === 'HEN_GIO' ? formatReceiveTime(form.thoiGianNhanMongMuon) : 'Giao sớm nhất'}</strong></p>
               <p><span>Thanh toán</span><strong>{form.phuongThucThanhToan === 'COD' ? 'COD' : 'VietQR'}</strong></p>
             </div>
