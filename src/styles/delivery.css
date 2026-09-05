@@ -956,7 +956,7 @@
 /* Trang theo dõi PayOS */
 .delivery-flow-page{background:#f8fafc;color:var(--flow-ink)}
 .delivery-flow-back{display:inline-flex;align-items:center;gap:8px;color:#5f6e82;text-decoration:none;font-size:13px;font-weight:750}
-.delivery-payflow-page,.delivery-paidflow-page{width:min(1450px,calc(100% - 40px));padding:24px 0 72px}
+.delivery-payflow-page,.delivery-paidflow-page{width:min(1240px,calc(100% - 40px));padding:24px 0 72px}
 .delivery-payflow-page>.delivery-flow-back,.delivery-paidflow-page>.delivery-flow-back{margin-bottom:22px}
 .delivery-payflow-grid,.delivery-paidflow-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.9fr);gap:18px;align-items:start}
 .delivery-payflow-main-card,.delivery-payos-card-v2,.delivery-paidflow-main-card,.delivery-paid-summary-card{border:1px solid #dde5ed;border-radius:18px;background:#fff;box-shadow:0 12px 38px rgba(23,42,62,.055)}
@@ -1202,7 +1202,7 @@
 /* 2026-09-05 compact pending PayOS tracking layout */
 @media (min-width:901px){
   .delivery-payflow-page{
-    width:min(1320px,calc(100% - 40px));
+    width:min(1240px,calc(100% - 40px));
     padding:18px 0 52px;
   }
   .delivery-payflow-page>.delivery-flow-back{margin-bottom:16px}
