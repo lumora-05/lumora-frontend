@@ -1344,17 +1344,17 @@
 /* 2026-09-06 payment page refreshed based on QR banking reference */
 .delivery-pay-reference-page{width:min(1120px,calc(100% - 40px));padding:24px 0 72px}
 .delivery-pay-reference-shell{border:1px solid #dde5ed;border-radius:18px;background:#fff;box-shadow:0 12px 38px rgba(23,42,62,.055);overflow:hidden}
-.delivery-pay-reference-head{padding:24px 28px;border-bottom:1px solid #e8edf2;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.delivery-pay-reference-brand{display:flex;align-items:center;gap:14px}
-.delivery-pay-reference-brand>span{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;color:var(--flow-orange);background:#fff1e8}
+.delivery-pay-reference-head{padding:16px 22px;border-bottom:1px solid #e8edf2;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.delivery-pay-reference-brand{display:flex;align-items:center;gap:11px}
+.delivery-pay-reference-brand>span{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--flow-orange);background:#fff1e8}
 .delivery-pay-reference-brand strong,.delivery-pay-reference-brand small{display:block}
-.delivery-pay-reference-brand strong{color:#132943;font-size:20px}
-.delivery-pay-reference-brand small{margin-top:4px;color:#728196;font-size:12px;line-height:1.55}
-.delivery-pay-reference-expire{min-width:240px;text-align:right}
-.delivery-pay-reference-expire small{display:block;color:#66788e;font-size:12px;font-weight:700}
-.delivery-pay-reference-expire>div{margin-top:8px;display:inline-flex;align-items:center;gap:7px}
-.delivery-pay-reference-expire b{min-width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;background:#1e2632;font-size:24px;letter-spacing:.04em}
-.delivery-pay-reference-expire span{color:#314154;font-size:24px;font-weight:900}
+.delivery-pay-reference-brand strong{color:#132943;font-size:18px}
+.delivery-pay-reference-brand small{margin-top:2px;color:#728196;font-size:11px;line-height:1.45}
+.delivery-pay-reference-expire{min-width:205px;text-align:right}
+.delivery-pay-reference-expire small{display:block;color:#66788e;font-size:11px;font-weight:700}
+.delivery-pay-reference-expire>div{margin-top:5px;display:inline-flex;align-items:center;gap:6px}
+.delivery-pay-reference-expire b{min-width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;background:#1e2632;font-size:19px;letter-spacing:.04em}
+.delivery-pay-reference-expire span{color:#314154;font-size:19px;font-weight:900}
 .delivery-pay-reference-alert{margin:22px 28px 0;padding:16px 18px;border:1px solid #f3c68c;border-radius:12px;display:flex;align-items:flex-start;gap:12px;background:#fff8ef}
 .delivery-pay-reference-alert>svg{flex:none;margin-top:2px;color:#aa6a11}
 .delivery-pay-reference-alert strong,.delivery-pay-reference-alert small{display:block}
@@ -1369,6 +1369,9 @@
 .delivery-pay-reference-order-list p:first-child{padding-top:0}
 .delivery-pay-reference-order-list span{flex:none;color:#65768b;font-size:12px}
 .delivery-pay-reference-order-list strong{color:#182d48;font-size:15px;text-align:right;line-height:1.5}
+.delivery-pay-reference-order-list .delivery-pay-reference-total{margin-top:4px;padding-top:15px;border-top:1px solid #d8e0e8;border-bottom:0}
+.delivery-pay-reference-order-list .delivery-pay-reference-total span{color:#24384f;font-weight:800}
+.delivery-pay-reference-order-list .delivery-pay-reference-total strong{color:#f05a16;font-size:20px;font-weight:900}
 .delivery-pay-reference-order-list strong.copyable{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px}
 .delivery-pay-reference-order-list strong.copyable button{width:30px;height:30px;border:0;border-radius:8px;display:grid;place-items:center;color:#63768e;background:#fff;cursor:pointer;box-shadow:inset 0 0 0 1px #dce4eb}
 .delivery-pay-reference-state{margin-top:16px;padding:14px 16px;border:1px solid #dce4ed;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:16px}

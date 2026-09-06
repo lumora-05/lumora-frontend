@@ -454,10 +454,9 @@ export default function DeliveryTracking() {
               <section className="delivery-pay-reference-order-card">
                 <h2>Thông tin đơn hàng</h2>
                 <div className="delivery-pay-reference-order-list">
-                  <p><span>Số tiền thanh toán</span><strong>{formatMoney(paymentAmount)}</strong></p>
-                  <p><span>Giá trị đơn hàng</span><strong>{formatMoney(order.tamTinh)}</strong></p>
-                  <p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p>
-                  {Number(order.tienGiam || 0) > 0 ? <p><span>Giảm giá</span><strong>-{formatMoney(order.tienGiam)}</strong></p> : null}
+                  <p><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
+                  <p><span>Số điện thoại</span><strong>{order.soDienThoaiNhanChe || order.soDienThoaiNhan || '—'}</strong></p>
+                  <p><span>Địa chỉ giao hàng</span><strong>{isPickupOrder ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p>
                   <p>
                     <span>Mã đơn hàng</span>
                     <strong className="copyable">
@@ -469,9 +468,8 @@ export default function DeliveryTracking() {
                       ) : null}
                     </strong>
                   </p>
-                  <p><span>Nhà cung cấp</span><strong>Nhà hàng Lumora</strong></p>
-                  <p><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
-                  <p><span>Địa chỉ giao hàng</span><strong>{isPickupOrder ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p>
+                  <p><span>Phí giao hàng</span><strong>{formatMoney(order.phiGiaoHang)}</strong></p>
+                  <p className="delivery-pay-reference-total"><span>Số tiền thanh toán</span><strong>{formatMoney(paymentAmount)}</strong></p>
                 </div>
 
                 <div className="delivery-pay-reference-state">
