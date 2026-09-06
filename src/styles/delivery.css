@@ -1495,3 +1495,38 @@
   .delivery-payment-expired-actions{grid-template-columns:1fr}
   .delivery-payment-expired-actions .primary{grid-row:1}
 }
+
+/* 2026-09-06 · payment cards match reference framing */
+.delivery-pay-reference-order-card,
+.delivery-pay-reference-qr-card{
+  padding:18px;
+  border:1px solid #e9e1d8;
+  border-radius:18px;
+  background:#fffdfb;
+  box-sizing:border-box;
+}
+.delivery-pay-reference-section-title{
+  padding-bottom:14px;
+  border-bottom:1px solid #ece5de;
+}
+.delivery-pay-reference-order-list{margin-top:16px}
+.delivery-pay-reference-qr-subtitle{margin-top:16px;text-align:center}
+.delivery-pay-reference-qr-box{
+  margin-top:14px;
+  border:1px solid #ece3da;
+  background:#fffaf6;
+}
+.delivery-pay-reference-qr-frame{
+  border:1px solid #f1e6dc;
+  background:#fff;
+}
+.delivery-pay-reference-qr-box.expired{
+  border-color:#ece3da;
+  background:#fffaf6;
+}
+@media(max-width:680px){
+  .delivery-pay-reference-order-card,
+  .delivery-pay-reference-qr-card{padding:14px;border-radius:16px}
+  .delivery-pay-reference-section-title{padding-bottom:12px}
+  .delivery-pay-reference-qr-subtitle{margin-top:13px}
+}
