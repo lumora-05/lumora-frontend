@@ -1530,3 +1530,24 @@
   .delivery-pay-reference-section-title{padding-bottom:12px}
   .delivery-pay-reference-qr-subtitle{margin-top:13px}
 }
+
+/* 2026-09-06 · QR payment color match refinement */
+.delivery-pay-reference-qr-card{
+  background:#fff;
+  border-color:#e7e9ec;
+}
+.delivery-pay-reference-qr-card .delivery-pay-reference-section-title>span{
+  background:#fff7f2;
+}
+.delivery-pay-reference-qr-box,
+.delivery-pay-reference-qr-box.expired{
+  background:#fff;
+  border-color:#e7e9ec;
+}
+.delivery-pay-reference-qr-frame{
+  background:#fff;
+  border-color:#e7e9ec;
+}
+.delivery-pay-reference-qr-frame .corner{
+  border-color:#f45b0b;
+}
