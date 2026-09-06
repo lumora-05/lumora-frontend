@@ -113,6 +113,9 @@ export default function DeliveryTracking() {
   const [qr, setQr] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [paymentNowMs, setPaymentNowMs] = useState(() => Date.now());
+  const [paymentExpiredModalOpen, setPaymentExpiredModalOpen] = useState(false);
+  const [paymentExpiredDismissed, setPaymentExpiredDismissed] = useState(false);
+  const [renewingPayment, setRenewingPayment] = useState(false);
   const qrAutoRequestKeyRef = useRef('');
   const qrRequestIdRef = useRef(0);
   const [cancelReason, setCancelReason] = useState('');
@@ -226,6 +229,40 @@ export default function DeliveryTracking() {
     return () => window.clearInterval(timer);
   }, [order?.phuongThucThanhToan, order?.trangThaiGiaoHang, order?.trangThaiThanhToan, order?.thoiGianHetHanThanhToan]);
 
+  useEffect(() => {
+    const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
+    const deliveryStatus = String(order?.trangThaiGiaoHang || '').toUpperCase();
+    const paymentStatus = String(order?.trangThaiThanhToan || '').toUpperCase();
+    const deadline = parseDateValue(order?.thoiGianHetHanThanhToan);
+    const expiredByStatus = paymentStatus === 'HET_HAN';
+    const expiredByClock = paymentStatus === 'CHO_THANH_TOAN'
+      && deadline
+      && deadline.getTime() <= paymentNowMs;
+
+    const activeFutureSession = paymentMethod === 'VIETQR'
+      && deliveryStatus === 'CHO_THANH_TOAN'
+      && paymentStatus === 'CHO_THANH_TOAN'
+      && deadline
+      && deadline.getTime() > paymentNowMs;
+
+    if (activeFutureSession) {
+      setPaymentExpiredDismissed(false);
+      return;
+    }
+
+    if (paymentMethod === 'VIETQR'
+        && deliveryStatus === 'CHO_THANH_TOAN'
+        && (expiredByStatus || expiredByClock)) {
+      if (!paymentExpiredDismissed) setPaymentExpiredModalOpen(true);
+      return;
+    }
+
+    if (deliveryStatus !== 'CHO_THANH_TOAN' || !['CHO_THANH_TOAN', 'HET_HAN'].includes(paymentStatus)) {
+      setPaymentExpiredModalOpen(false);
+      setPaymentExpiredDismissed(false);
+    }
+  }, [order?.phuongThucThanhToan, order?.trangThaiGiaoHang, order?.trangThaiThanhToan, order?.thoiGianHetHanThanhToan, paymentNowMs, paymentExpiredDismissed]);
+
   const steps = useMemo(() => {
     const paymentMethod = String(order?.phuongThucThanhToan || '').toUpperCase();
     const receiveType = String(order?.loaiThoiGianNhan || '').toUpperCase();
@@ -253,6 +290,25 @@ export default function DeliveryTracking() {
       toast.error(errorMessageOf(requestError, 'Không thể tạo mã QR thanh toán.'));
     } finally {
       setQrLoading(false);
+    }
+  }
+
+  async function renewPaymentSession() {
+    setRenewingPayment(true);
+    try {
+      qrAutoRequestKeyRef.current = '';
+      const response = await deliveryApi.createVietQr(trackingCode);
+      setQr(unwrapDeliveryResponse(response));
+      setPaymentNowMs(Date.now());
+      await loadOrder({ silent: true });
+      setPaymentExpiredModalOpen(false);
+      setPaymentExpiredDismissed(false);
+      toast.success('Đã tạo mã thanh toán mới. Vui lòng hoàn tất trong thời gian hiển thị.');
+    } catch (requestError) {
+      await loadOrder({ silent: true });
+      toast.error(errorMessageOf(requestError, 'Không thể tạo lại mã thanh toán.'));
+    } finally {
+      setRenewingPayment(false);
     }
   }
 
@@ -338,11 +394,16 @@ export default function DeliveryTracking() {
   const isPickupOrder = receiveMethod === 'TU_DEN_LAY';
   const isScheduledOrder = receiveType === 'HEN_GIO';
   const isPayOsPending = !failed && paymentMethod === 'VIETQR' && status === 'CHO_THANH_TOAN' && paymentStatus === 'CHO_THANH_TOAN';
+  const isPayOsExpired = !failed && paymentMethod === 'VIETQR' && status === 'CHO_THANH_TOAN' && paymentStatus === 'HET_HAN';
   const paidFlowStatuses = ['CHO_XAC_NHAN', 'CHO_DEN_GIO', 'DANG_CHUAN_BI', 'CHO_TAI_XE_NHAN', 'CHO_BAN_GIAO', 'CHO_KHACH_NHAN', 'DANG_GIAO', 'CHO_DOI_SOAT', 'HOAN_THANH'];
   const isPayOsPaidFlow = !failed && paymentMethod === 'VIETQR' && paymentStatus === 'DA_THANH_TOAN'
     && paidFlowStatuses.includes(status);
   const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.soLuong || 0), 0);
   const paymentCountdown = countdownParts(order?.thoiGianHetHanThanhToan, paymentNowMs);
+  const paymentSessionExpired = isPayOsExpired || Boolean(paymentCountdown?.expired);
+  const isPayOsPaymentFlow = isPayOsPending || isPayOsExpired || (
+    !failed && paymentMethod === 'VIETQR' && status === 'CHO_THANH_TOAN' && paymentSessionExpired
+  );
   const paymentAmount = qr?.amount ?? order.tongThanhToan;
   const transferContent = qr?.addInfo || order.maDonHangHienThi || '—';
   const paymentBankInfo = [qr?.bankName, qr?.accountNo].filter(Boolean).join(' · ');
@@ -411,7 +472,7 @@ export default function DeliveryTracking() {
     };
   })();
 
-  if (isPayOsPending) {
+  if (isPayOsPaymentFlow) {
     return (
       <main className="delivery-public-page delivery-flow-page">
         <DeliveryPublicHeader homeStyle />
@@ -428,7 +489,12 @@ export default function DeliveryTracking() {
                 </div>
               </div>
 
-              {paymentCountdown ? (
+              {paymentSessionExpired ? (
+                <div className="delivery-pay-reference-expire expired">
+                  <small>Phiên thanh toán</small>
+                  <strong>Đã hết hạn</strong>
+                </div>
+              ) : paymentCountdown ? (
                 <div className="delivery-pay-reference-expire">
                   <small>Giao dịch hết hạn sau</small>
                   <div>
@@ -442,11 +508,11 @@ export default function DeliveryTracking() {
               ) : null}
             </div>
 
-            <div className="delivery-pay-reference-alert">
-              <AlertTriangle size={20} />
+            <div className={`delivery-pay-reference-alert ${paymentSessionExpired ? 'expired' : ''}`}>
+              {paymentSessionExpired ? <Clock3 size={20} /> : <AlertTriangle size={20} />}
               <div>
-                <strong>Vui lòng không đóng trình duyệt cho đến khi website nhận được kết quả giao dịch.</strong>
-                <small>Sau khi bạn thanh toán thành công, hệ thống sẽ tự động xác nhận và chuyển đơn sang bước chờ nhà hàng xác nhận.</small>
+                <strong>{paymentSessionExpired ? 'Mã thanh toán đã hết hạn, nhưng đơn hàng của bạn vẫn được giữ.' : 'Vui lòng không đóng trình duyệt cho đến khi website nhận được kết quả giao dịch.'}</strong>
+                <small>{paymentSessionExpired ? 'Bạn có thể tạo mã mới để tiếp tục thanh toán mà không cần chọn lại món hoặc nhập lại thông tin.' : 'Sau khi bạn thanh toán thành công, hệ thống sẽ tự động xác nhận và chuyển đơn sang bước chờ nhà hàng xác nhận.'}</small>
               </div>
             </div>
 
@@ -474,7 +540,7 @@ export default function DeliveryTracking() {
 
                 <div className="delivery-pay-reference-state">
                   <div><small>Trạng thái đơn</small><strong>{order.maDonHangHienThi || '—'}</strong></div>
-                  <span><Clock3 size={16} /> Chờ thanh toán</span>
+                  <span className={paymentSessionExpired ? 'expired' : ''}><Clock3 size={16} /> {paymentSessionExpired ? 'Mã đã hết hạn' : 'Chờ thanh toán'}</span>
                 </div>
 
                 <div className="delivery-pay-reference-progress">
@@ -502,8 +568,18 @@ export default function DeliveryTracking() {
               <section className="delivery-pay-reference-qr-card">
                 <h2>Quét mã bằng ứng dụng ngân hàng / ví điện tử</h2>
 
-                <div className="delivery-pay-reference-qr-box">
-                  {qr?.qrUrl ? (
+                <div className={`delivery-pay-reference-qr-box ${paymentSessionExpired ? 'expired' : ''}`}>
+                  {paymentSessionExpired ? (
+                    <div className="delivery-pay-expired-inline">
+                      <span><Clock3 size={32} /></span>
+                      <strong>Phiên thanh toán đã hết hạn</strong>
+                      <small>Mã QR cũ không còn hiệu lực. Đơn hàng vẫn được giữ nguyên.</small>
+                      <button type="button" onClick={renewPaymentSession} disabled={renewingPayment}>
+                        {renewingPayment ? <LoaderCircle className="spin" size={17} /> : <RefreshCw size={17} />}
+                        {renewingPayment ? 'Đang tạo mã mới...' : 'Tạo lại mã thanh toán'}
+                      </button>
+                    </div>
+                  ) : qr?.qrUrl ? (
                     <div className="delivery-pay-reference-qr-frame">
                       <span className="corner top-left" aria-hidden="true" />
                       <span className="corner top-right" aria-hidden="true" />
@@ -519,38 +595,62 @@ export default function DeliveryTracking() {
                   )}
                 </div>
 
-                {!qr?.qrUrl && !qrLoading ? (
+                {!paymentSessionExpired && !qr?.qrUrl && !qrLoading ? (
                   <button className="delivery-payos-retry" type="button" onClick={generateQr}><RefreshCw size={16} /> Thử tạo lại mã QR</button>
                 ) : null}
 
-                <div className="delivery-pay-reference-transfer">
-                  <span>Nội dung chuyển khoản</span>
-                  <div>
-                    <b>{transferContent}</b>
-                    {transferContent !== '—' ? (
-                      <button type="button" onClick={() => copyText(transferContent, 'Đã sao chép nội dung chuyển khoản.')} aria-label="Sao chép nội dung chuyển khoản">
-                        <Copy size={16} />
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
+                {!paymentSessionExpired ? (
+                  <>
+                    <div className="delivery-pay-reference-transfer">
+                      <span>Nội dung chuyển khoản</span>
+                      <div>
+                        <b>{transferContent}</b>
+                        {transferContent !== '—' ? (
+                          <button type="button" onClick={() => copyText(transferContent, 'Đã sao chép nội dung chuyển khoản.')} aria-label="Sao chép nội dung chuyển khoản">
+                            <Copy size={16} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
 
-                <div className="delivery-pay-reference-help">
-                  <strong>Hướng dẫn thanh toán</strong>
-                  <ol>
-                    <li>Mở ứng dụng ngân hàng hoặc ví điện tử.</li>
-                    <li>Quét mã QR và kiểm tra đúng số tiền, nội dung chuyển khoản.</li>
-                    <li>Hoàn tất chuyển khoản để hệ thống tự động xác nhận.</li>
-                  </ol>
-                </div>
+                    <div className="delivery-pay-reference-help">
+                      <strong>Hướng dẫn thanh toán</strong>
+                      <ol>
+                        <li>Mở ứng dụng ngân hàng hoặc ví điện tử.</li>
+                        <li>Quét mã QR và kiểm tra đúng số tiền, nội dung chuyển khoản.</li>
+                        <li>Hoàn tất chuyển khoản để hệ thống tự động xác nhận.</li>
+                      </ol>
+                    </div>
 
-                <div className="delivery-pay-reference-extra">
-                  {paymentBankInfo ? <small>{paymentBankInfo}</small> : null}
-                  <small>Thời gian tạo đơn: {formatDate(order.thoiGianDat)}</small>
-                </div>
+                    <div className="delivery-pay-reference-extra">
+                      {paymentBankInfo ? <small>{paymentBankInfo}</small> : null}
+                      <small>Thời gian tạo đơn: {formatDate(order.thoiGianDat)}</small>
+                    </div>
+                  </>
+                ) : null}
               </section>
             </div>
           </section>
+
+          {paymentExpiredModalOpen && paymentSessionExpired ? (
+            <div className="delivery-payment-expired-backdrop" role="presentation" onMouseDown={(event) => {
+              if (event.target === event.currentTarget) { setPaymentExpiredModalOpen(false); setPaymentExpiredDismissed(true); }
+            }}>
+              <section className="delivery-payment-expired-modal" role="dialog" aria-modal="true" aria-labelledby="delivery-payment-expired-title">
+                <button className="delivery-payment-expired-close" type="button" onClick={() => { setPaymentExpiredModalOpen(false); setPaymentExpiredDismissed(true); }} aria-label="Đóng thông báo">×</button>
+                <span className="delivery-payment-expired-icon"><Clock3 size={30} /></span>
+                <h2 id="delivery-payment-expired-title">Phiên thanh toán đã hết hạn</h2>
+                <p>Mã QR này không còn hiệu lực do quá thời gian thanh toán. <strong>Đơn hàng của bạn vẫn được giữ nguyên</strong>, bạn không cần chọn món hay nhập lại thông tin.</p>
+                <div className="delivery-payment-expired-actions">
+                  <button className="secondary" type="button" onClick={() => { setPaymentExpiredModalOpen(false); setPaymentExpiredDismissed(true); }}>Quay lại</button>
+                  <button className="primary" type="button" onClick={renewPaymentSession} disabled={renewingPayment}>
+                    {renewingPayment ? <LoaderCircle className="spin" size={17} /> : <RefreshCw size={17} />}
+                    {renewingPayment ? 'Đang tạo mã mới...' : 'Tạo lại mã thanh toán'}
+                  </button>
+                </div>
+              </section>
+            </div>
+          ) : null}
         </section>
       </main>
     );
