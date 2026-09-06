@@ -5,9 +5,25 @@ const foodId = (food) => food?.maMonAn ?? food?.id;
 const storageKey = (qrToken) => `lumora_cart_qr_${qrToken || 'unknown'}`;
 
 function readCart(qrToken) {
+  const key = storageKey(qrToken);
   try {
-    const value = JSON.parse(sessionStorage.getItem(storageKey(qrToken)) || '[]');
-    return Array.isArray(value) ? value : [];
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      const value = JSON.parse(saved || '[]');
+      return Array.isArray(value) ? value : [];
+    }
+
+    // Giữ lại giỏ của phiên bản cũ đang lưu bằng sessionStorage,
+    // sau đó chuyển sang localStorage để giỏ còn nguyên khi mở lại trình duyệt.
+    const legacy = sessionStorage.getItem(key);
+    if (legacy !== null) {
+      const value = JSON.parse(legacy || '[]');
+      const items = Array.isArray(value) ? value : [];
+      localStorage.setItem(key, JSON.stringify(items));
+      return items;
+    }
+
+    return [];
   } catch {
     return [];
   }
@@ -21,7 +37,7 @@ export function CartProvider({ children, qrToken }) {
   }, [qrToken]);
 
   useEffect(() => {
-    sessionStorage.setItem(storageKey(qrToken), JSON.stringify(items));
+    localStorage.setItem(storageKey(qrToken), JSON.stringify(items));
   }, [items, qrToken]);
 
   const add = (food, quantity = 1) => setItems((old) => {
