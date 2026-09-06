@@ -456,7 +456,7 @@ export default function DeliveryTracking() {
                 <div className="delivery-pay-reference-order-list">
                   <p><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
                   <p><span>Số điện thoại</span><strong>{order.soDienThoaiNhanChe || order.soDienThoaiNhan || '—'}</strong></p>
-                  <p><span>Địa chỉ giao hàng</span><strong>{isPickupOrder ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p>
+                  <p className="delivery-pay-reference-address"><span>Địa chỉ giao hàng</span><strong>{isPickupOrder ? '191 Hoàng Diệu, Phường Hải Châu, Thành phố Đà Nẵng' : order.diaChiGiaoHang || '—'}</strong></p>
                   <p>
                     <span>Mã đơn hàng</span>
                     <strong className="copyable">
@@ -500,8 +500,7 @@ export default function DeliveryTracking() {
               </section>
 
               <section className="delivery-pay-reference-qr-card">
-                <h2>Quét mã qua App Ngân hàng / Ví điện tử</h2>
-                <p>Khách hàng dùng ứng dụng ngân hàng để quét mã và hoàn tất thanh toán.</p>
+                <h2>Quét mã bằng ứng dụng ngân hàng / ví điện tử</h2>
 
                 <div className="delivery-pay-reference-qr-box">
                   {qr?.qrUrl ? (
