@@ -878,7 +878,8 @@
 .delivery-checkout-flow-v2{--flow-orange:#ff5a0a;--flow-orange-2:#ff7714;--flow-ink:#0f2340;--flow-muted:#728095;--flow-line:#dfe6ee;--flow-soft:#fff8f2;--flow-green:#139847}
 
 /* Checkout */
-.delivery-checkout-flow-v2{width:min(1360px,calc(100% - 40px));grid-template-columns:minmax(0,1fr) 410px;gap:18px;padding-bottom:90px}
+@media(min-width:681px){.delivery-checkout-heading-simple{width:min(1152px,calc(100% - 40px))}}
+.delivery-checkout-flow-v2{width:min(1152px,calc(100% - 40px));grid-template-columns:minmax(0,1fr) 360px;gap:24px;padding-bottom:90px}
 .delivery-checkout-flow-v2 .delivery-checkout-main{gap:18px}
 .delivery-checkout-flow-v2 .delivery-checkout-card,
 .delivery-checkout-flow-v2 .delivery-order-summary{border-color:#dde4eb;border-radius:20px;box-shadow:0 12px 38px rgba(20,37,55,.055)}
