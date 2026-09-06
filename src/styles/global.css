@@ -2926,7 +2926,7 @@
 .cashier-shell .admin-sidebar{background:linear-gradient(180deg,#0c1a2b,#071523)}
 .cashier-shell .admin-sidebar .brand-logo{background:linear-gradient(135deg,#ff7a00,#ff4d00)}
 .cashier-shell .admin-sidebar a.active{background:linear-gradient(135deg,#ff7a00,#ff4d00);color:#fff}
-.cashier-main{min-width:0}
+.cashier-main{min-width:0;background:#f8fafc}
 .cashier-title-wrap{display:flex;align-items:center;gap:12px;min-width:0}
 .cashier-menu-button{display:none;width:42px;height:42px;border:1px solid #eadccd;border-radius:11px;background:#fff;color:#6b5541;place-items:center;cursor:pointer}
 .cashier-live-time{display:inline-flex;align-items:center;gap:7px;color:#806a57;font-size:13px;font-weight:800;white-space:nowrap}
@@ -4709,9 +4709,7 @@
 .cashier-reference-page{
   min-height:calc(100vh - 103px)!important;
   padding:23px 25px 38px 23px!important;
-  background:
-    radial-gradient(circle at 80% 14%,rgba(244,183,135,.10),transparent 24%),
-    linear-gradient(180deg,#fbfaf8 0%,#fffdfb 100%)!important;
+  background:#f8fafc!important;
 }
 .cashier-reference-error{
   margin-bottom:16px;
