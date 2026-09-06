@@ -12,6 +12,8 @@ import {
   PackageCheck,
   Phone,
   RefreshCw,
+  Receipt,
+  QrCode,
   Search,
   ShoppingBag,
   Star,
@@ -518,7 +520,7 @@ export default function DeliveryTracking() {
 
             <div className="delivery-pay-reference-grid">
               <section className="delivery-pay-reference-order-card">
-                <h2>Thông tin đơn hàng</h2>
+                <h2 className="delivery-pay-reference-section-title"><span><Receipt size={19} /></span>Thông tin đơn hàng</h2>
                 <div className="delivery-pay-reference-order-list">
                   <p><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
                   <p><span>Số điện thoại</span><strong>{order.soDienThoaiNhanChe || order.soDienThoaiNhan || '—'}</strong></p>
@@ -566,7 +568,8 @@ export default function DeliveryTracking() {
               </section>
 
               <section className="delivery-pay-reference-qr-card">
-                <h2>Quét mã bằng ứng dụng ngân hàng / ví điện tử</h2>
+                <h2 className="delivery-pay-reference-section-title"><span><QrCode size={19} /></span>Thanh toán VietQR</h2>
+                <p className="delivery-pay-reference-qr-subtitle">Quét mã bằng ứng dụng ngân hàng / ví điện tử</p>
 
                 <div className={`delivery-pay-reference-qr-box ${paymentSessionExpired ? 'expired' : ''}`}>
                   {paymentSessionExpired ? (
