@@ -677,7 +677,7 @@ export default function DeliveryTracking() {
               <div className="delivery-payos-success-banner"><span><Check size={22} /></span><div><strong>Hệ thống đã xác nhận thanh toán tự động</strong><small>Thanh toán đã được ghi nhận thành công.</small></div></div>
 
               <div className="delivery-paid-status-grid">
-                <div><span><CreditCard size={23} /></span><p><small>Trạng thái thanh toán</small><strong className="success">Đã thanh toán</strong></p></div>
+                <div><span><CreditCard size={23} /></span><p><small>Trạng thái thanh toán</small><strong className="paid-success">Đã thanh toán</strong></p></div>
                 <div><span><PackageCheck size={23} /></span><p><small>Trạng thái đơn hàng</small><strong className="waiting">{deliveryStatusLabel(status)}</strong></p></div>
               </div>
 
