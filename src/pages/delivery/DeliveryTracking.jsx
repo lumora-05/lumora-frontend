@@ -504,7 +504,13 @@ export default function DeliveryTracking() {
 
                 <div className="delivery-pay-reference-qr-box">
                   {qr?.qrUrl ? (
-                    <img src={qr.qrUrl} alt="Mã QR thanh toán đơn giao hàng" />
+                    <div className="delivery-pay-reference-qr-frame">
+                      <span className="corner top-left" aria-hidden="true" />
+                      <span className="corner top-right" aria-hidden="true" />
+                      <span className="corner bottom-left" aria-hidden="true" />
+                      <span className="corner bottom-right" aria-hidden="true" />
+                      <img src={qr.qrUrl} alt="Mã QR thanh toán đơn giao hàng" />
+                    </div>
                   ) : (
                     <div className="delivery-payos-qr-loading delivery-pay-reference-loading">
                       {qrLoading ? <LoaderCircle className="spin" size={28} /> : <CreditCard size={28} />}

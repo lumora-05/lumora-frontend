@@ -1390,6 +1390,13 @@
 .delivery-pay-reference-qr-card>p{margin:0;color:#728095;font-size:12px;line-height:1.55}
 .delivery-pay-reference-qr-box{margin-top:12px;padding:14px;border-radius:16px;background:#f8fafc;display:grid;place-items:center;min-height:285px}
 .delivery-pay-reference-qr-box img{width:225px;height:225px;object-fit:contain;padding:9px;border-radius:8px;background:#fff;box-shadow:0 3px 12px rgba(20,34,49,.08)}
+.delivery-pay-reference-qr-frame{position:relative;display:grid;place-items:center;padding:14px;border-radius:16px;background:#fff}
+.delivery-pay-reference-qr-frame .corner{position:absolute;width:24px;height:24px;border-color:#ff6b17;border-style:solid;pointer-events:none}
+.delivery-pay-reference-qr-frame .corner.top-left{top:0;left:0;border-width:2px 0 0 2px;border-top-left-radius:12px}
+.delivery-pay-reference-qr-frame .corner.top-right{top:0;right:0;border-width:2px 2px 0 0;border-top-right-radius:12px}
+.delivery-pay-reference-qr-frame .corner.bottom-left{bottom:0;left:0;border-width:0 0 2px 2px;border-bottom-left-radius:12px}
+.delivery-pay-reference-qr-frame .corner.bottom-right{bottom:0;right:0;border-width:0 2px 2px 0;border-bottom-right-radius:12px}
+.delivery-pay-reference-qr-frame img{box-shadow:none}
 .delivery-pay-reference-loading{margin:0 auto;background:#fff;box-shadow:0 3px 12px rgba(20,34,49,.05)}
 .delivery-pay-reference-transfer{margin-top:18px}
 .delivery-pay-reference-transfer>span{display:block;margin-bottom:8px;color:#65768b;font-size:12px;font-weight:700}
@@ -1428,6 +1435,7 @@
   .delivery-pay-reference-progress strong{font-size:11px}
   .delivery-pay-reference-qr-box{min-height:250px;padding:14px}
   .delivery-pay-reference-qr-box img,.delivery-pay-reference-loading{width:190px;height:190px}
+.delivery-pay-reference-qr-frame .corner{width:22px;height:22px}
   .delivery-pay-reference-transfer b{font-size:14px}
   .delivery-pay-reference-expire b{min-width:36px;height:36px;font-size:20px}
   .delivery-pay-reference-expire span{font-size:20px}
@@ -1445,4 +1453,5 @@
   .delivery-pay-reference-grid{padding-top:14px}
   .delivery-pay-reference-qr-box{min-height:230px;padding:12px}
   .delivery-pay-reference-qr-box img,.delivery-pay-reference-loading{width:180px;height:180px}
+.delivery-pay-reference-qr-frame .corner{width:20px;height:20px}
 }
