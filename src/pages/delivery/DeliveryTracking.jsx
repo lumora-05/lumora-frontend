@@ -12,7 +12,7 @@ import {
   PackageCheck,
   Phone,
   RefreshCw,
-  Receipt,
+  FileText,
   QrCode,
   Search,
   ShoppingBag,
@@ -520,7 +520,7 @@ export default function DeliveryTracking() {
 
             <div className="delivery-pay-reference-grid">
               <section className="delivery-pay-reference-order-card">
-                <h2 className="delivery-pay-reference-section-title"><span><Receipt size={19} /></span>Thông tin đơn hàng</h2>
+                <h2 className="delivery-pay-reference-section-title"><span><FileText size={21} /></span>Thông tin đơn hàng</h2>
                 <div className="delivery-pay-reference-order-list">
                   <p><span>Người nhận</span><strong>{order.tenNguoiNhan || '—'}</strong></p>
                   <p><span>Số điện thoại</span><strong>{order.soDienThoaiNhanChe || order.soDienThoaiNhan || '—'}</strong></p>
