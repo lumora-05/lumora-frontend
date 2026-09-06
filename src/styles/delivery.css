@@ -1551,3 +1551,23 @@
 .delivery-pay-reference-qr-frame .corner{
   border-color:#f45b0b;
 }
+
+/* 2026-09-06 · unify order information card background */
+.delivery-pay-reference-order-card{
+  background:#f8fafc;
+}
+.delivery-pay-reference-order-card .delivery-pay-reference-section-title>span{
+  background:#fff7f2;
+}
+.delivery-pay-reference-order-list{
+  background:transparent;
+  border-radius:0;
+}
+.delivery-pay-reference-state{
+  margin-top:0;
+  padding:16px 18px 0;
+  border:0;
+  border-top:1px solid #e4eaf0;
+  border-radius:0;
+  background:transparent;
+}
