@@ -612,7 +612,6 @@ export default function DeliveryCheckout() {
               </div>
             ) : (
             <div className="delivery-checkout-subsection">
-              <h3>Địa chỉ nhận hàng</h3>
               <div className="delivery-da-nang-notice">
                 <MapPin size={18} />
                 <div>
