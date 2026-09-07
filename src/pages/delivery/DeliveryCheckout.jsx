@@ -442,7 +442,8 @@ export default function DeliveryCheckout() {
 
     const streetText = suggestionStreetText(suggestion, addressQuery);
     const parsed = splitStreetText(streetText);
-    setAddressQuery(streetText || String(suggestion.label || '').trim());
+    const selectedLabel = String(suggestion.label || '').trim();
+    setAddressQuery(selectedLabel || streetText);
     setForm((current) => ({
       ...current,
       soNha: String(suggestion.soNha || parsed.soNha || '').trim(),
@@ -451,7 +452,7 @@ export default function DeliveryCheckout() {
       tinhThanh: DELIVERY_CITY,
     }));
     setAddressSelectionToken(suggestion.selectionToken);
-    setSelectedAddressLabel(String(suggestion.label || '').trim());
+    setSelectedAddressLabel(selectedLabel);
     setAddressSuggestions([]);
     setAddressSuggestionError('');
     setQuote(null);
@@ -633,12 +634,6 @@ export default function DeliveryCheckout() {
                 />
               </div>
 
-            {quote?.quangDuongMet && quote?.diaChiDayDu ? (
-              <div className="delivery-map-address">
-                <MapPin size={18} />
-                <div><strong>{quote.diaChiDayDu}</strong><small>Địa chỉ đã được xác thực trước khi đặt hàng.</small></div>
-              </div>
-            ) : null}
             {quote?.encodedPolyline ? <GoogleMapsEmbed routeGeometry={quote.encodedPolyline} destinationLabel={quote.diaChiDayDu} /> : null}
             <label className="delivery-order-note"><span>Ghi chú giao hàng</span><input value={form.ghiChuGiaoHang} onChange={updateField('ghiChuGiaoHang')} maxLength={500} placeholder="Gọi trước khi đến, giao tại cổng..." /></label>
             <div className={`delivery-quote-box ${quoteError ? 'error' : ''}`}>
