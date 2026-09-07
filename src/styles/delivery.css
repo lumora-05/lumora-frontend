@@ -888,22 +888,22 @@
 .delivery-checkout-flow-v2 .delivery-card-title>span{width:48px;height:48px;padding:0;border-radius:14px;color:var(--flow-orange);background:#fff0e7}
 .delivery-checkout-flow-v2 .delivery-card-title h2{color:var(--flow-ink);font-size:21px;letter-spacing:-.02em}
 .delivery-checkout-flow-v2 .delivery-card-title p{font-size:12px;color:#8794a6}
-.delivery-checkout-flow-v2 .delivery-checkout-subsection h3{color:#182c45;font-size:14px;margin-bottom:14px}
+.delivery-checkout-flow-v2 .delivery-checkout-subsection h3{color:#182c45;font-size:14px;margin-bottom:10px}
 .delivery-checkout-flow-v2 .delivery-form-grid.two{gap:18px}
 .delivery-checkout-flow-v2 .delivery-form-grid label{font-size:12px;color:#27394f}
-.delivery-checkout-flow-v2 .delivery-form-grid label>div{min-height:54px;border-radius:12px;border-color:#d5dee8}
+.delivery-checkout-flow-v2 .delivery-form-grid label>div{min-height:50px;border-radius:12px;border-color:#d5dee8}
 .delivery-checkout-flow-v2 .delivery-form-grid input{font-size:14px;font-weight:650;color:#27384d}
 .delivery-checkout-flow-v2 .delivery-receive-methods{gap:16px}
-.delivery-checkout-flow-v2 .delivery-receive-methods label{min-height:86px;padding:15px 46px 15px 18px;border-radius:12px}
+.delivery-checkout-flow-v2 .delivery-receive-methods label{min-height:74px;padding:11px 44px 11px 16px;border-radius:12px}
 .delivery-checkout-flow-v2 .delivery-receive-methods label.active{border-color:var(--flow-orange);background:#fff9f5}
-.delivery-checkout-flow-v2 .delivery-receive-method-image{width:50px;height:50px}
+.delivery-checkout-flow-v2 .delivery-receive-method-image{width:44px;height:44px}
 .delivery-checkout-flow-v2 .delivery-receive-methods strong{font-size:14px;color:#172b44}
 .delivery-checkout-flow-v2 .delivery-receive-methods small{font-size:11px;color:#8794a6}
-.delivery-checkout-flow-v2 .delivery-da-nang-notice{margin-bottom:15px;padding:16px 18px;border-color:#ffc6a7;border-radius:13px;background:#fff8f3;gap:12px}
+.delivery-checkout-flow-v2 .delivery-da-nang-notice{margin-bottom:12px;padding:12px 16px;border-color:#ffc6a7;border-radius:13px;background:#fff8f3;gap:10px}
 .delivery-checkout-flow-v2 .delivery-da-nang-notice>svg{color:var(--flow-orange)}
 .delivery-checkout-flow-v2 .delivery-da-nang-notice strong{font-size:12px;color:#a3481d}
 .delivery-checkout-flow-v2 .delivery-da-nang-notice span{font-size:10px;color:#8c796d}
-.delivery-checkout-flow-v2 .delivery-address-autocomplete{min-height:54px!important;border-radius:12px!important}
+.delivery-checkout-flow-v2 .delivery-address-autocomplete{min-height:50px!important;border-radius:12px!important}
 .delivery-checkout-flow-v2 .delivery-address-autocomplete.open{border-color:var(--flow-orange)!important;box-shadow:0 0 0 3px rgba(255,90,10,.08)!important}
 .delivery-checkout-flow-v2 .delivery-address-autocomplete input{font-size:14px;font-weight:650}
 .delivery-checkout-flow-v2 .delivery-address-suggestion-menu{top:calc(100% + 5px);border-radius:12px!important;box-shadow:0 18px 42px rgba(23,36,50,.17)!important}
