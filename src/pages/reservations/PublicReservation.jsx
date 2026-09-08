@@ -260,7 +260,7 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
         <div className="reservation-public-deposit-payment">
           {qr ? (
             <>
-              <div className="reservation-public-deposit-qr"><img src={qr.qrUrl} alt={`VietQR cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
+              <div className="reservation-public-deposit-qr"><img src={qr.qrUrl} alt={`QR PayOS cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
               <div className="reservation-public-deposit-bank">
                 <p><Landmark size={16} /><span>Ngân hàng</span><strong>{qr.bankName || qr.bankId || '—'}</strong></p>
                 <p><span>Số tài khoản</span><strong>{qr.accountNo || '—'}</strong></p>
@@ -272,19 +272,19 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
           ) : (
             <div className="reservation-public-deposit-empty">
               <QrCode size={28} />
-              <div><strong>{error ? 'Chưa thể tải mã VietQR' : 'Thanh toán cọc bằng VietQR'}</strong><p>{error || 'Mở mã QR để chuyển khoản đúng số tiền và nội dung.'}</p></div>
-              <button type="button" onClick={onLoadQr} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <QrCode size={16} />} Hiện VietQR</button>
+              <div><strong>{error ? 'Chưa thể tải mã thanh toán' : 'Thanh toán cọc tự động qua PayOS'}</strong><p>{error || 'Mở mã QR và chuyển khoản đúng số tiền hiển thị.'}</p></div>
+              <button type="button" onClick={onLoadQr} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <QrCode size={16} />} Hiện mã QR</button>
             </div>
           )}
           <div className="reservation-public-deposit-help">
             <ShieldCheck size={17} />
-            <p>Sau khi chuyển khoản, nhà hàng sẽ kiểm tra giao dịch và xác nhận tiền cọc. Khách không thể tự đánh dấu đã thanh toán.</p>
+            <p>Sau khi chuyển khoản thành công, PayOS sẽ tự động xác nhận tiền cọc và trạng thái lịch sẽ được cập nhật. Không cần nhân viên xác nhận cọc thủ công.</p>
             <button type="button" onClick={onRefresh} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={15} /> Kiểm tra trạng thái</button>
           </div>
         </div>
       ) : null}
 
-      {paid ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>{depositStatus === 'DA_KHAU_TRU' ? 'Tiền cọc đã được khấu trừ vào khoản phải thanh toán.' : 'Nhà hàng đã xác nhận nhận được tiền cọc. Lịch đang tiếp tục được xử lý.'}</p></div> : null}
+      {paid ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>{depositStatus === 'DA_KHAU_TRU' ? 'Tiền cọc đã được khấu trừ vào khoản phải thanh toán.' : 'PayOS đã tự động xác nhận tiền cọc. Lịch đang chờ nhà hàng xác nhận và sắp xếp bàn.'}</p></div> : null}
       {depositStatus === 'CHO_HOAN' ? <div className="reservation-public-deposit-message warning"><Clock3 size={17} /><p>Khoản cọc đang chờ nhà hàng hoàn lại. Khi hoàn tất, trạng thái sẽ được cập nhật tại đây.</p></div> : null}
       {depositStatus === 'DA_HOAN' ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>Nhà hàng đã ghi nhận hoàn tiền cọc.</p></div> : null}
       {depositStatus === 'MAT_COC' ? <div className="reservation-public-deposit-message danger"><XCircle size={17} /><p>Khoản cọc không được hoàn theo chính sách của lịch đặt bàn này.</p></div> : null}
@@ -295,7 +295,7 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
 }
 
 
-function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, onCopy, onClose, embedded = false }) {
+function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onCopy, onClose, embedded = false }) {
   const [now, setNow] = useState(Date.now());
   const depositStatus = reservationDepositStatus(item);
   const pending = depositStatus === 'CHO_THANH_TOAN';
@@ -326,15 +326,15 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, on
       {paid ? (
         <div className="reservation-deposit-payment-success">
           <span><Check size={28} /></span>
-          <h3>Đã xác nhận tiền cọc</h3>
-          <p>Nhà hàng đã ghi nhận khoản cọc <b>{formatReservationMoney(item?.tienCoc)}</b>. Lịch đặt bàn đang tiếp tục được xử lý.</p>
+          <h3>Đã thanh toán cọc</h3>
+          <p>PayOS đã tự động ghi nhận khoản cọc <b>{formatReservationMoney(item?.tienCoc)}</b>. Lịch đặt bàn đang chờ nhà hàng xác nhận và sắp xếp bàn.</p>
           <button type="button" onClick={onClose}>Xem chi tiết lịch</button>
         </div>
       ) : (
         <>
           <header>
             <span><QrCode size={22} /></span>
-            <div><h3>Thanh toán cọc giữ bàn</h3><p>Lịch <b>{item?.maTraCuu}</b> chỉ được nhà hàng xác nhận sau khi nhận được tiền cọc.</p></div>
+            <div><h3>Thanh toán cọc giữ bàn</h3><p>Lịch <b>{item?.maTraCuu}</b> sẽ đủ điều kiện xác nhận sau khi PayOS ghi nhận giao dịch cọc thành công.</p></div>
           </header>
 
           <div className="reservation-deposit-payment-amount">
@@ -345,7 +345,7 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, on
 
           {pending && qr ? (
             <div className="reservation-deposit-payment-content">
-              <div className="reservation-deposit-payment-qr"><img src={qr.qrUrl} alt={`VietQR cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
+              <div className="reservation-deposit-payment-qr"><img src={qr.qrUrl} alt={`QR PayOS cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
               <div className="reservation-deposit-payment-bank">
                 <p><span>Ngân hàng</span><strong>{qr.bankName || qr.bankId || '—'}</strong></p>
                 <p><span>Số tài khoản</span><strong>{qr.accountNo || '—'}</strong>{qr.accountNo ? <button type="button" onClick={() => onCopy(qr.accountNo, 'số tài khoản')}><Copy size={14} /> Sao chép</button> : null}</p>
@@ -357,8 +357,8 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, on
           ) : pending ? (
             <div className="reservation-deposit-payment-loading">
               {loading ? <LoaderCircle className="spin" size={28} /> : <QrCode size={30} />}
-              <div><strong>{loading ? 'Đang tải mã VietQR...' : 'Chưa thể hiển thị VietQR'}</strong><p>{error || 'Vui lòng thử tải lại mã thanh toán.'}</p></div>
-              {!loading ? <button type="button" onClick={onLoadQr}><RefreshCw size={16} /> Tải lại VietQR</button> : null}
+              <div><strong>{loading ? 'Đang tải mã thanh toán...' : 'Chưa thể hiển thị mã thanh toán'}</strong><p>{error || 'Vui lòng thử tải lại mã QR PayOS.'}</p></div>
+              {!loading ? <button type="button" onClick={onLoadQr}><RefreshCw size={16} /> Tải lại mã QR</button> : null}
             </div>
           ) : (
             <div className="reservation-deposit-payment-loading">
@@ -367,10 +367,10 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onRefresh, on
             </div>
           )}
 
-          <div className="reservation-deposit-payment-note"><ShieldCheck size={17} /><p>Chuyển khoản đúng <b>số tiền</b> và <b>nội dung</b> hiển thị. Sau khi chuyển, bấm “Kiểm tra thanh toán”. Khách không thể tự đánh dấu đã thanh toán.</p></div>
+          <div className="reservation-deposit-payment-note"><ShieldCheck size={17} /><p>Quét mã và chuyển khoản đúng <b>số tiền</b> hiển thị. PayOS sẽ tự động xác nhận giao dịch; màn hình này tự cập nhật khi tiền cọc được ghi nhận.</p></div>
           <footer>
             <button type="button" className="secondary" onClick={onClose}>Xem chi tiết lịch</button>
-            <button type="button" className="primary" onClick={onRefresh} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} size={16} /> Kiểm tra thanh toán</button>
+            {pending ? <span className="reservation-deposit-auto-wait"><RefreshCw className="spin" size={15} /> Đang tự động chờ PayOS xác nhận</span> : null}
           </footer>
         </>
       )}
@@ -582,7 +582,7 @@ export default function PublicReservation() {
       setDepositQr(reservationData(response));
     } catch (error) {
       setDepositQr(null);
-      const message = errorMessageOf(error, 'Không thể tạo VietQR cọc lúc này.');
+      const message = errorMessageOf(error, 'Không thể tạo mã thanh toán cọc qua PayOS lúc này.');
       setDepositError(message);
       if (!silent) toast.error(message);
     } finally {
@@ -593,6 +593,12 @@ export default function PublicReservation() {
   useEffect(() => {
     if (socketEvent && reservation?.maTraCuu) refreshSelectedReservation(true);
   }, [refreshSelectedReservation, reservation?.maTraCuu, socketEvent]);
+
+  useEffect(() => {
+    if (reservationDepositStatus(reservation) !== 'CHO_THANH_TOAN' || !lookup.code || !lookup.phone) return undefined;
+    const timer = window.setInterval(() => refreshSelectedReservation(true), 4000);
+    return () => window.clearInterval(timer);
+  }, [lookup.code, lookup.phone, refreshSelectedReservation, reservation?.maTraCuu, reservation?.trangThaiCoc]);
 
   useEffect(() => {
     if (reservationDepositStatus(reservation) === 'CHO_THANH_TOAN' && lookup.code && lookup.phone) {
@@ -971,7 +977,6 @@ export default function PublicReservation() {
               loading={depositLoading || searching}
               error={depositError}
               onLoadQr={() => loadDepositQr(false)}
-              onRefresh={() => refreshSelectedReservation(false)}
               onCopy={copyDepositValue}
               onClose={() => { setReviewOpen(false); setReviewStep('review'); }}
             />
@@ -1009,7 +1014,6 @@ export default function PublicReservation() {
           loading={depositLoading || searching}
           error={depositError}
           onLoadQr={() => loadDepositQr(false)}
-          onRefresh={() => refreshSelectedReservation(false)}
           onCopy={copyDepositValue}
           onClose={() => setDepositPaymentOpen(false)}
         />

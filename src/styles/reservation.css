@@ -239,3 +239,6 @@
   .waiter-reservation-toolbar-actions{height:auto;display:grid;grid-template-columns:1fr 1fr}
   .waiter-reservation-toolbar-actions .reservation-refresh,.waiter-reservation-toolbar-actions .reservation-reset{width:100%;justify-content:center}
 }
+
+/* payOS reservation deposit: webhook confirms automatically; this is only a live waiting indicator. */
+.reservation-deposit-auto-wait{display:inline-flex;align-items:center;gap:7px;color:#6b7280;font-size:11px;font-weight:800}

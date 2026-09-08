@@ -69,13 +69,8 @@ export function reservationPreorderChangedAfterApproval(item) {
 
 export function reservationNeedsCashierAttention(item) {
   const depositStatus = reservationDepositStatus(item);
-  const expiredByDepositTimeout = reservationStatus(item) === 'HET_HAN'
-    && depositStatus === 'DA_HUY'
-    && String(item?.lyDoHuyTuChoi || '').trim() === 'Quá thời hạn thanh toán tiền cọc';
-  return depositStatus === 'CHO_THANH_TOAN'
-    || depositStatus === 'CHO_HOAN'
+  return depositStatus === 'CHO_HOAN'
     || (reservationStatus(item) === 'CHO_XAC_NHAN' && depositStatus === 'DA_THANH_TOAN')
-    || expiredByDepositTimeout
     || reservationPreorderNeedsReview(item);
 }
 
