@@ -399,13 +399,11 @@ export default function WaiterHome() {
                   <Table2 size={22} />
                   <strong>{displayTableName(table)}</strong>
                   <span className="waiter-table-capacity">{tableCapacity(table)} chỗ</span>
-                  <small>{grouped
-                    ? `1 đơn nhóm · ${groupSummary?.itemCount || 0} món`
-                    : ownOrders.length
-                      ? `${ownOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}`
-                      : hold
-                        ? `Đã đặt lúc ${reservationHoldTime(hold)}`
-                        : 'Chưa có đơn'}</small>
+                  {!grouped ? <small>{ownOrders.length
+                    ? `${ownOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}`
+                    : hold
+                      ? `Đã đặt lúc ${reservationHoldTime(hold)}`
+                      : 'Chưa có đơn'}</small> : null}
                   {grouped ? <span className="waiter-table-group-name"><Link2 size={11} /> Nhóm {groupName}</span> : null}
                   <em>{hold && !ownOrders.length ? `Đã đặt ${reservationHoldTime(hold)}` : meta.label}</em>
                 </button>
