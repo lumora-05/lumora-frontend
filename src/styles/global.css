@@ -5603,3 +5603,72 @@
   .waiter-room-grid{grid-template-columns:repeat(5,minmax(135px,1fr));min-width:820px;padding:20px 24px;gap:22px;}
   .waiter-room-table{min-height:136px;}
 }
+
+/* 2026-09-09 · Waiter table-map: treat merged tables as one shared order in the UI */
+.waiter-group-order-summary{
+  margin:0 22px 18px;
+  min-height:58px;
+  padding:11px 14px;
+  border:1px solid #ddd6fe;
+  border-radius:13px;
+  background:linear-gradient(90deg,#faf7ff,#fff);
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+.waiter-group-order-summary-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  flex:0 0 34px;
+  background:#ede9fe;
+  color:#7c3aed;
+}
+.waiter-group-order-summary>div{display:grid;gap:3px;min-width:0}
+.waiter-group-order-summary strong{font-size:14px;color:#312e81}
+.waiter-group-order-summary small{font-size:11px;color:#6b7280;font-weight:750}
+.waiter-group-order-row{background:#fcfbff}
+.waiter-group-order-row>td:first-child strong{display:block;color:#312e81}
+.waiter-group-order-row-note{display:block;margin-top:4px;color:#7c8390;font-size:10px;font-weight:750}
+.waiter-group-order-label{
+  display:inline-flex;
+  align-items:center;
+  min-height:27px;
+  padding:0 9px;
+  border-radius:999px;
+  background:#f3e8ff;
+  color:#7c3aed;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.waiter-group-view-button{font:inherit;cursor:pointer}
+.waiter-group-order-items-row td{padding:0!important;background:#fafafa}
+.waiter-group-order-items{
+  padding:13px 18px 15px;
+  border-top:1px dashed #e5e7eb;
+  display:grid;
+  gap:9px;
+}
+.waiter-group-order-items>strong{font-size:12px;color:#374151}
+.waiter-group-order-items>div{display:flex;gap:8px;flex-wrap:wrap}
+.waiter-group-order-items>div>span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:30px;
+  padding:0 10px;
+  border:1px solid #e5e7eb;
+  border-radius:999px;
+  background:#fff;
+  color:#4b5563;
+  font-size:11px;
+  font-weight:750;
+}
+.waiter-group-order-items>div>span b{color:#111827}
+.waiter-group-order-items>div>small{color:#6b7280}
+@media(max-width:760px){
+  .waiter-group-order-summary{margin:0 14px 14px}
+}

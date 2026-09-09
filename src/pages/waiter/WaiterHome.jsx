@@ -12,6 +12,7 @@ import {
   hasPendingConfirmation,
   isActiveOrder,
   itemCount,
+  itemName,
   orderCreatedAt,
   orderGroup,
   orderId,
@@ -115,6 +116,7 @@ export default function WaiterHome() {
   const [filters, setFilters] = useState({ empty: true, new: true, serving: true, payment: true, reserved: true });
   const [arrangementMode, setArrangementMode] = useState(null);
   const [arrangementLoading, setArrangementLoading] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState(null);
 
   async function load(preferredTable) {
     try {
@@ -165,6 +167,66 @@ export default function WaiterHome() {
     return map;
   }, [tables]);
 
+  const tableById = useMemo(() => {
+    const map = new Map();
+    tables.forEach((table) => map.set(String(tableId(table)), table));
+    return map;
+  }, [tables]);
+
+  const groupSummaries = useMemo(() => {
+    const summaries = new Map();
+
+    tables.forEach((table) => {
+      if (!table?.maNhomBan) return;
+      const key = String(table.maNhomBan);
+      if (!summaries.has(key)) summaries.set(key, { key, members: [] });
+      summaries.get(key).members.push(table);
+    });
+
+    summaries.forEach((summary) => {
+      summary.members.sort((a, b) => displayTableName(a).localeCompare(displayTableName(b), 'vi', { numeric: true }));
+      summary.name = summary.members.map(compactTableName).join(' + ');
+      summary.primary = summary.members.find(isPrimaryTable) || summary.members[0] || null;
+
+      const ids = new Set(summary.members.map((table) => String(tableId(table))));
+      summary.orders = activeOrders.filter((order) => ids.has(String(tableIdOfOrder(order))));
+      summary.itemCount = summary.orders.reduce((sum, order) => sum + itemCount(order), 0);
+
+      const createdTimes = summary.orders
+        .map((order) => orderCreatedAt(order))
+        .filter(Boolean)
+        .map((value) => new Date(value))
+        .filter((value) => !Number.isNaN(value.getTime()));
+      summary.createdAt = createdTimes.length
+        ? new Date(Math.min(...createdTimes.map((value) => value.getTime()))).toISOString()
+        : null;
+
+      const priorityOrder = [...summary.orders].sort((a, b) => {
+        const priorityDiff = statusMeta(a?.trangThai).priority - statusMeta(b?.trangThai).priority;
+        if (priorityDiff !== 0) return priorityDiff;
+        return new Date(orderCreatedAt(a) || 0) - new Date(orderCreatedAt(b) || 0);
+      })[0];
+      summary.meta = priorityOrder
+        ? statusMeta(priorityOrder.trangThai)
+        : { label: 'Đang phục vụ', tone: 'serving' };
+
+      const mergedItems = new Map();
+      summary.orders.forEach((order) => {
+        (order?.chiTietDonHang || []).forEach((item) => {
+          if (String(item?.trangThaiMon || '').toUpperCase() === 'DA_HUY') return;
+          const name = itemName(item);
+          const quantity = Number(item?.soLuong || 0);
+          mergedItems.set(name, (mergedItems.get(name) || 0) + quantity);
+        });
+      });
+      summary.items = [...mergedItems.entries()]
+        .map(([name, quantity]) => ({ name, quantity }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    });
+
+    return summaries;
+  }, [tables, activeOrders]);
+
   function ordersForTable(table) {
     if (!table) return [];
     if (!isGrouped(table) || !table?.maNhomBan) {
@@ -206,6 +268,27 @@ export default function WaiterHome() {
     })
     .sort((a, b) => new Date(orderCreatedAt(b) || 0) - new Date(orderCreatedAt(a) || 0)), [activeOrders, selectedTable, selectedTableRow, tableIdsByGroup]);
 
+  const shownOrderRows = useMemo(() => {
+    const rows = [];
+    const renderedGroups = new Set();
+
+    shownOrders.forEach((order) => {
+      const table = tableById.get(String(tableIdOfOrder(order)));
+      const groupKey = table?.maNhomBan ? String(table.maNhomBan) : null;
+
+      if (groupKey && groupSummaries.has(groupKey)) {
+        if (renderedGroups.has(groupKey)) return;
+        renderedGroups.add(groupKey);
+        rows.push({ type: 'group', key: `group-${groupKey}`, summary: groupSummaries.get(groupKey) });
+        return;
+      }
+
+      rows.push({ type: 'order', key: `order-${orderId(order)}`, order });
+    });
+
+    return rows;
+  }, [shownOrders, tableById, groupSummaries]);
+
   function toggleFilter(key) {
     setFilters((current) => ({ ...current, [key]: !current[key] }));
   }
@@ -241,10 +324,13 @@ export default function WaiterHome() {
 
   const selectedLabel = selectedTableRow ? displayTableName(selectedTableRow) : '';
   const selectedGroupName = selectedTableRow && isGrouped(selectedTableRow) ? groupDisplayName(selectedTableRow, tables) : '';
+  const selectedGroupSummary = selectedTableRow?.maNhomBan
+    ? groupSummaries.get(String(selectedTableRow.maNhomBan)) || null
+    : null;
   const selectedContext = !selectedTableRow
     ? 'Chọn một bàn để thực hiện chuyển, ghép hoặc tách bàn.'
     : isGrouped(selectedTableRow)
-      ? `Đã chọn ${selectedLabel} · Nhóm ${selectedGroupName}`
+      ? `Đã chọn Nhóm ${selectedGroupName}`
       : `Đã chọn ${selectedLabel}`;
 
   return (
@@ -299,6 +385,7 @@ export default function WaiterHome() {
               const count = ownOrders.reduce((sum, order) => sum + itemCount(order), 0);
               const grouped = isGrouped(table);
               const groupName = grouped ? groupDisplayName(table, tables) : '';
+              const groupSummary = grouped && table?.maNhomBan ? groupSummaries.get(String(table.maNhomBan)) : null;
               const filteredOut = !filters[statusKey];
               return (
                 <button
@@ -312,7 +399,13 @@ export default function WaiterHome() {
                   <Table2 size={22} />
                   <strong>{displayTableName(table)}</strong>
                   <span className="waiter-table-capacity">{tableCapacity(table)} chỗ</span>
-                  <small>{ownOrders.length ? `${ownOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}` : hold ? `Đã đặt lúc ${reservationHoldTime(hold)}` : 'Chưa có đơn'}</small>
+                  <small>{grouped
+                    ? `1 đơn nhóm · ${groupSummary?.itemCount || 0} món`
+                    : ownOrders.length
+                      ? `${ownOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}`
+                      : hold
+                        ? `Đã đặt lúc ${reservationHoldTime(hold)}`
+                        : 'Chưa có đơn'}</small>
                   {grouped ? <span className="waiter-table-group-name"><Link2 size={11} /> Nhóm {groupName}</span> : null}
                   <em>{hold && !ownOrders.length ? `Đã đặt ${reservationHoldTime(hold)}` : meta.label}</em>
                 </button>
@@ -320,22 +413,81 @@ export default function WaiterHome() {
             })}
           </div>
         </div>
+
+        {selectedGroupSummary ? (
+          <div className="waiter-group-order-summary" role="status">
+            <span className="waiter-group-order-summary-icon"><Link2 size={17} /></span>
+            <div>
+              <strong>Nhóm bàn {selectedGroupSummary.name}</strong>
+              <small>{selectedGroupSummary.members.length} bàn · 1 đơn nhóm · {selectedGroupSummary.itemCount} món</small>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="waiter-card waiter-table-order-list">
         <div className="waiter-table-list-head">
-          <div><h3>Danh sách đơn theo bàn</h3><p>{selectedTable === 'ALL' ? 'Tất cả đơn đang hoạt động' : isGrouped(selectedTableRow) ? `Đang xem: Nhóm bàn ${selectedGroupName}` : `Đang xem đơn của ${selectedLabel}`}</p></div>
+          <div>
+            <h3>{isGrouped(selectedTableRow) ? `Đơn của nhóm bàn ${selectedGroupName}` : 'Danh sách đơn theo bàn / nhóm bàn'}</h3>
+            <p>{selectedTable === 'ALL'
+              ? 'Tất cả đơn đang hoạt động'
+              : selectedGroupSummary
+                ? `1 đơn nhóm · ${selectedGroupSummary.itemCount} món`
+                : `Đang xem đơn của ${selectedLabel}`}</p>
+          </div>
           {selectedTable !== 'ALL' ? <button onClick={() => setSelectedTable('ALL')}>Hiển thị tất cả</button> : null}
         </div>
         <div className="waiter-orders-table-wrap">
           <table className="waiter-orders-table waiter-table-monitor-table">
-            <thead><tr><th>Bàn</th><th>Mã đơn</th><th>Số món</th><th>Trạng thái</th><th>Thời gian chờ</th><th>Thao tác</th></tr></thead>
+            <thead><tr><th>Bàn / nhóm bàn</th><th>Đơn</th><th>Số món</th><th>Trạng thái</th><th>Thời gian chờ</th><th>Thao tác</th></tr></thead>
             <tbody>
-              {shownOrders.map((order) => {
+              {shownOrderRows.map((row) => {
+                if (row.type === 'group') {
+                  const { summary } = row;
+                  const isExpanded = expandedGroup === summary.key;
+                  return [
+                    <tr key={row.key} className="waiter-group-order-row">
+                      <td>
+                        <strong>Nhóm {summary.name}</strong>
+                        <small className="waiter-group-order-row-note">{summary.members.length} bàn · Bàn chính: {compactTableName(summary.primary)}</small>
+                      </td>
+                      <td><span className="waiter-group-order-label">1 đơn nhóm</span></td>
+                      <td>{summary.itemCount}</td>
+                      <td><span className={`waiter-status-badge ${summary.meta.tone}`}>{summary.meta.label}</span></td>
+                      <td><span className="waiter-table-wait"><Clock3 size={15} />{waitLabel(summary.createdAt)} <small>({formatClock(summary.createdAt)})</small></span></td>
+                      <td>
+                        <button
+                          type="button"
+                          className="waiter-monitor-view waiter-group-view-button"
+                          onClick={() => setExpandedGroup((current) => current === summary.key ? null : summary.key)}
+                          aria-expanded={isExpanded}
+                        >
+                          <Eye size={18} /><span>{isExpanded ? 'Thu gọn' : 'Xem'}</span>
+                        </button>
+                      </td>
+                    </tr>,
+                    isExpanded ? (
+                      <tr key={`${row.key}-items`} className="waiter-group-order-items-row">
+                        <td colSpan="6">
+                          <div className="waiter-group-order-items">
+                            <strong>Món trong đơn nhóm</strong>
+                            <div>
+                              {summary.items.length
+                                ? summary.items.map((item) => <span key={item.name}>{item.name} <b>×{item.quantity}</b></span>)
+                                : <small>Chưa có món trong đơn nhóm.</small>}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null,
+                  ];
+                }
+
+                const { order } = row;
                 const meta = statusMeta(order.trangThai);
                 const createdAt = orderCreatedAt(order);
                 return (
-                  <tr key={orderId(order)}>
+                  <tr key={row.key}>
                     <td><strong>{tableNameOfOrder(order)}</strong></td>
                     <td>#{orderId(order)}</td>
                     <td>{itemCount(order)}</td>
@@ -345,7 +497,7 @@ export default function WaiterHome() {
                   </tr>
                 );
               })}
-              {!shownOrders.length ? <tr><td colSpan="6" className="waiter-empty-cell">Không có đơn hàng đang hoạt động.</td></tr> : null}
+              {!shownOrderRows.length ? <tr><td colSpan="6" className="waiter-empty-cell">Không có đơn hàng đang hoạt động.</td></tr> : null}
             </tbody>
           </table>
         </div>
