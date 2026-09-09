@@ -48,10 +48,6 @@ function isPrimaryTable(table) {
   return String(tableId(table)) === String(table?.maBanChinh);
 }
 
-function primaryTableId(table) {
-  return table?.maBanChinh ?? tableId(table);
-}
-
 function tableVisualStatus(table, orders, reservationHold) {
   if (orders?.some((order) => hasPendingConfirmation(order) || ['NEW', 'CONFIRM'].includes(orderGroup(order)))) return 'new';
   if (orders?.some((order) => orderGroup(order) === 'PAYMENT')) return 'payment';
@@ -64,7 +60,11 @@ function tableVisualStatus(table, orders, reservationHold) {
 
 function groupRole(table) {
   if (!isGrouped(table)) return '';
-  return isPrimaryTable(table) ? 'Bàn chính' : 'Bàn ghép';
+  return isPrimaryTable(table) ? 'Bàn chính' : 'Bàn phụ';
+}
+
+function tableCapacity(table) {
+  return Number(table?.sucChua ?? table?.soCho ?? table?.soLuongCho ?? 4);
 }
 
 function canTransfer(table) {
@@ -88,9 +88,21 @@ function canUnmerge(table) {
   return isGrouped(table) && String(table?.trangThai || '').toUpperCase() === 'TRONG';
 }
 
-function primaryTableName(table, tables) {
-  const primary = tables.find((item) => String(tableId(item)) === String(primaryTableId(table)));
-  return primary ? displayTableName(primary) : `Bàn ${primaryTableId(table)}`;
+function compactTableName(table) {
+  const name = displayTableName(table);
+  return name.replace(/^Bàn\s*/i, '').trim();
+}
+
+function groupMembersOf(table, tables) {
+  if (!isGrouped(table) || !table?.maNhomBan) return table ? [table] : [];
+  return tables
+    .filter((item) => String(item?.maNhomBan ?? '') === String(table.maNhomBan))
+    .sort((a, b) => displayTableName(a).localeCompare(displayTableName(b), 'vi', { numeric: true }));
+}
+
+function groupDisplayName(table, tables) {
+  const members = groupMembersOf(table, tables);
+  return members.length ? members.map(compactTableName).join(' + ') : compactTableName(table);
 }
 
 export default function WaiterHome() {
@@ -173,10 +185,15 @@ export default function WaiterHome() {
     ? groupHasPayment(selectedTableRow, tables) || ordersForTable(selectedTableRow).some((order) => orderGroup(order) === 'PAYMENT')
     : false;
 
-  const shownTables = useMemo(() => tables.filter((table) => {
-    const rows = ordersForTable(table);
-    return filters[tableVisualStatus(table, rows, reservationHolds.get(String(tableId(table))))];
-  }), [tables, ordersByTable, tableIdsByGroup, filters, reservationHolds]);
+  const statusCounts = useMemo(() => {
+    const counts = { empty: 0, new: 0, serving: 0, payment: 0, reserved: 0 };
+    tables.forEach((table) => {
+      const groupOrders = ordersForTable(table);
+      const key = tableVisualStatus(table, groupOrders, reservationHolds.get(String(tableId(table))));
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }, [tables, ordersByTable, reservationHolds]);
 
   const shownOrders = useMemo(() => activeOrders
     .filter((order) => {
@@ -223,6 +240,12 @@ export default function WaiterHome() {
   }
 
   const selectedLabel = selectedTableRow ? displayTableName(selectedTableRow) : '';
+  const selectedGroupName = selectedTableRow && isGrouped(selectedTableRow) ? groupDisplayName(selectedTableRow, tables) : '';
+  const selectedContext = !selectedTableRow
+    ? 'Chọn một bàn để thực hiện chuyển, ghép hoặc tách bàn.'
+    : isGrouped(selectedTableRow)
+      ? `Đã chọn ${selectedLabel} · Nhóm ${selectedGroupName}`
+      : `Đã chọn ${selectedLabel}`;
 
   return (
     <section className="waiter-page waiter-table-monitor-page">
@@ -245,43 +268,63 @@ export default function WaiterHome() {
               ><Link2 size={16} /> {isGrouped(selectedTableRow) ? 'Thêm bàn' : 'Ghép bàn'}</button>
               <button type="button" disabled={!selectedTableRow || !canUnmerge(selectedTableRow)} title={selectedTableRow && !canUnmerge(selectedTableRow) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={16} /> Tách bàn</button>
             </div>
-            <div className="waiter-map-filters">
+            <div className="waiter-map-filters" aria-label="Lọc trạng thái bàn">
               {Object.entries(STATUS_META).map(([key, meta]) => (
-                <label key={key} className={meta.tone}>
-                  <input type="checkbox" checked={filters[key]} onChange={() => toggleFilter(key)} />
-                  <i />{meta.label}
-                </label>
+                <button
+                  type="button"
+                  key={key}
+                  className={`${meta.tone} ${filters[key] ? 'active' : ''}`}
+                  aria-pressed={filters[key]}
+                  onClick={() => toggleFilter(key)}
+                >
+                  <i />
+                  <span>{meta.label}</span>
+                  <b>{statusCounts[key] || 0}</b>
+                </button>
               ))}
             </div>
+            <div className={`waiter-map-selection-note ${selectedTableRow ? 'has-selection' : ''}`}>{selectedContext}</div>
           </div>
         </div>
 
-        <div className="waiter-room-grid">
-          {shownTables.map((table) => {
-            const id = tableId(table);
-            const tableOrders = ordersForTable(table);
-            const hold = reservationHolds.get(String(id));
-            const statusKey = tableVisualStatus(table, tableOrders, hold);
-            const meta = STATUS_META[statusKey];
-            const count = tableOrders.reduce((sum, order) => sum + itemCount(order), 0);
-            return (
-              <button key={id} className={`waiter-room-table ${meta.tone} ${String(selectedTable) === String(id) ? 'selected' : ''} ${isGrouped(table) ? 'grouped' : ''}`} onClick={() => setSelectedTable((current) => String(current) === String(id) ? 'ALL' : String(id))}>
-                <span className="chair top" /><span className="chair bottom" /><span className="chair left" /><span className="chair right" />
-                {isGrouped(table) ? <span className={`waiter-table-group-tag ${isPrimaryTable(table) ? 'primary' : 'secondary'}`}>{groupRole(table)}</span> : null}
-                <Table2 size={22} />
-                <strong>{displayTableName(table)}</strong>
-                <small>{tableOrders.length ? `${tableOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}` : hold ? `Đã đặt lúc ${reservationHoldTime(hold)}` : isGrouped(table) ? `Dùng chung với ${primaryTableName(table, tables)}` : 'Chưa có đơn'}</small>
-                <em>{hold && !tableOrders.length ? `Đã đặt ${reservationHoldTime(hold)}` : meta.label}</em>
-              </button>
-            );
-          })}
-          {!shownTables.length ? <div className="waiter-map-empty">Không có bàn phù hợp với bộ lọc.</div> : null}
+        <div className="waiter-room-scroll">
+          <div className="waiter-room-grid">
+            {tables.map((table) => {
+              const id = tableId(table);
+              const ownOrders = ordersByTable.get(String(id)) || [];
+              const hold = reservationHolds.get(String(id));
+              const groupOrders = ordersForTable(table);
+              const statusKey = tableVisualStatus(table, groupOrders, hold);
+              const meta = STATUS_META[statusKey];
+              const count = ownOrders.reduce((sum, order) => sum + itemCount(order), 0);
+              const grouped = isGrouped(table);
+              const groupName = grouped ? groupDisplayName(table, tables) : '';
+              const filteredOut = !filters[statusKey];
+              return (
+                <button
+                  key={id}
+                  className={`waiter-room-table ${meta.tone} ${String(selectedTable) === String(id) ? 'selected' : ''} ${grouped ? 'grouped' : ''} ${filteredOut ? 'filtered-out' : ''}`}
+                  onClick={() => setSelectedTable((current) => String(current) === String(id) ? 'ALL' : String(id))}
+                  aria-label={`${displayTableName(table)}, ${tableCapacity(table)} chỗ, ${meta.label}${grouped ? `, nhóm ${groupName}` : ''}`}
+                >
+                  <span className="chair top" /><span className="chair bottom" /><span className="chair left" /><span className="chair right" />
+                  {grouped ? <span className={`waiter-table-group-tag ${isPrimaryTable(table) ? 'primary' : 'secondary'}`}>{groupRole(table)}</span> : null}
+                  <Table2 size={22} />
+                  <strong>{displayTableName(table)}</strong>
+                  <span className="waiter-table-capacity">{tableCapacity(table)} chỗ</span>
+                  <small>{ownOrders.length ? `${ownOrders.length} đơn · ${count} món${hold ? ` · Đặt ${reservationHoldTime(hold)}` : ''}` : hold ? `Đã đặt lúc ${reservationHoldTime(hold)}` : 'Chưa có đơn'}</small>
+                  {grouped ? <span className="waiter-table-group-name"><Link2 size={11} /> Nhóm {groupName}</span> : null}
+                  <em>{hold && !ownOrders.length ? `Đã đặt ${reservationHoldTime(hold)}` : meta.label}</em>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <div className="waiter-card waiter-table-order-list">
         <div className="waiter-table-list-head">
-          <div><h3>Danh sách đơn theo bàn</h3><p>{selectedTable === 'ALL' ? 'Tất cả đơn đang hoạt động' : `Đang xem đơn của ${selectedLabel}${isGrouped(selectedTableRow) ? ' và nhóm bàn ghép' : ''}`}</p></div>
+          <div><h3>Danh sách đơn theo bàn</h3><p>{selectedTable === 'ALL' ? 'Tất cả đơn đang hoạt động' : isGrouped(selectedTableRow) ? `Đang xem: Nhóm bàn ${selectedGroupName}` : `Đang xem đơn của ${selectedLabel}`}</p></div>
           {selectedTable !== 'ALL' ? <button onClick={() => setSelectedTable('ALL')}>Hiển thị tất cả</button> : null}
         </div>
         <div className="waiter-orders-table-wrap">

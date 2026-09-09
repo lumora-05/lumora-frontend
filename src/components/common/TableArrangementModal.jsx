@@ -18,6 +18,10 @@ function tableArea(table) {
     || 'Khu vực chung';
 }
 
+function tableCapacity(table) {
+  return Number(table?.sucChua ?? table?.soCho ?? table?.soLuongCho ?? 4);
+}
+
 function isGrouped(table) {
   return Boolean(table?.maNhomBan || table?.maBanChinh || table?.dangGhepBan);
 }
@@ -39,7 +43,7 @@ const MODE_META = {
   },
   merge: {
     title: 'Ghép bàn',
-    description: 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực. Hai bàn đang có đơn sẽ được tính chung một bill.',
+    description: 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực. Các đơn đã phát sinh của từng bàn vẫn được giữ nguyên và các bàn được liên kết vào cùng một nhóm phục vụ.',
     confirmText: 'Xác nhận ghép',
     Icon: Link2,
   },
@@ -103,7 +107,7 @@ export default function TableArrangementModal({
 
   const dialogTitle = extendingGroup ? 'Thêm bàn vào nhóm' : meta.title;
   const dialogDescription = extendingGroup
-    ? 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực để thêm vào nhóm hiện tại. Bill chung và bàn chính được giữ nguyên.'
+    ? 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực để thêm vào nhóm hiện tại. Bàn chính và các đơn đã phát sinh vẫn được giữ nguyên.'
     : meta.description;
   const confirmText = extendingGroup ? 'Xác nhận thêm bàn' : meta.confirmText;
 
@@ -120,7 +124,7 @@ export default function TableArrangementModal({
   function toggleTable(id) {
     const table = tables.find((item) => String(tableId(item)) === String(id));
     // Lịch đặt chỉ khóa bàn đang trống. Bàn đang phục vụ vẫn có thể được ghép
-    // để thanh toán chung theo nghiệp vụ mới.
+    // mà không làm mất các đơn đã phát sinh của từng bàn.
     if (table && isEmpty(table) && reservationHolds?.has?.(String(id))) return;
     setSelectedIds((current) => current.includes(id)
       ? current.filter((value) => value !== id)
@@ -167,7 +171,7 @@ export default function TableArrangementModal({
           <div>
             <small>{mode === 'merge' ? (extendingGroup ? 'Nhóm hiện tại' : 'Bàn chính') : mode === 'transfer' ? 'Bàn nguồn' : 'Nhóm đang chọn'}</small>
             <strong>{extendingGroup ? groupMembers.map(tableName).join(' + ') : tableName(sourceTable)}</strong>
-            <p>{tableArea(groupPrimary || sourceTable)}{extendingGroup ? ` · Bàn chính: ${tableName(groupPrimary)}` : ''}</p>
+            <p>{tableArea(groupPrimary || sourceTable)} · {tableCapacity(groupPrimary || sourceTable)} chỗ{extendingGroup ? ` · Bàn chính: ${tableName(groupPrimary)}` : ''}</p>
           </div>
         </div>
 
@@ -180,7 +184,7 @@ export default function TableArrangementModal({
                 const hold = holdFor(table);
                 return (
                   <option key={tableId(table)} value={tableId(table)} disabled={Boolean(hold)}>
-                    {tableName(table)} · {tableArea(table)}{hold ? ` · Đã đặt ${reservationHoldTime(hold)}` : ''}
+                    {tableName(table)} · {tableCapacity(table)} chỗ · {tableArea(table)}{hold ? ` · Đã đặt ${reservationHoldTime(hold)}` : ''}
                   </option>
                 );
               })}
@@ -212,8 +216,8 @@ export default function TableArrangementModal({
                         {unavailable
                           ? `Đã đặt lúc ${reservationHoldTime(hold)} · Không thể ghép`
                           : serving
-                            ? `${tableArea(table)} · Đang phục vụ · Tính chung bill`
-                            : `${tableArea(table)} · Bàn trống`}
+                            ? `${tableArea(table)} · ${tableCapacity(table)} chỗ · Đang phục vụ · Giữ nguyên đơn hiện có`
+                            : `${tableArea(table)} · ${tableCapacity(table)} chỗ · Bàn trống`}
                       </small>
                     </div>
                   </label>
