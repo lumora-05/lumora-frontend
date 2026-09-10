@@ -2009,6 +2009,16 @@
 
 .kitchen-queue-tabs button small{font-size:10px;color:#94a3b8;font-weight:800}
 .kitchen-queue-tabs button.active small{color:rgba(255,255,255,.78)}
+.kitchen-table-group-summary{min-height:50px;padding:10px 14px;border:1px solid #fed7aa;border-radius:11px;background:#fffaf5;display:flex;align-items:center;justify-content:space-between;gap:16px;color:#c2410c}
+.kitchen-table-group-summary-main{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.kitchen-table-group-summary-main>svg{flex:0 0 auto;color:#f97316}
+.kitchen-table-group-summary-main strong{color:#1f2937;font-size:14px}
+.kitchen-table-group-summary-main span{padding:5px 9px;border-radius:999px;background:#fff0e7;color:#c2410c;font-size:11px;font-weight:900;white-space:nowrap}
+.kitchen-table-group-summary-main span.payment{display:inline-flex;align-items:center;gap:6px}
+.kitchen-table-group-summary-main i{color:#f59e0b;font-size:11px;font-style:normal}
+.kitchen-table-group-summary p{margin:0;padding-left:15px;border-left:1px solid #fed7aa;color:#ea580c;font-size:11px;font-weight:800;white-space:nowrap}
+.kitchen-batch-card>header .kitchen-table-group-badge{padding:5px 9px;border-radius:999px;background:#fff0e7;color:#c2410c;font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.kitchen-batch-card>header .kitchen-table-group-badge svg{flex:0 0 auto}
 .kitchen-batch-card.overdue{border-color:#fecaca;border-left-color:#dc2626;box-shadow:0 8px 25px rgba(220,38,38,.08)}
 .kitchen-ticket-identity{min-width:0}
 .kitchen-ticket-identity em.additional{background:#fff0e7;color:#e65316}
@@ -2104,6 +2114,7 @@
   .kitchen-live-summary article,.kitchen-menu-summary article{padding:13px}
   .kitchen-queue-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.kitchen-queue-tabs button{justify-content:center;padding:0 9px}.kitchen-queue-tabs button small{display:none}
   .kitchen-batch-list{padding:12px}.kitchen-batch-card>header{padding:13px}.kitchen-ticket-time{justify-content:flex-start!important}
+  .kitchen-table-group-summary{align-items:flex-start;flex-direction:column;gap:8px}.kitchen-table-group-summary p{width:100%;padding:8px 0 0;border-left:0;border-top:1px solid #fed7aa;white-space:normal}
   .kitchen-batch-card>footer{gap:12px}.kitchen-batch-actions{width:100%;justify-content:flex-start}.kitchen-batch-actions button,.kitchen-batch-actions a{flex:1;min-width:150px}
   .kitchen-detail-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .kitchen-detail-batch-actions button{width:100%}

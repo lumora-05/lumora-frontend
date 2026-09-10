@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Clock3, Flame, Play, Search, UtensilsCrossed } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Check, ChevronRight, Clock3, CreditCard, Flame, Play, Search, Users, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
@@ -35,6 +35,14 @@ function groupStatus(list) {
 
 function groupKey(item) {
   return `${kitchenOrderId(item)}-${kitchenCallNumber(item)}`;
+}
+
+function sharedPaymentGroupId(item) {
+  return String(item?.maNhomThanhToan || '').trim();
+}
+
+function compareTableNames(a, b) {
+  return String(a).localeCompare(String(b), 'vi', { numeric: true, sensitivity: 'base' });
 }
 
 function kitchenDishKey(item) {
@@ -90,6 +98,7 @@ export default function KitchenBoard() {
   const toast = useToast();
   const event = useWebSocket(['/topic/kitchen', '/topic/orders']);
   const [items, setItems] = useState([]);
+  const [groupContextOrders, setGroupContextOrders] = useState([]);
   const [tab, setTab] = useState('ACTIVE');
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(true);
@@ -100,8 +109,24 @@ export default function KitchenBoard() {
   async function load(showNotice = false, silent = false) {
     if (!silent) setLoading(true);
     try {
+      // /orders/kitchen/active là endpoint nhẹ và hiện chưa mang thông tin nhóm thanh toán.
+      // Lấy thêm ngữ cảnh đơn hàng để chỉ bổ sung nhãn ghép bàn, không thay đổi luồng xử lý bếp.
+      const groupContextRequest = orderApi.getAll().catch(() => null);
       const response = await orderApi.getKitchenActive();
-      const next = flattenKitchenOrders(unwrapList(response));
+      const groupContextResponse = await groupContextRequest;
+      const contextOrders = unwrapList(groupContextResponse);
+      if (contextOrders.length) setGroupContextOrders(contextOrders);
+
+      const contextByOrderId = new Map(contextOrders.map((order) => [String(kitchenOrderId(order)), order]));
+      const activeOrders = unwrapList(response).map((order) => {
+        const contextOrder = contextByOrderId.get(String(kitchenOrderId(order)));
+        if (!contextOrder) return order;
+        return {
+          ...order,
+          maNhomThanhToan: contextOrder?.maNhomThanhToan ?? order?.maNhomThanhToan,
+        };
+      });
+      const next = flattenKitchenOrders(activeOrders);
       setItems(next);
 
       const waiting = new Set(next
@@ -147,6 +172,24 @@ export default function KitchenBoard() {
     status !== 'HOAN_THANH' && kitchenWaitMinutes(kitchenOrderedAt(list[0]), now) >= 15
   )).length, [allGroups, now]);
 
+  const sharedTableGroups = useMemo(() => {
+    const map = new Map();
+    groupContextOrders.forEach((order) => {
+      const groupId = sharedPaymentGroupId(order);
+      if (!groupId) return;
+      if (!map.has(groupId)) map.set(groupId, new Set());
+      const tableName = kitchenTableName(order);
+      if (tableName && !tableName.startsWith('Đơn online')) map.get(groupId).add(tableName);
+    });
+
+    const result = new Map();
+    map.forEach((tableNameSet, groupId) => {
+      const tableNames = [...tableNameSet].sort(compareTableNames);
+      if (tableNames.length > 1) result.set(groupId, { tableNames });
+    });
+    return result;
+  }, [groupContextOrders]);
+
   const groups = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return allGroups
@@ -169,6 +212,17 @@ export default function KitchenBoard() {
         return tab === 'HOAN_THANH' ? bTime - aTime : aTime - bTime;
       });
   }, [allGroups, keyword, tab]);
+
+  const visibleSharedGroupMeta = useMemo(() => {
+    const result = new Map();
+    groups.forEach(({ key, list }) => {
+      const groupId = sharedPaymentGroupId(list[0]);
+      if (!groupId || !sharedTableGroups.has(groupId)) return;
+      if (!result.has(groupId)) result.set(groupId, { firstKey: key, visibleTicketCount: 0 });
+      result.get(groupId).visibleTicketCount += 1;
+    });
+    return result;
+  }, [groups, sharedTableGroups]);
 
   async function updateItems(targetItems, nextStatus, successMessage) {
     const candidates = targetItems.filter((item) => canonicalKitchenStatus(item) !== nextStatus);
@@ -229,12 +283,33 @@ export default function KitchenBoard() {
             const cookingItems = list.filter((item) => canonicalKitchenStatus(item) === 'DANG_NAU');
             const displayRows = groupSameDishes(list);
             const isBatchBusy = list.some((item) => busyIds.has(kitchenItemId(item)));
+            const paymentGroupId = sharedPaymentGroupId(first);
+            const sharedGroup = paymentGroupId ? sharedTableGroups.get(paymentGroupId) : null;
+            const visibleSharedMeta = paymentGroupId ? visibleSharedGroupMeta.get(paymentGroupId) : null;
+            const sharedGroupLabel = sharedGroup?.tableNames.join(' · ') || '';
+            const showSharedSummary = Boolean(sharedGroup && visibleSharedMeta?.firstKey === key);
             return (
-              <article className={`kitchen-batch-card ${batchMeta.tone} ${overdue ? 'overdue' : ''}`} key={key}>
+              <Fragment key={key}>
+                {showSharedSummary ? (
+                  <div className="kitchen-table-group-summary">
+                    <div className="kitchen-table-group-summary-main">
+                      <Users size={19} />
+                      <strong>Nhóm bàn {sharedGroupLabel}</strong>
+                      <span>{sharedGroup.tableNames.length} bàn</span>
+                      <i>•</i>
+                      <span>{visibleSharedMeta.visibleTicketCount} phiếu</span>
+                      <i>•</i>
+                      <span className="payment"><CreditCard size={14} />Thanh toán chung</span>
+                    </div>
+                    <p>Các bàn này đã được ghép để thanh toán chung</p>
+                  </div>
+                ) : null}
+                <article className={`kitchen-batch-card ${batchMeta.tone} ${overdue ? 'overdue' : ''}`}>
                 <header>
                   <div className="kitchen-ticket-identity">
                     <strong>{kitchenTableName(first)}</strong>
                     <span>Mã đơn: #{orderId}</span>
+                    {sharedGroup ? <span className="kitchen-table-group-badge"><Users size={13} />Nhóm bàn {sharedGroupLabel}</span> : null}
                     <em className={call > 1 ? 'additional' : ''}>{call > 1 ? `Lượt gọi thêm #${call}` : 'Lượt gọi đầu'}</em>
                   </div>
                   <div className="kitchen-ticket-time">
@@ -316,7 +391,8 @@ export default function KitchenBoard() {
                     <Link to={`/kitchen/orders/${orderId}?call=${call}`}>Chi tiết <ChevronRight size={17} /></Link>
                   </div>
                 </footer>
-              </article>
+                </article>
+              </Fragment>
             );
           })}
           {!loading && !groups.length ? <div className="kitchen-list-empty">Không có phiếu bếp phù hợp với bộ lọc.</div> : null}

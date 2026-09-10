@@ -136,6 +136,7 @@ export function flattenKitchenOrders(orders, { includeClosed = false } = {}) {
         banAn: order?.banAn,
         tenBan: order?.banAn?.tenBan || order?.tenBan,
         maBan: order?.maBan,
+        maNhomThanhToan: order?.maNhomThanhToan,
         thoiGianDat: item?.thoiGianThem || order?.thoiGianDat || order?.createdAt,
         trangThaiDon: order?.trangThai,
         ghiChuDon: order?.ghiChu,
