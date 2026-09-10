@@ -12,6 +12,7 @@ export const tableApi = {
   transfer: (sourceId, targetId) => axiosClient.post(`/tables/${sourceId}/transfer`, { maBanDich: targetId }),
   merge: (primaryId, mergedIds) => axiosClient.post('/tables/merge', { maBanChinh: primaryId, maBanGhep: mergedIds }),
   unmerge: (groupId) => axiosClient.delete(`/tables/groups/${encodeURIComponent(String(groupId))}`),
+  unmergeTable: (groupId, tableId) => axiosClient.delete(`/tables/groups/${encodeURIComponent(String(groupId))}/tables/${encodeURIComponent(String(tableId))}`),
   customerTable: (id) => axiosClient.get(`/customer/tables/${id}`),
   customerMenu: (id, params = {}) => axiosClient.get(`/customer/tables/${id}/menu`, { params }),
   customerTableByQrToken: (qrToken) => axiosClient.get(`/customer/qr/${encodeToken(qrToken)}`),

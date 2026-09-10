@@ -48,8 +48,8 @@ const MODE_META = {
     Icon: Link2,
   },
   unmerge: {
-    title: 'Tách nhóm bàn',
-    description: 'Tách các bàn khỏi nhóm hiện tại. Nhóm chỉ có thể tách khi không còn đơn đang mở.',
+    title: 'Tách bàn',
+    description: 'Chọn một bàn đưa ra khỏi nhóm hiện tại. Đơn và món của bàn được giữ nguyên; bàn đó sẽ thanh toán riêng.',
     confirmText: 'Xác nhận tách',
     Icon: Unlink2,
   },
@@ -67,6 +67,7 @@ export default function TableArrangementModal({
 }) {
   const [targetId, setTargetId] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [detachedId, setDetachedId] = useState('');
   const meta = MODE_META[mode] || MODE_META.transfer;
   const Icon = meta.Icon;
   const sourceGrouped = isGrouped(sourceTable);
@@ -84,6 +85,7 @@ export default function TableArrangementModal({
     if (!open) return;
     setTargetId('');
     setSelectedIds([]);
+    setDetachedId(mode === 'unmerge' ? String(tableId(sourceTable) ?? '') : '');
   }, [open, mode, sourceTable]);
 
   const candidates = useMemo(() => {
@@ -110,6 +112,12 @@ export default function TableArrangementModal({
     ? 'Chọn bàn trống hoặc bàn đang phục vụ cùng khu vực để thêm vào nhóm hiện tại. Bàn chính và các đơn đã phát sinh vẫn được giữ nguyên.'
     : meta.description;
   const confirmText = extendingGroup ? 'Xác nhận thêm bàn' : meta.confirmText;
+  const detachedTable = mode === 'unmerge'
+    ? groupMembers.find((table) => String(tableId(table)) === String(detachedId)) || null
+    : null;
+  const remainingAfterDetach = mode === 'unmerge' && detachedTable
+    ? groupMembers.filter((table) => String(tableId(table)) !== String(detachedId))
+    : groupMembers;
 
   function holdFor(table) {
     return reservationHolds?.get?.(String(tableId(table))) || null;
@@ -143,10 +151,13 @@ export default function TableArrangementModal({
       onSubmit?.(selectedIds.map(Number));
       return;
     }
-    onSubmit?.();
+    if (mode === 'unmerge') {
+      if (!detachedId) return;
+      onSubmit?.(Number(detachedId));
+    }
   }
 
-  const canSubmit = mode === 'unmerge'
+  const canSubmit = (mode === 'unmerge' && Boolean(detachedId))
     || (mode === 'transfer' && Boolean(targetId))
     || (mode === 'merge' && selectedIds.length > 0);
 
@@ -169,9 +180,12 @@ export default function TableArrangementModal({
         <div className="table-arrangement-source">
           <span><Table2 size={18} /></span>
           <div>
-            <small>{mode === 'merge' ? (extendingGroup ? 'Nhóm hiện tại' : 'Bàn chính') : mode === 'transfer' ? 'Bàn nguồn' : 'Nhóm đang chọn'}</small>
-            <strong>{extendingGroup ? groupMembers.map(tableName).join(' + ') : tableName(sourceTable)}</strong>
-            <p>{tableArea(groupPrimary || sourceTable)} · {tableCapacity(groupPrimary || sourceTable)} chỗ{extendingGroup ? ` · Bàn chính: ${tableName(groupPrimary)}` : ''}</p>
+            <small>{mode === 'unmerge' ? 'Nhóm hiện tại' : mode === 'merge' ? (extendingGroup ? 'Nhóm hiện tại' : 'Bàn chính') : 'Bàn nguồn'}</small>
+            <strong>{mode === 'unmerge' || extendingGroup ? groupMembers.map(tableName).join(' + ') : tableName(sourceTable)}</strong>
+            <p>
+              {tableArea(groupPrimary || sourceTable)} · {tableCapacity(groupPrimary || sourceTable)} chỗ
+              {mode === 'unmerge' || extendingGroup ? ` · Bàn chính: ${tableName(groupPrimary)}` : ''}
+            </p>
           </div>
         </div>
 
@@ -229,9 +243,50 @@ export default function TableArrangementModal({
         ) : null}
 
         {mode === 'unmerge' ? (
-          <div className="table-arrangement-warning">
-            Sau khi tách, mỗi bàn trở lại hoạt động độc lập. Hệ thống sẽ từ chối nếu nhóm vẫn còn đơn đang phục vụ.
-          </div>
+          <>
+            <div className="table-arrangement-options">
+              <div className="table-arrangement-options-head">
+                <span>Chọn bàn muốn tách</span>
+                <small>{detachedTable ? tableName(detachedTable) : 'Chưa chọn'}</small>
+              </div>
+              <div className="table-arrangement-option-list">
+                {groupMembers.map((table) => {
+                  const id = tableId(table);
+                  const checked = String(detachedId) === String(id);
+                  return (
+                    <label key={id} className={checked ? 'selected' : ''}>
+                      <input
+                        type="radio"
+                        name="detachedTable"
+                        value={id}
+                        checked={checked}
+                        onChange={() => setDetachedId(String(id))}
+                      />
+                      <span><Table2 size={17} /></span>
+                      <div>
+                        <strong>{tableName(table)}{String(tableId(groupPrimary)) === String(id) ? ' · Bàn chính' : ''}</strong>
+                        <small>
+                          {isServing(table)
+                            ? 'Đang phục vụ · Giữ nguyên đơn và món hiện có'
+                            : isEmpty(table)
+                              ? 'Bàn trống · Tách khỏi nhóm hiện tại'
+                              : `${String(table?.trangThai || '').replaceAll('_', ' ')} · Tách khỏi nhóm hiện tại`}
+                        </small>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="table-arrangement-warning">
+              {detachedTable
+                ? groupMembers.length === 2
+                  ? `Sau khi tách ${tableName(detachedTable)}, nhóm sẽ được giải thể. ${groupMembers.map(tableName).join(' và ')} trở lại hoạt động và thanh toán độc lập; đơn/món hiện có vẫn được giữ nguyên.`
+                  : `${tableName(detachedTable)} sẽ ra khỏi nhóm và thanh toán riêng. ${remainingAfterDetach.map(tableName).join(' + ')} vẫn thuộc cùng nhóm và tiếp tục thanh toán chung.`
+                : 'Chọn một bàn để xem kết quả sau khi tách.'}
+            </div>
+          </>
         ) : null}
 
         <footer>

@@ -86,7 +86,7 @@ function groupHasPayment(table, tables) {
 }
 
 function canUnmerge(table) {
-  return isGrouped(table) && String(table?.trangThai || '').toUpperCase() === 'TRONG';
+  return isGrouped(table);
 }
 
 function compactTableName(table) {
@@ -305,7 +305,8 @@ export default function WaiterHome() {
       } else if (arrangementMode === 'merge') {
         response = await tableApi.merge(tableId(selectedTableRow), value);
       } else if (arrangementMode === 'unmerge') {
-        response = await tableApi.unmerge(selectedTableRow.maNhomBan);
+        response = await tableApi.unmergeTable(selectedTableRow.maNhomBan, value);
+        preferredId = value;
       } else {
         return;
       }
@@ -352,7 +353,7 @@ export default function WaiterHome() {
                       : ''}
                 onClick={() => setArrangementMode('merge')}
               ><Link2 size={16} /> {isGrouped(selectedTableRow) ? 'Thêm bàn' : 'Ghép bàn'}</button>
-              <button type="button" disabled={!selectedTableRow || !canUnmerge(selectedTableRow)} title={selectedTableRow && !canUnmerge(selectedTableRow) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={16} /> Tách bàn</button>
+              <button type="button" disabled={!selectedTableRow || !canUnmerge(selectedTableRow) || selectedGroupHasPayment} title={selectedGroupHasPayment ? 'Nhóm đã bắt đầu thanh toán nên không thể tách bàn' : selectedTableRow && !canUnmerge(selectedTableRow) ? 'Chỉ tách bàn đang thuộc nhóm ghép' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={16} /> Tách bàn</button>
             </div>
             <div className="waiter-map-filters" aria-label="Lọc trạng thái bàn">
               {Object.entries(STATUS_META).map(([key, meta]) => (

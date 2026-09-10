@@ -118,7 +118,7 @@ function groupHasPayment(row, rows) {
 }
 
 function canUnmerge(row) {
-  return isGrouped(row) && String(row?.trangThai || '').toUpperCase() === 'TRONG';
+  return isGrouped(row);
 }
 
 function getTableStatus(row) {
@@ -545,7 +545,8 @@ export default function TableManage() {
       } else if (arrangementMode === 'merge') {
         response = await tableApi.merge(tableId(selected), value);
       } else if (arrangementMode === 'unmerge') {
-        response = await tableApi.unmerge(selected.maNhomBan);
+        response = await tableApi.unmergeTable(selected.maNhomBan, value);
+        preferredId = value;
       } else {
         return;
       }
@@ -734,7 +735,7 @@ export default function TableManage() {
                             : ''}
                       onClick={() => setArrangementMode('merge')}
                     ><Link2 size={17} /> {isGrouped(selected) ? 'Thêm bàn' : 'Ghép bàn'}</button>
-                    {isGrouped(selected) ? <button disabled={!canUnmerge(selected)} title={!canUnmerge(selected) ? 'Chỉ tách nhóm khi không còn đơn đang mở' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
+                    {isGrouped(selected) ? <button disabled={!canUnmerge(selected) || groupHasPayment(selected, rows)} title={groupHasPayment(selected, rows) ? 'Nhóm đã bắt đầu thanh toán nên không thể tách bàn' : !canUnmerge(selected) ? 'Chỉ tách bàn đang thuộc nhóm ghép' : ''} onClick={() => setArrangementMode('unmerge')}><Unlink2 size={17} /> Tách bàn</button> : null}
                     <button onClick={() => openEdit(selected)}><Pencil size={17} /> Chỉnh sửa</button>
                     {ADMIN_MANUAL_TABLE_STATUS.has(String(selected?.trangThai || 'TRONG').toUpperCase()) ? (
                       <button onClick={() => toggleMaintenance(selected)}>
