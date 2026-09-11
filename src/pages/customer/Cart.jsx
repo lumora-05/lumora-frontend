@@ -35,6 +35,10 @@ function orderIdOf(order) {
   return order?.maDonHang ?? order?.id;
 }
 
+function orderTableId(order) {
+  return order?.banAn?.maBan ?? order?.banAn?.id ?? order?.maBan ?? order?.tableId ?? null;
+}
+
 function callCount(order) {
   const calls = (order?.chiTietDonHang || [])
     .map((item) => Number(item?.lanGoi || 1))
@@ -66,10 +70,18 @@ export default function Cart() {
         orderApi.customerOpenOrdersByQrToken(qrToken)
       ]);
       const tableData = tableResponse?.data ?? tableResponse;
-      setTable(tableData?.banAn ?? tableData?.table ?? null);
+      const scannedTable = tableData?.banAn ?? tableData?.table ?? null;
+      setTable(scannedTable);
       const openOrders = unwrapList(orderResponse);
+      const scannedTableId = scannedTable?.maBan ?? scannedTable?.id ?? null;
+      const ownOrder = scannedTableId == null
+        ? null
+        : openOrders.find((item) => String(orderTableId(item)) === String(scannedTableId)) || null;
+
+      // Sau khi ghép bàn, endpoint trả toàn bộ đơn của nhóm. QR nào gọi món thì
+      // phải tiếp tục đúng đơn của bàn QR đó, không lấy mặc định đơn bàn chính.
       setServiceOrders(openOrders);
-      setCurrentOrder(openOrders[0] || null);
+      setCurrentOrder(ownOrder);
     } catch {
       setTable(null);
       setServiceOrders([]);

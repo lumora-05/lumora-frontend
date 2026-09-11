@@ -11,6 +11,10 @@ function unwrapList(response) {
   return Array.isArray(data) ? data : [];
 }
 
+function orderTableId(order) {
+  return order?.banAn?.maBan ?? order?.banAn?.id ?? order?.maBan ?? order?.tableId ?? null;
+}
+
 export default function CustomerOrders() {
   const { qrToken } = useParams();
   const navigate = useNavigate();
@@ -29,11 +33,17 @@ export default function CustomerOrders() {
       ]);
       const tableData = tableResponse?.data ?? tableResponse;
       const table = tableData?.banAn ?? tableData?.table;
-      setResolvedTableId(table?.maBan ?? table?.id ?? null);
-      // Backend ưu tiên đơn của bàn chính khi các bàn đã ghép. Giữ nguyên thứ tự
-      // để quét QR bàn chính hay bàn phụ đều mở cùng một phiên phục vụ.
+      const scannedTableId = table?.maBan ?? table?.id ?? null;
+      setResolvedTableId(scannedTableId);
+
+      // Endpoint trả toàn bộ đơn của nhóm bàn ghép. Khi QR của bàn hiện tại đã
+      // có đơn riêng, mở đúng đơn đó; nếu chưa có thì dùng một đơn trong nhóm
+      // làm điểm vào trang theo dõi chung.
       const orders = unwrapList(orderResponse).filter(Boolean);
-      const current = orders[0];
+      const ownOrder = scannedTableId == null
+        ? null
+        : orders.find((item) => String(orderTableId(item)) === String(scannedTableId)) || null;
+      const current = ownOrder || orders[0];
       const id = current?.maDonHang ?? current?.id;
       if (id) {
         navigate(`/table/${qrToken}/orders/${id}`, { replace: true });
