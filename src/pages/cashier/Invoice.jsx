@@ -250,7 +250,7 @@ export default function Invoice() {
             {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><strong>-{formatMoney(pointDiscount)}</strong></p>}
             {depositApplied > 0 ? <p><span>Tổng sau ưu đãi</span><strong>{formatMoney(total)}</strong></p> : null}
             {depositApplied > 0 ? <p><span>Cọc đặt bàn đã khấu trừ</span><strong>-{formatMoney(Math.min(depositApplied, total))}</strong></p> : null}
-            <p className="grand"><span>{depositApplied > 0 ? 'Đã thanh toán thêm' : 'Tổng cộng'}</span><strong>{formatMoney(depositApplied > 0 ? amountPaidAfterDeposit : total)}</strong></p>
+            <p className="grand"><span>{depositApplied > 0 ? 'Đã thanh toán' : 'Tổng cộng'}</span><strong>{formatMoney(depositApplied > 0 ? amountPaidAfterDeposit : total)}</strong></p>
           </div>
         </div>
 

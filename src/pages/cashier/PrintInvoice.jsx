@@ -190,9 +190,9 @@ function Receipt({ order, payment, slip, preview }) {
         {!preview && <p><span>Phí phục vụ</span><b>{formatMoney(serviceFee)}</b></p>}
         {discount > 0 && <p><span>Khuyến mãi{promotionCode ? ` (${promotionCode})` : ''}</span><b>-{formatMoney(discount)}</b></p>}
         {pointDiscount > 0 && <p><span>Giảm bằng điểm ({pointsUsed} điểm)</span><b>-{formatMoney(pointDiscount)}</b></p>}
-        <p><span>Tổng sau ưu đãi</span><b>{formatMoney(total)}</b></p>
+        <p><span>Tổng thanh toán</span><b>{formatMoney(total)}</b></p>
         {depositApplied > 0 ? <p><span>Cọc đặt bàn đã khấu trừ</span><b>-{formatMoney(depositApplied)}</b></p> : null}
-        <p className="grand"><span>{preview ? 'Còn phải thanh toán' : 'Đã thanh toán thêm'}</span><strong>{formatMoney(payable)}</strong></p>
+        <p className="grand"><span>{preview ? 'Còn phải thanh toán' : 'Đã thanh toán'}</span><strong>{formatMoney(payable)}</strong></p>
       </div>
 
       {hasLoyalty ? (
