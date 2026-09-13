@@ -94,6 +94,20 @@ function integerValue(value, fallback = 0) {
   return Number.isInteger(number) ? number : fallback;
 }
 
+function paymentDeadlineOf(value) {
+  if (!value) return null;
+  const deadline = new Date(value).getTime();
+  return Number.isFinite(deadline) ? deadline : null;
+}
+
+function paymentCountdownOf(remainingMs) {
+  if (remainingMs == null) return null;
+  if (remainingMs <= 0) return 'Đã hết thời hạn thanh toán';
+  const minutes = Math.floor(remainingMs / 60000);
+  const seconds = Math.floor((remainingMs % 60000) / 1000);
+  return `Còn ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} để thanh toán`;
+}
+
 function lineItemsOf(paymentSlip, order) {
   const orderItems = Array.isArray(order?.chiTietDonHang) ? order.chiTietDonHang : [];
   const source = Array.isArray(paymentSlip?.items) && paymentSlip.items.length
@@ -188,6 +202,7 @@ export default function Payment() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState('');
   const [transferReloadKey, setTransferReloadKey] = useState(0);
+  const [transferNow, setTransferNow] = useState(Date.now());
 
   useEffect(() => {
     let active = true;
@@ -251,6 +266,10 @@ export default function Payment() {
   const parsedPointsInput = integerValue(pointsInput, -1);
   const pointsPendingApply = loyaltyChecked && parsedPointsInput !== appliedPoints;
   const lineItems = useMemo(() => lineItemsOf(paymentSlip, order), [paymentSlip, order]);
+  const transferDeadline = paymentDeadlineOf(transferQr?.paymentDeadline);
+  const transferRemainingMs = transferDeadline == null ? null : Math.max(transferDeadline - transferNow, 0);
+  const transferExpired = transferRemainingMs != null && transferRemainingMs <= 0;
+  const transferCountdown = paymentCountdownOf(transferRemainingMs);
 
   useEffect(() => {
     if (!order || method !== 'CHUYEN_KHOAN' || total <= 0 || order?.trangThai === 'DA_THANH_TOAN') {
@@ -272,6 +291,7 @@ export default function Payment() {
         if (!active) return;
         const data = response?.data || response;
         if (!data?.qrUrl) throw new Error('QR_MISSING');
+        setTransferNow(Date.now());
         setTransferQr(data);
       })
       .catch((requestError) => {
@@ -299,7 +319,21 @@ export default function Payment() {
   ]);
 
   useEffect(() => {
-    if (!order || method !== 'CHUYEN_KHOAN' || !transferQr || total <= 0 || order?.trangThai === 'DA_THANH_TOAN') {
+    if (method !== 'CHUYEN_KHOAN' || !transferQr?.paymentDeadline || order?.trangThai === 'DA_THANH_TOAN') {
+      return undefined;
+    }
+
+    setTransferNow(Date.now());
+    const timer = window.setInterval(() => setTransferNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [method, order?.trangThai, transferQr?.paymentDeadline]);
+
+  useEffect(() => {
+    if (transferExpired && qrZoomOpen) setQrZoomOpen(false);
+  }, [qrZoomOpen, transferExpired]);
+
+  useEffect(() => {
+    if (!order || method !== 'CHUYEN_KHOAN' || !transferQr || transferExpired || total <= 0 || order?.trangThai === 'DA_THANH_TOAN') {
       return undefined;
     }
 
@@ -327,7 +361,7 @@ export default function Payment() {
       active = false;
       window.clearInterval(timer);
     };
-  }, [method, order?.trangThai, orderId, total, transferQr]);
+  }, [method, order?.trangThai, orderId, total, transferExpired, transferQr]);
 
   useEffect(() => {
     if (!order) return;
@@ -775,7 +809,7 @@ export default function Payment() {
                 </div>
               ) : null}
 
-              {!transferLoading && transferQr ? (
+              {!transferLoading && transferQr && !transferExpired ? (
                 <>
                   <div className="cashier-pos-qr-card">
                     <img src={transferQr.qrUrl} alt={`VietQR thanh toán ${displayCode}`} />
@@ -790,7 +824,7 @@ export default function Payment() {
                   <div className="cashier-transfer-auto-status" role="status" aria-live="polite">
                     <span className="cashier-transfer-clock"><Clock3 size={24} /></span>
                     <span>
-                      <strong>Đang chờ khách thanh toán...</strong>
+                      <strong>{transferCountdown || 'Đang chờ khách thanh toán...'}</strong>
                       <small>Hệ thống sẽ tự động xác nhận khi nhận được thanh toán.</small>
                     </span>
                   </div>
@@ -805,6 +839,15 @@ export default function Payment() {
                   </Link>
                   {error ? <div className="cashier-error">{error}</div> : null}
                 </>
+              ) : null}
+
+              {!transferLoading && transferQr && transferExpired ? (
+                <div className="cashier-pos-qr-error" role="status" aria-live="polite">
+                  <span>Mã VietQR đã hết thời hạn thanh toán. Vui lòng tạo mã mới để tiếp tục.</span>
+                  <button type="button" onClick={() => setTransferReloadKey((value) => value + 1)}>
+                    <RotateCcw size={15} />Tạo mã QR mới
+                  </button>
+                </div>
               ) : null}
             </div>
           ) : null}
@@ -857,7 +900,7 @@ export default function Payment() {
         </div>
       ) : null}
 
-      {qrZoomOpen && transferQr ? (
+      {qrZoomOpen && transferQr && !transferExpired ? (
         <div className="cashier-confirm-overlay cashier-pos-qr-zoom-overlay" role="presentation" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setQrZoomOpen(false);
         }}>
@@ -881,6 +924,13 @@ export default function Payment() {
               <span>SỐ TIỀN CẦN THANH TOÁN</span>
               <strong>{formatMoney(Number(transferQr.amount ?? total))}</strong>
             </div>
+
+            {transferCountdown ? (
+              <div className="cashier-pos-qr-zoom-code" role="status" aria-live="polite">
+                <Clock3 size={16} strokeWidth={2} />
+                <strong>{transferCountdown}</strong>
+              </div>
+            ) : null}
 
             <div className="cashier-pos-qr-zoom-code">
               <FileText size={16} strokeWidth={2} />
