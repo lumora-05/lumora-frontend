@@ -4638,7 +4638,7 @@
   border-bottom:1px solid #eee7df!important;
   background:#fff!important;
   display:grid!important;
-  grid-template-columns:minmax(430px,1fr) minmax(260px,.72fr) auto;
+  grid-template-columns:minmax(430px,1fr) auto;
   align-items:center;
   gap:24px;
 }
