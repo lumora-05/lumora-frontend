@@ -154,6 +154,30 @@ function publicReservationStatusMeta(item) {
   return reservationStatusMeta(item);
 }
 
+function isDepositDeadlineExpired(item, now = Date.now()) {
+  if (!item?.thoiHanThanhToanCoc) return false;
+  const deadline = new Date(item.thoiHanThanhToanCoc).getTime();
+  return Number.isFinite(deadline) && deadline <= now;
+}
+
+function canRetryExpiredDeposit(item, now = Date.now()) {
+  const bookingStatus = reservationStatus(item);
+  const depositStatus = reservationDepositStatus(item);
+  const expiredWhilePending = bookingStatus === 'CHO_XAC_NHAN'
+    && depositStatus === 'CHO_THANH_TOAN'
+    && isDepositDeadlineExpired(item, now);
+  const closedByDepositTimeout = bookingStatus === 'HET_HAN'
+    && depositStatus === 'DA_HUY'
+    && String(item?.lyDoHuyTuChoi || '').trim() === 'Quá thời hạn thanh toán tiền cọc';
+  return expiredWhilePending || closedByDepositTimeout;
+}
+
+function isActiveDepositPayment(item, now = Date.now()) {
+  return reservationStatus(item) === 'CHO_XAC_NHAN'
+    && reservationDepositStatus(item) === 'CHO_THANH_TOAN'
+    && !isDepositDeadlineExpired(item, now);
+}
+
 function ReservationStatusTimeline({ item }) {
   const current = reservationStatus(item);
   const depositStatus = reservationDepositStatus(item);
@@ -240,8 +264,9 @@ function ReservationStatusTimeline({ item }) {
 function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh }) {
   const depositStatus = reservationDepositStatus(item);
   if (!item?.tienCoc || !depositStatus) return null;
-  const meta = reservationDepositStatusMeta(depositStatus);
-  const pending = depositStatus === 'CHO_THANH_TOAN';
+  const retryable = canRetryExpiredDeposit(item);
+  const meta = retryable ? { label: 'Hết hạn thanh toán', tone: 'pending' } : reservationDepositStatusMeta(depositStatus);
+  const pending = depositStatus === 'CHO_THANH_TOAN' && !retryable;
   const paid = ['DA_THANH_TOAN', 'DA_KHAU_TRU'].includes(depositStatus);
 
   return (
@@ -256,9 +281,9 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
         {Number(item?.tienCocDaKhauTru || 0) > 0 ? <p><span>Đã khấu trừ</span><strong>{formatReservationMoney(item.tienCocDaKhauTru)}</strong></p> : null}
       </div>
 
-      {pending ? (
+      {(pending || retryable) ? (
         <div className="reservation-public-deposit-payment">
-          {qr ? (
+          {pending && qr ? (
             <>
               <div className="reservation-public-deposit-qr"><img src={qr.qrUrl} alt={`QR PayOS cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
               <div className="reservation-public-deposit-bank">
@@ -272,8 +297,11 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
           ) : (
             <div className="reservation-public-deposit-empty">
               <QrCode size={28} />
-              <div><strong>{error ? 'Chưa thể tải mã thanh toán' : 'Thanh toán cọc tự động qua PayOS'}</strong><p>{error || 'Mở mã QR và chuyển khoản đúng số tiền hiển thị.'}</p></div>
-              <button type="button" onClick={onLoadQr} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <QrCode size={16} />} Hiện mã QR</button>
+              <div>
+                <strong>{retryable ? 'Mã thanh toán đã hết hạn' : error ? 'Chưa thể tải mã thanh toán' : 'Thanh toán cọc tự động qua PayOS'}</strong>
+                <p>{retryable ? 'Tạo mã QR mới để tiếp tục thanh toán cọc. Hệ thống sẽ cấp lại thời hạn thanh toán.' : error || 'Mở mã QR và chuyển khoản đúng số tiền hiển thị.'}</p>
+              </div>
+              <button type="button" onClick={onLoadQr} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <QrCode size={16} />} {retryable ? 'Tạo mã QR mới' : 'Hiện mã QR'}</button>
             </div>
           )}
           <div className="reservation-public-deposit-help">
@@ -288,7 +316,7 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
       {depositStatus === 'CHO_HOAN' ? <div className="reservation-public-deposit-message warning"><Clock3 size={17} /><p>Khoản cọc đang chờ nhà hàng hoàn lại. Khi hoàn tất, trạng thái sẽ được cập nhật tại đây.</p></div> : null}
       {depositStatus === 'DA_HOAN' ? <div className="reservation-public-deposit-message deposit-success"><Check size={17} /><p>Nhà hàng đã ghi nhận hoàn tiền cọc.</p></div> : null}
       {depositStatus === 'MAT_COC' ? <div className="reservation-public-deposit-message danger"><XCircle size={17} /><p>Khoản cọc không được hoàn theo chính sách của lịch đặt bàn này.</p></div> : null}
-      {depositStatus === 'DA_HUY' ? <div className="reservation-public-deposit-message muted"><XCircle size={17} /><p>Yêu cầu cọc đã kết thúc mà không phát sinh khoản tiền cần xử lý.</p></div> : null}
+      {depositStatus === 'DA_HUY' && !retryable ? <div className="reservation-public-deposit-message muted"><XCircle size={17} /><p>Yêu cầu cọc đã kết thúc mà không phát sinh khoản tiền cần xử lý.</p></div> : null}
       {item?.lyDoXuLyCoc ? <div className="reservation-public-deposit-reason"><b>Ghi chú xử lý cọc:</b> {item.lyDoXuLyCoc}</div> : null}
     </section>
   );
@@ -298,7 +326,8 @@ function ReservationDepositCard({ item, qr, loading, error, onLoadQr, onRefresh 
 function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onCopy, onClose, embedded = false }) {
   const [now, setNow] = useState(Date.now());
   const depositStatus = reservationDepositStatus(item);
-  const pending = depositStatus === 'CHO_THANH_TOAN';
+  const retryable = canRetryExpiredDeposit(item, now);
+  const pending = depositStatus === 'CHO_THANH_TOAN' && !retryable;
   const paid = ['DA_THANH_TOAN', 'DA_KHAU_TRU'].includes(depositStatus);
 
   useEffect(() => {
@@ -343,7 +372,13 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onCopy, onClo
             {countdown ? <em className={remainingMs === 0 ? 'expired' : ''}><Clock3 size={15} /> {countdown}</em> : null}
           </div>
 
-          {pending && qr ? (
+          {retryable ? (
+            <div className="reservation-deposit-payment-loading">
+              {loading ? <LoaderCircle className="spin" size={28} /> : <QrCode size={30} />}
+              <div><strong>Mã thanh toán đã hết hạn</strong><p>Tạo mã QR mới để tiếp tục thanh toán cọc. Thời hạn thanh toán sẽ được cấp lại từ lúc tạo mã mới.</p></div>
+              {!loading ? <button type="button" onClick={onLoadQr}><RefreshCw size={16} /> Tạo mã QR mới</button> : null}
+            </div>
+          ) : pending && qr ? (
             <div className="reservation-deposit-payment-content">
               <div className="reservation-deposit-payment-qr"><img src={qr.qrUrl} alt={`QR PayOS cọc đặt bàn ${item?.maTraCuu || ''}`} /></div>
               <div className="reservation-deposit-payment-bank">
@@ -382,11 +417,12 @@ function DepositPaymentModal({ item, qr, loading, error, onLoadQr, onCopy, onClo
 }
 
 function ReservationDepositPrompt({ item, onPay }) {
-  if (reservationDepositStatus(item) !== 'CHO_THANH_TOAN') return null;
+  const retryable = canRetryExpiredDeposit(item);
+  if (reservationDepositStatus(item) !== 'CHO_THANH_TOAN' && !retryable) return null;
   return (
     <section className="reservation-deposit-payment-prompt">
-      <div><span><CreditCard size={19} /></span><div><strong>Bạn chưa thanh toán cọc {formatReservationMoney(item?.tienCoc)}</strong><p>Hoàn tất tiền cọc để nhà hàng có thể xác nhận và giữ chỗ cho lịch này.</p></div></div>
-      <button type="button" onClick={onPay}><QrCode size={16} /> Thanh toán ngay</button>
+      <div><span><CreditCard size={19} /></span><div><strong>{retryable ? 'Mã thanh toán cọc đã hết hạn' : `Bạn chưa thanh toán cọc ${formatReservationMoney(item?.tienCoc)}`}</strong><p>{retryable ? 'Bạn có thể tạo mã QR mới để tiếp tục thanh toán và giữ lịch đặt bàn.' : 'Hoàn tất tiền cọc để nhà hàng có thể xác nhận và giữ chỗ cho lịch này.'}</p></div></div>
+      <button type="button" onClick={onPay}><QrCode size={16} /> {retryable ? 'Tạo mã QR mới' : 'Thanh toán ngay'}</button>
     </section>
   );
 }
@@ -571,15 +607,19 @@ export default function PublicReservation() {
     }
   }, [lookup.code, lookup.phone, toast]);
 
-  const loadDepositQr = useCallback(async (silent = false) => {
+  const loadDepositQr = useCallback(async (silent = false, allowExpiredRetry = false) => {
     const code = lookup.code.trim();
     const phone = normalizeVietnamPhone(lookup.phone);
-    if (!code || !phone || reservationDepositStatus(reservation) !== 'CHO_THANH_TOAN') return;
+    const activePayment = isActiveDepositPayment(reservation);
+    const retryable = canRetryExpiredDeposit(reservation);
+    if (!code || !phone || (!activePayment && !(allowExpiredRetry && retryable))) return;
     try {
       setDepositLoading(true);
       setDepositError('');
       const response = await reservationApi.customerDepositVietQr(code, phone);
       setDepositQr(reservationData(response));
+      await refreshSelectedReservation(true);
+      if (retryable && !silent) toast.success('Đã tạo mã QR mới và gia hạn thời gian thanh toán cọc.');
     } catch (error) {
       setDepositQr(null);
       const message = errorMessageOf(error, 'Không thể tạo mã thanh toán cọc qua PayOS lúc này.');
@@ -588,7 +628,16 @@ export default function PublicReservation() {
     } finally {
       setDepositLoading(false);
     }
-  }, [lookup.code, lookup.phone, reservation, toast]);
+  }, [
+    lookup.code,
+    lookup.phone,
+    refreshSelectedReservation,
+    reservation?.lyDoHuyTuChoi,
+    reservation?.thoiHanThanhToanCoc,
+    reservation?.trangThai,
+    reservation?.trangThaiCoc,
+    toast,
+  ]);
 
   useEffect(() => {
     if (socketEvent && reservation?.maTraCuu) refreshSelectedReservation(true);
@@ -601,13 +650,13 @@ export default function PublicReservation() {
   }, [lookup.code, lookup.phone, refreshSelectedReservation, reservation?.maTraCuu, reservation?.trangThaiCoc]);
 
   useEffect(() => {
-    if (reservationDepositStatus(reservation) === 'CHO_THANH_TOAN' && lookup.code && lookup.phone) {
+    if (isActiveDepositPayment(reservation) && lookup.code && lookup.phone) {
       loadDepositQr(true);
-    } else {
+    } else if (reservationDepositStatus(reservation) !== 'CHO_THANH_TOAN' || canRetryExpiredDeposit(reservation)) {
       setDepositQr(null);
       setDepositError('');
     }
-  }, [loadDepositQr, lookup.code, lookup.phone, reservation?.maTraCuu, reservation?.trangThaiCoc]);
+  }, [loadDepositQr, lookup.code, lookup.phone, reservation?.maTraCuu, reservation?.trangThai, reservation?.trangThaiCoc, reservation?.thoiHanThanhToanCoc]);
 
   const minDateTime = useMemo(
     () => minReservationDateTime(reservationPolicy.minimumAdvanceMinutes),
@@ -811,7 +860,7 @@ export default function PublicReservation() {
 
   function openDepositPayment() {
     setDepositPaymentOpen(true);
-    if (!depositQr && !depositLoading && reservationDepositStatus(reservation) === 'CHO_THANH_TOAN') {
+    if (!depositQr && !depositLoading && isActiveDepositPayment(reservation)) {
       loadDepositQr(false);
     }
   }
@@ -936,7 +985,7 @@ export default function PublicReservation() {
                 <button type="button" className="reservation-public-copy" onClick={copyCode}><Copy size={16} /> Sao chép mã {reservation.maTraCuu}</button>
                 <ReservationDepositPrompt item={reservation} onPay={openDepositPayment} />
                 <ReservationDetail item={reservation} defaultDurationMinutes={reservationPolicy.defaultDurationMinutes} onEdit={startEdit} onCancel={() => setCancelOpen(true)} />
-                <ReservationDepositCard item={reservation} qr={depositQr} loading={depositLoading} error={depositError} onLoadQr={() => loadDepositQr(false)} onRefresh={() => refreshSelectedReservation(false)} />
+                <ReservationDepositCard item={reservation} qr={depositQr} loading={depositLoading} error={depositError} onLoadQr={() => loadDepositQr(false, true)} onRefresh={() => refreshSelectedReservation(false)} />
                 <CustomerReservationPreorder
                   reservation={reservation}
                   code={lookup.code}
@@ -976,7 +1025,7 @@ export default function PublicReservation() {
               qr={depositQr}
               loading={depositLoading || searching}
               error={depositError}
-              onLoadQr={() => loadDepositQr(false)}
+              onLoadQr={() => loadDepositQr(false, true)}
               onCopy={copyDepositValue}
               onClose={() => { setReviewOpen(false); setReviewStep('review'); }}
             />
@@ -1013,7 +1062,7 @@ export default function PublicReservation() {
           qr={depositQr}
           loading={depositLoading || searching}
           error={depositError}
-          onLoadQr={() => loadDepositQr(false)}
+          onLoadQr={() => loadDepositQr(false, true)}
           onCopy={copyDepositValue}
           onClose={() => setDepositPaymentOpen(false)}
         />
