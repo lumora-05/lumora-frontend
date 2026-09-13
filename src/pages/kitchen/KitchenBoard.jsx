@@ -105,27 +105,16 @@ export default function KitchenBoard() {
   const [busyIds, setBusyIds] = useState(new Set());
   const [now, setNow] = useState(Date.now());
   const previousWaiting = useRef(new Set());
+  const refreshTimer = useRef(null);
 
   async function load(showNotice = false, silent = false) {
     if (!silent) setLoading(true);
     try {
-      // /orders/kitchen/active là endpoint nhẹ và hiện chưa mang thông tin nhóm thanh toán.
-      // Lấy thêm ngữ cảnh đơn hàng để chỉ bổ sung nhãn ghép bàn, không thay đổi luồng xử lý bếp.
-      const groupContextRequest = orderApi.getAll().catch(() => null);
+      // Backend đã trả đủ maNhomThanhToan trong endpoint nhẹ /orders/kitchen/active,
+      // vì vậy không cần tải toàn bộ /orders chỉ để lấy ngữ cảnh bàn ghép.
       const response = await orderApi.getKitchenActive();
-      const groupContextResponse = await groupContextRequest;
-      const contextOrders = unwrapList(groupContextResponse);
-      if (contextOrders.length) setGroupContextOrders(contextOrders);
-
-      const contextByOrderId = new Map(contextOrders.map((order) => [String(kitchenOrderId(order)), order]));
-      const activeOrders = unwrapList(response).map((order) => {
-        const contextOrder = contextByOrderId.get(String(kitchenOrderId(order)));
-        if (!contextOrder) return order;
-        return {
-          ...order,
-          maNhomThanhToan: contextOrder?.maNhomThanhToan ?? order?.maNhomThanhToan,
-        };
-      });
+      const activeOrders = unwrapList(response);
+      setGroupContextOrders(activeOrders);
       const next = flattenKitchenOrders(activeOrders);
       setItems(next);
 
@@ -149,7 +138,14 @@ export default function KitchenBoard() {
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
-    if (event?.topic === '/topic/kitchen' || event?.topic === '/topic/orders') load(true, true);
+    if (event?.topic !== '/topic/kitchen' && event?.topic !== '/topic/orders') return undefined;
+
+    // Hai topic có thể cùng phát cho một thao tác. Gom các sự kiện sát nhau thành một lần tải lại
+    // để tránh gọi /orders/kitchen/active liên tiếp.
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => load(true, true), 250);
+
+    return () => window.clearTimeout(refreshTimer.current);
   }, [event]);
 
   const allGroups = useMemo(() => {
@@ -233,8 +229,15 @@ export default function KitchenBoard() {
       const response = candidates.length === 1
         ? await orderApi.updateItemStatus(ids[0], { trangThaiMon: nextStatus })
         : await orderApi.updateItemStatusesBulk({ itemIds: ids, trangThaiMon: nextStatus });
+      // Cập nhật ngay trên giao diện sau khi PUT thành công. Không bắt nút phải chờ thêm
+      // một request tải lại danh sách; WebSocket sẽ đồng bộ dữ liệu nền sau đó.
+      const idSet = new Set(ids.map(String));
+      setItems((current) => current.map((item) => (
+        idSet.has(String(kitchenItemId(item)))
+          ? { ...item, trangThaiMon: nextStatus }
+          : item
+      )));
       toast.success(messageOf(response, successMessage));
-      await load(false, true);
     } catch (error) {
       toast.error(errorMessageOf(error, 'Cập nhật trạng thái món thất bại'));
       await load(false, true);
