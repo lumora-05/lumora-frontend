@@ -75,9 +75,6 @@ export default function CashierHeader({ title, subtitle, attentionCount = 0, onO
         </div>
       </div>
 
-      {paymentLanding ? (
-        <div className="cashier-payment-tagline" aria-hidden="true">Ẩm thực kết nối<br />những khoảnh khắc đẹp</div>
-      ) : null}
 
       <div className="cashier-header-actions">
         <Link to="/cashier/notifications" className="notification-btn cashier-notification-link" aria-label={`${queueCount} công việc cần theo dõi`}>
