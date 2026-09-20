@@ -44,6 +44,23 @@ export function tableNameOfOrder(order) {
   return order?.banAn?.tenBan || (tableIdOfOrder(order) ? `Bàn ${tableIdOfOrder(order)}` : 'Chưa xác định bàn');
 }
 
+export function sessionIdOfOrder(order) {
+  return order?.sessionId
+    ?? order?.maPhien
+    ?? order?.idPhien
+    ?? order?.phienBan?.sessionId
+    ?? order?.phienBan?.maPhien
+    ?? null;
+}
+
+export function shortSessionId(value) {
+  const raw = typeof value === 'object' && value !== null ? sessionIdOfOrder(value) : value;
+  const text = String(raw ?? '').trim();
+  if (!text) return '—';
+  if (text.length <= 18) return text;
+  return `${text.slice(0, 8)}…${text.slice(-6)}`;
+}
+
 export function orderCreatedAt(order) {
   return order?.thoiGianDat || order?.ngayTao || order?.createdAt || null;
 }

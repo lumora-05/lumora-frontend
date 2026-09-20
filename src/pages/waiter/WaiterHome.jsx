@@ -16,6 +16,8 @@ import {
   orderCreatedAt,
   orderGroup,
   orderId,
+  sessionIdOfOrder,
+  shortSessionId,
   statusMeta,
   tableIdOfOrder,
   tableNameOfOrder,
@@ -191,6 +193,7 @@ export default function WaiterHome() {
       const ids = new Set(summary.members.map((table) => String(tableId(table))));
       summary.orders = activeOrders.filter((order) => ids.has(String(tableIdOfOrder(order))));
       summary.itemCount = summary.orders.reduce((sum, order) => sum + itemCount(order), 0);
+      summary.sessionIds = [...new Set(summary.orders.map(sessionIdOfOrder).filter(Boolean).map(String))];
 
       const createdTimes = summary.orders
         .map((order) => orderCreatedAt(order))
@@ -450,7 +453,10 @@ export default function WaiterHome() {
                         <strong>Nhóm {summary.name}</strong>
                         <small className="waiter-group-order-row-note">{summary.members.length} bàn · Bàn chính: {compactTableName(summary.primary)}</small>
                       </td>
-                      <td><span className="waiter-group-order-label">1 đơn nhóm</span></td>
+                      <td>
+                        <span className="waiter-group-order-label">1 đơn nhóm</span>
+                        {summary.sessionIds?.length ? <small className="waiter-session-inline" title={summary.sessionIds.join(' · ')}>Phiên {summary.sessionIds.map(shortSessionId).join(' · ')}</small> : null}
+                      </td>
                       <td>{summary.itemCount}</td>
                       <td><span className={`waiter-status-badge ${summary.meta.tone}`}>{summary.meta.label}</span></td>
                       <td><span className="waiter-table-wait"><Clock3 size={15} />{waitLabel(summary.createdAt)} <small>({formatClock(summary.createdAt)})</small></span></td>
@@ -485,10 +491,14 @@ export default function WaiterHome() {
                 const { order } = row;
                 const meta = statusMeta(order.trangThai);
                 const createdAt = orderCreatedAt(order);
+                const sessionId = sessionIdOfOrder(order);
                 return (
                   <tr key={row.key}>
                     <td><strong>{tableNameOfOrder(order)}</strong></td>
-                    <td>#{orderId(order)}</td>
+                    <td>
+                      <span>#{orderId(order)}</span>
+                      {sessionId ? <small className="waiter-session-inline" title={`Session ID: ${sessionId}`}>Phiên {shortSessionId(sessionId)}</small> : null}
+                    </td>
                     <td>{itemCount(order)}</td>
                     <td><span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span></td>
                     <td><span className="waiter-table-wait"><Clock3 size={15} />{waitLabel(createdAt)} <small>({formatClock(createdAt)})</small></span></td>

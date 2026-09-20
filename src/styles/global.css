@@ -1637,6 +1637,8 @@
 .waiter-feed-title>div{display:flex;align-items:center;gap:12px;min-width:0;}
 .waiter-feed-title strong{color:#111827;font-size:17px;white-space:nowrap;}
 .waiter-feed-title>div>span{color:#64748b;font-size:13px;font-weight:750;}
+.waiter-feed-title>div>.waiter-session-chip{padding:4px 8px;border-radius:999px;background:#eef6ff;color:#2563eb;font-size:11px;font-weight:850;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis;}
+.waiter-session-inline{display:block;margin-top:4px;color:#2563eb;font-size:11px;font-weight:800;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .waiter-feed-summary{display:flex;align-items:center;gap:14px;margin-top:13px;min-width:0;}
 .waiter-feed-summary>span{display:flex;align-items:center;gap:7px;color:#475569;font-size:13px;font-weight:850;white-space:nowrap;}
 .waiter-feed-summary p{margin:0;color:#64748b;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

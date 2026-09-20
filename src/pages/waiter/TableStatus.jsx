@@ -19,6 +19,8 @@ import {
   orderGroup,
   orderId,
   pendingReadyCount,
+  sessionIdOfOrder,
+  shortSessionId,
   statusMeta,
   tableNameOfOrder,
   unwrapList,
@@ -230,6 +232,7 @@ export default function TableStatus() {
     const readyCount = pendingReadyCount(order);
     const call = latestCall(order);
     const createdAt = orderCreatedAt(order);
+    const sessionId = sessionIdOfOrder(order);
     const elapsedTone = waitTone(createdAt, group);
     const tableIcon = elapsedTone === 'urgent'
       ? '/waiter-icons/table-chair-action.png'
@@ -250,6 +253,7 @@ export default function TableStatus() {
                 <div>
                   <strong>{tableNameOfOrder(order)}</strong>
                   <span>#{id}</span>
+                  {sessionId ? <span className="waiter-session-chip" title={`Session ID: ${sessionId}`}>Phiên {shortSessionId(sessionId)}</span> : null}
                   {call > 1 ? <em>Lượt gọi #{call}</em> : null}
                 </div>
                 <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
