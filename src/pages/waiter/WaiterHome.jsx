@@ -17,7 +17,6 @@ import {
   orderGroup,
   orderId,
   sessionIdOfOrder,
-  shortSessionId,
   statusMeta,
   tableIdOfOrder,
   tableNameOfOrder,
@@ -455,7 +454,7 @@ export default function WaiterHome() {
                       </td>
                       <td>
                         <span className="waiter-group-order-label">1 đơn nhóm</span>
-                        {summary.sessionIds?.length ? <small className="waiter-session-inline" title={summary.sessionIds.join(' · ')}>Phiên {summary.sessionIds.map(shortSessionId).join(' · ')}</small> : null}
+                        {summary.sessionIds?.length ? <small className="waiter-session-inline" title={`Session ID: ${summary.sessionIds.join(' · ')}`}>Lượt khách hiện tại</small> : null}
                       </td>
                       <td>{summary.itemCount}</td>
                       <td><span className={`waiter-status-badge ${summary.meta.tone}`}>{summary.meta.label}</span></td>
@@ -497,7 +496,7 @@ export default function WaiterHome() {
                     <td><strong>{tableNameOfOrder(order)}</strong></td>
                     <td>
                       <span>#{orderId(order)}</span>
-                      {sessionId ? <small className="waiter-session-inline" title={`Session ID: ${sessionId}`}>Phiên {shortSessionId(sessionId)}</small> : null}
+                      {sessionId ? <small className="waiter-session-inline" title={`Session ID: ${sessionId}`}>Lượt khách hiện tại</small> : null}
                     </td>
                     <td>{itemCount(order)}</td>
                     <td><span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span></td>

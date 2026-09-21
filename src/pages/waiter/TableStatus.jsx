@@ -20,7 +20,6 @@ import {
   orderId,
   pendingReadyCount,
   sessionIdOfOrder,
-  shortSessionId,
   statusMeta,
   tableNameOfOrder,
   unwrapList,
@@ -253,7 +252,7 @@ export default function TableStatus() {
                 <div>
                   <strong>{tableNameOfOrder(order)}</strong>
                   <span>#{id}</span>
-                  {sessionId ? <span className="waiter-session-chip" title={`Session ID: ${sessionId}`}>Phiên {shortSessionId(sessionId)}</span> : null}
+                  {sessionId ? <span className="waiter-session-chip" title={`Session ID: ${sessionId}`}>Lượt khách hiện tại</span> : null}
                   {call > 1 ? <em>Lượt gọi #{call}</em> : null}
                 </div>
                 <span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span>
