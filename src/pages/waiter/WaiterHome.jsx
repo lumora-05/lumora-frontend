@@ -16,7 +16,6 @@ import {
   orderCreatedAt,
   orderGroup,
   orderId,
-  sessionIdOfOrder,
   statusMeta,
   tableIdOfOrder,
   tableNameOfOrder,
@@ -192,7 +191,6 @@ export default function WaiterHome() {
       const ids = new Set(summary.members.map((table) => String(tableId(table))));
       summary.orders = activeOrders.filter((order) => ids.has(String(tableIdOfOrder(order))));
       summary.itemCount = summary.orders.reduce((sum, order) => sum + itemCount(order), 0);
-      summary.sessionIds = [...new Set(summary.orders.map(sessionIdOfOrder).filter(Boolean).map(String))];
 
       const createdTimes = summary.orders
         .map((order) => orderCreatedAt(order))
@@ -454,7 +452,6 @@ export default function WaiterHome() {
                       </td>
                       <td>
                         <span className="waiter-group-order-label">1 đơn nhóm</span>
-                        {summary.sessionIds?.length ? <small className="waiter-session-inline" title={`Session ID: ${summary.sessionIds.join(' · ')}`}>Lượt khách hiện tại</small> : null}
                       </td>
                       <td>{summary.itemCount}</td>
                       <td><span className={`waiter-status-badge ${summary.meta.tone}`}>{summary.meta.label}</span></td>
@@ -490,13 +487,11 @@ export default function WaiterHome() {
                 const { order } = row;
                 const meta = statusMeta(order.trangThai);
                 const createdAt = orderCreatedAt(order);
-                const sessionId = sessionIdOfOrder(order);
                 return (
                   <tr key={row.key}>
                     <td><strong>{tableNameOfOrder(order)}</strong></td>
                     <td>
                       <span>#{orderId(order)}</span>
-                      {sessionId ? <small className="waiter-session-inline" title={`Session ID: ${sessionId}`}>Lượt khách hiện tại</small> : null}
                     </td>
                     <td>{itemCount(order)}</td>
                     <td><span className={`waiter-status-badge ${meta.tone}`}>{meta.label}</span></td>

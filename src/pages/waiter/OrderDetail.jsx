@@ -22,7 +22,6 @@ import {
   itemStatus,
   orderCreatedAt,
   orderId as readOrderId,
-  sessionIdOfOrder,
   statusMeta,
   tableNameOfOrder,
   waitLabel,
@@ -205,7 +204,6 @@ export default function OrderDetail() {
   const pendingWholeOrder = String(order?.trangThai || '').toUpperCase() === 'CHO_XAC_NHAN';
   const needsConfirmation = pendingWholeOrder || pendingConfirmationItems.length > 0;
   const createdAt = orderCreatedAt(order);
-  const sessionId = sessionIdOfOrder(order);
 
   return (
     <section className="waiter-page waiter-service-detail-page">
@@ -217,7 +215,6 @@ export default function OrderDetail() {
             <div className="waiter-order-identifiers">
               <span><small>Bàn</small><strong>{tableNameOfOrder(order)}</strong></span>
               <span><small>Mã đơn</small><strong>#{readOrderId(order)}</strong></span>
-              {sessionId ? <span title={`Session ID: ${sessionId}`}><small>Lượt khách</small><strong>Hiện tại</strong></span> : null}
               <span><small>Thời gian gửi</small><strong>{formatClock(createdAt)}</strong></span>
               <span><small>Đã chờ</small><strong>{waitLabel(createdAt)}</strong></span>
             </div>
