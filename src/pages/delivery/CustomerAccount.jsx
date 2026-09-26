@@ -161,12 +161,12 @@ export default function CustomerAccount() {
           <div>
             <small>TÀI KHOẢN KHÁCH HÀNG</small>
             <h1>{user?.hoTen || 'Khách hàng'}</h1>
-            <p>{user?.soDienThoai || ''}</p>
+            <p>{user?.soDienThoai || 'Chưa bổ sung số điện thoại'}</p>
             <span className="delivery-account-member-badge">Khách hàng Lumora</span>
           </div>
         </div>
         <div className="delivery-account-profile-actions">
-          <button className="delivery-account-edit-profile" type="button" onClick={openProfileEditor}><Pencil size={16}/> Chỉnh sửa thông tin</button>
+          <button className="delivery-account-edit-profile" type="button" onClick={openProfileEditor}><Pencil size={16}/> {user?.soDienThoai ? 'Chỉnh sửa thông tin' : 'Bổ sung số điện thoại'}</button>
           <button className="delivery-account-logout" type="button" onClick={logout}><LogOut size={17}/> Đăng xuất</button>
         </div>
       </section>
@@ -232,7 +232,9 @@ export default function CustomerAccount() {
         <span className="delivery-account-profile-modal-icon"><Pencil size={22}/></span>
         <small>THÔNG TIN CÁ NHÂN</small>
         <h2 id="delivery-account-profile-title">Chỉnh sửa thông tin</h2>
-        <p>Cập nhật họ tên và số điện thoại dùng cho tài khoản khách hàng Lumora.</p>
+        <p>{user?.soDienThoai
+          ? 'Cập nhật họ tên và số điện thoại dùng cho tài khoản khách hàng Lumora.'
+          : 'Vui lòng bổ sung số điện thoại để thuận tiện khi đặt hàng. Thông tin này sẽ được lưu vào tài khoản của bạn.'}</p>
 
         <form onSubmit={saveProfile}>
           <label>

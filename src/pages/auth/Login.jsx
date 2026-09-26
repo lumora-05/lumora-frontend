@@ -116,7 +116,8 @@ export default function Login() {
 
     try {
       const loggedInUser = await loginWithGoogle(credential);
-      navigate(getHomePath(loggedInUser.role), { replace: true });
+      const normalizedRole = String(loggedInUser.role || '').replace('ROLE_', '');
+      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(loggedInUser.role), { replace: true });
     } catch (requestError) {
       const message = errorMessageOf(
         requestError,
@@ -170,7 +171,7 @@ export default function Login() {
           <div className="lumora-login-form-wrap">
             <div className="lumora-login-heading">
               <h2>Đăng nhập</h2>
-              <p>Khách hàng dùng số điện thoại; nhân viên dùng tên đăng nhập được cấp.</p>
+              <p>Khách hàng dùng số điện thoại hoặc Google; nhân viên dùng tên đăng nhập được cấp hoặc Google.</p>
             </div>
 
             <form className="lumora-login-form" onSubmit={submit} noValidate>

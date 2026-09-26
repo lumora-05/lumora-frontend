@@ -31,7 +31,7 @@ export function saveCustomerSession(auth) {
   localStorage.setItem(TOKEN_KEY, auth.token);
   localStorage.setItem(USER_KEY, JSON.stringify({
     maKhachHang: auth.maKhachHang,
-    hoTen: auth.hoTen || '',
+    hoTen: auth.hoTen || auth.fullName || '',
     soDienThoai: auth.soDienThoai || '',
     diemTichLuy: Number(auth.diemTichLuy || 0),
   }));
