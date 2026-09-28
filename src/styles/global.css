@@ -5687,7 +5687,7 @@
 
 /* Cashier mixed payment: cash + VietQR on the same bill */
 .cashier-method-grid-three{grid-template-columns:repeat(3,minmax(0,1fr))}
-.cashier-mixed-area{margin:0 0 14px;padding:15px;border:0;border-radius:13px;background:#fff8f2;display:grid;gap:13px}
+.cashier-mixed-area{margin:0 0 14px;padding:15px;border:0;border-radius:13px;background:#fff8f2;display:grid;grid-auto-rows:max-content;align-content:start;gap:13px}
 .cashier-mixed-heading{display:flex;align-items:center;gap:11px}
 .cashier-mixed-icon{width:44px;height:44px;border-radius:50%;background:#ffead9;color:#eb5b17;display:grid;place-items:center;flex:0 0 auto}
 .cashier-mixed-heading strong{display:block;color:#d94d13;font-size:14px;font-weight:900}
@@ -5706,7 +5706,7 @@
 .cashier-mixed-progress p strong{color:#30251e;font-size:12px}
 .cashier-mixed-progress p.remaining{padding-top:7px;border-top:1px dashed #e5d6c7;color:#704327;font-weight:900}
 .cashier-mixed-progress p.remaining strong{color:#e45116;font-size:14px}
-.cashier-mixed-status{min-height:42px;border:1px solid #e7d7c8;border-radius:10px;background:#fff;display:flex;align-items:center;gap:8px;padding:9px 11px;color:#745d4b;font-size:11.5px;font-weight:800}
+.cashier-mixed-status{height:auto!important;min-height:42px!important;max-height:none!important;align-self:start;flex:none;border:1px solid #e7d7c8;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:9px 11px;color:#745d4b;font-size:11.5px;font-weight:800;line-height:1.4}
 .cashier-mixed-status.success{border-color:#cfe8d5;background:#f5faf6;color:#31573d}
 .cashier-mixed-actions{margin-top:0!important}
 .cashier-mixed-actions .cashier-confirm-action{width:100%}
