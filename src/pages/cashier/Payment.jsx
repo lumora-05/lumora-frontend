@@ -37,6 +37,7 @@ import {
 const METHODS = [
   { key: 'TIEN_MAT', label: 'Tiền mặt', icon: Banknote },
   { key: 'CHUYEN_KHOAN', label: 'VietQR', icon: QrCode },
+  { key: 'KET_HOP', label: 'Kết hợp', icon: WalletCards },
 ];
 
 function PromotionSummaryIcon() {
@@ -175,6 +176,7 @@ export default function Payment() {
   const toast = useToast();
   const previousPayableRef = useRef(0);
   const transferCompletedRef = useRef(false);
+  const mixedCompletedRef = useRef(false);
 
   const [order, setOrder] = useState(null);
   const [paymentSlip, setPaymentSlip] = useState(null);
@@ -203,6 +205,9 @@ export default function Payment() {
   const [transferError, setTransferError] = useState('');
   const [transferReloadKey, setTransferReloadKey] = useState(0);
   const [transferNow, setTransferNow] = useState(Date.now());
+  const [mixedCashAmount, setMixedCashAmount] = useState('');
+  const [mixedStatus, setMixedStatus] = useState(null);
+  const [mixedStatusLoading, setMixedStatusLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -210,17 +215,31 @@ export default function Payment() {
     Promise.all([
       orderApi.getById(orderId),
       paymentApi.paymentSlipByOrder(orderId).catch(() => null),
-    ]).then(([response, slipResponse]) => {
+      paymentApi.mixedStatusByOrder(orderId).catch(() => null),
+    ]).then(([response, slipResponse, mixedResponse]) => {
       if (!active) return;
       const data = response?.data || response;
       const slipData = slipResponse?.data || slipResponse || null;
+      const mixedData = mixedResponse?.data || mixedResponse || null;
       const initialTotal = totalOf(data);
       const initialDeposit = Math.min(Number(slipData?.tienCocDaKhauTru || 0), initialTotal);
       const initialPayable = Math.max(0, initialTotal - initialDeposit);
       setOrder(data);
       setPaymentSlip(slipData);
+      setMixedStatus(mixedData);
       setCashReceived(initialPayable > 0 ? String(initialPayable) : '0');
       previousPayableRef.current = initialPayable;
+      const initialMixedCash = Number(mixedData?.tienMatDaThanhToan || 0);
+      const initialMixedTransfer = Number(mixedData?.chuyenKhoanDaThanhToan || 0);
+      const initialMixedPending = Number(mixedData?.chuyenKhoanDangCho || 0);
+      if (initialMixedCash > 0 || initialMixedTransfer > 0 || initialMixedPending > 0) {
+        setMethod('KET_HOP');
+        if (initialMixedCash > 0) {
+          setMixedCashAmount(String(initialMixedCash));
+        } else if (initialMixedTransfer > 0 && Number(mixedData?.conLai || 0) > 0) {
+          setMixedCashAmount(String(Number(mixedData.conLai)));
+        }
+      }
       if (data?.trangThai === 'DA_THANH_TOAN') {
         setError('Hóa đơn này đã được thanh toán.');
       }
@@ -270,10 +289,85 @@ export default function Payment() {
   const transferRemainingMs = transferDeadline == null ? null : Math.max(transferDeadline - transferNow, 0);
   const transferExpired = transferRemainingMs != null && transferRemainingMs <= 0;
   const transferCountdown = paymentCountdownOf(transferRemainingMs);
+  const mixedCashValue = Number(mixedCashAmount);
+  const mixedCashPaid = Number(mixedStatus?.tienMatDaThanhToan || 0);
+  const mixedTransferPaid = Number(mixedStatus?.chuyenKhoanDaThanhToan || 0);
+  const mixedTransferPending = Number(mixedStatus?.chuyenKhoanDangCho || 0);
+  const mixedRemaining = Number(mixedStatus?.conLai ?? total);
+  const mixedCompleted = Boolean(mixedStatus?.hoanTat);
+  const mixedCashRecorded = mixedCashPaid > 0;
+  const mixedCashForPlan = mixedCashRecorded
+    ? mixedCashPaid
+    : (Number.isFinite(mixedCashValue) ? mixedCashValue : 0);
+  const mixedTransferAmount = Math.max(0, total - mixedCashForPlan);
+  const transferRequestAmount = method === 'KET_HOP' ? mixedTransferAmount : total;
+  const transferMethodActive = method === 'CHUYEN_KHOAN' || method === 'KET_HOP';
 
   useEffect(() => {
-    if (!order || method !== 'CHUYEN_KHOAN' || total <= 0 || order?.trangThai === 'DA_THANH_TOAN') {
+    if (!order || method !== 'KET_HOP' || total <= 0) return undefined;
+
+    let active = true;
+
+    const loadMixedStatus = async (showLoading = false) => {
+      if (showLoading) setMixedStatusLoading(true);
+      try {
+        const params = customerPhone && loyaltyChecked && loyaltyPreview
+          ? { phone: customerPhone, pointsToUse: appliedPoints }
+          : {};
+        const response = await paymentApi.mixedStatusByOrder(orderId, params);
+        if (!active) return;
+        const data = response?.data || response;
+        setMixedStatus(data || null);
+
+        const cashPaid = Number(data?.tienMatDaThanhToan || 0);
+        const transferPaid = Number(data?.chuyenKhoanDaThanhToan || 0);
+        const remaining = Number(data?.conLai || 0);
+        if (cashPaid > 0) {
+          setMixedCashAmount(String(cashPaid));
+        } else if (transferPaid > 0 && remaining > 0) {
+          setMixedCashAmount(String(remaining));
+        }
+
+        if (data?.hoanTat && !mixedCompletedRef.current) {
+          mixedCompletedRef.current = true;
+          setSuccessOpen(true);
+          try {
+            const orderResponse = await orderApi.getById(orderId);
+            if (active) setOrder(orderResponse?.data || orderResponse);
+          } catch {
+            // Trạng thái thanh toán đã đủ để hiển thị thành công; không chặn UX nếu tải lại đơn lỗi.
+          }
+        }
+      } catch (requestError) {
+        if (active) setError(errorMessageOf(requestError, 'Không tải được trạng thái thanh toán kết hợp.'));
+      } finally {
+        if (active && showLoading) setMixedStatusLoading(false);
+      }
+    };
+
+    void loadMixedStatus(true);
+    const timer = window.setInterval(() => loadMixedStatus(false), 2500);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [
+    appliedPoints,
+    customerPhone,
+    loyaltyChecked,
+    loyaltyPreview,
+    method,
+    order,
+    orderId,
+    total,
+  ]);
+
+  useEffect(() => {
+    const mixedQrAllowed = method !== 'KET_HOP'
+      || (!mixedCompleted && mixedTransferPaid <= 0 && mixedTransferAmount > 0 && mixedCashForPlan > 0 && mixedCashForPlan < total);
+    if (!order || !transferMethodActive || transferRequestAmount <= 0 || order?.trangThai === 'DA_THANH_TOAN' || !mixedQrAllowed) {
       setTransferLoading(false);
+      if (method === 'KET_HOP' && !mixedQrAllowed) setTransferQr(null);
       return undefined;
     }
 
@@ -285,6 +379,7 @@ export default function Payment() {
     const params = customerPhone && loyaltyChecked && loyaltyPreview
       ? { phone: customerPhone, pointsToUse: appliedPoints }
       : {};
+    if (method === 'KET_HOP') params.amount = transferRequestAmount;
 
     paymentApi.vietQrByOrder(orderId, params)
       .then((response) => {
@@ -312,21 +407,27 @@ export default function Payment() {
     loyaltyChecked,
     loyaltyPreview,
     method,
+    mixedCashForPlan,
+    mixedCompleted,
+    mixedTransferAmount,
+    mixedTransferPaid,
     order?.trangThai,
     orderId,
+    transferMethodActive,
+    transferRequestAmount,
     total,
     transferReloadKey,
   ]);
 
   useEffect(() => {
-    if (method !== 'CHUYEN_KHOAN' || !transferQr?.paymentDeadline || order?.trangThai === 'DA_THANH_TOAN') {
+    if (!transferMethodActive || !transferQr?.paymentDeadline || order?.trangThai === 'DA_THANH_TOAN') {
       return undefined;
     }
 
     setTransferNow(Date.now());
     const timer = window.setInterval(() => setTransferNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, [method, order?.trangThai, transferQr?.paymentDeadline]);
+  }, [order?.trangThai, transferMethodActive, transferQr?.paymentDeadline]);
 
   useEffect(() => {
     if (transferExpired && qrZoomOpen) setQrZoomOpen(false);
@@ -467,6 +568,22 @@ export default function Payment() {
       if (cashValue < total) return 'Tiền khách đưa chưa đủ.';
     }
 
+    if (method === 'KET_HOP') {
+      if (mixedCompleted) return 'Hóa đơn này đã được thanh toán.';
+      if (!mixedCashRecorded) {
+        if (mixedCashAmount === '') return 'Vui lòng nhập số tiền khách trả bằng tiền mặt.';
+        if (!Number.isFinite(mixedCashValue) || mixedCashValue <= 0 || !Number.isInteger(mixedCashValue)) {
+          return 'Phần tiền mặt phải là số nguyên dương hợp lệ.';
+        }
+        if (mixedCashValue >= total) return 'Thanh toán kết hợp cần phần chuyển khoản lớn hơn 0.';
+      }
+      if (mixedTransferPaid <= 0 && mixedTransferAmount <= 0) {
+        return 'Thanh toán kết hợp cần phần chuyển khoản lớn hơn 0.';
+      }
+      if (!mixedCashRecorded && transferLoading) return 'Vui lòng chờ hệ thống tạo mã VietQR.';
+      if (!mixedCashRecorded && transferError) return 'Chưa tạo được mã VietQR cho phần chuyển khoản.';
+    }
+
     if (note.trim().length > 255) return 'Ghi chú tối đa 255 ký tự.';
     return '';
   }
@@ -476,6 +593,10 @@ export default function Payment() {
     setError('');
     setConfirmOpen(false);
     if (nextMethod === 'CHUYEN_KHOAN') {
+      transferCompletedRef.current = false;
+    }
+    if (nextMethod === 'KET_HOP') {
+      mixedCompletedRef.current = false;
       transferCompletedRef.current = false;
     }
   }
@@ -508,6 +629,36 @@ export default function Payment() {
     setError('');
     try {
       const hasLoyaltyCustomer = Boolean(customerPhone && loyaltyChecked && loyaltyPreview);
+      if (method === 'KET_HOP') {
+        if (mixedCashRecorded) {
+          setConfirmOpen(false);
+          setError('Phần tiền mặt đã được ghi nhận. Vui lòng chờ khách hoàn tất chuyển khoản VietQR.');
+          return;
+        }
+
+        const payload = {
+          maDonHang: Number(orderId),
+          soTien: mixedCashValue,
+          ghiChu: note.trim() || null,
+          soDienThoaiKhachHang: hasLoyaltyCustomer ? customerPhone : null,
+          hoTenKhachHang: hasLoyaltyCustomer ? (customerName.trim() || null) : null,
+          diemSuDung: hasLoyaltyCustomer ? appliedPoints : 0,
+        };
+        const response = await paymentApi.mixedCash(payload);
+        const data = response?.data || response;
+        setMixedStatus(data || null);
+        setConfirmOpen(false);
+
+        if (data?.hoanTat) {
+          mixedCompletedRef.current = true;
+          setSuccessOpen(true);
+          toast.success(messageOf(response, 'Thanh toán kết hợp thành công'));
+        } else {
+          toast.success(messageOf(response, 'Đã ghi nhận phần tiền mặt. Chờ khách chuyển khoản phần còn lại.'));
+        }
+        return;
+      }
+
       const payload = {
         maDonHang: Number(orderId),
         phuongThucThanhToan: method,
@@ -734,7 +885,7 @@ export default function Payment() {
           <div className="cashier-pos-method-heading"><h2>Chọn phương thức thanh toán</h2></div>
 
           {total > 0 ? (
-            <div className="cashier-method-grid cashier-method-grid-two cashier-pos-method-grid">
+            <div className="cashier-method-grid cashier-method-grid-three cashier-pos-method-grid">
               {METHODS.map(({ key, label, icon: Icon }) => (
                 <button key={key} type="button" className={method === key ? 'active' : ''} onClick={() => chooseMethod(key)}>
                   <Icon size={26} />
@@ -785,15 +936,86 @@ export default function Payment() {
             </div>
           ) : null}
 
-          {total > 0 && method === 'CHUYEN_KHOAN' ? (
+          {total > 0 && method === 'KET_HOP' ? (
+            <div className="cashier-mixed-area">
+              <div className="cashier-mixed-heading">
+                <span className="cashier-mixed-icon"><WalletCards size={21} /></span>
+                <div>
+                  <strong>Thanh toán kết hợp</strong>
+                  <p>Nhập phần tiền mặt. Phần còn lại sẽ được tạo mã VietQR tự động.</p>
+                </div>
+              </div>
+
+              <div className="cashier-mixed-fields">
+                <label>
+                  <span>Tiền mặt</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={Math.max(1, total - 1)}
+                    step="1000"
+                    inputMode="numeric"
+                    value={mixedCashAmount}
+                    disabled={mixedCashRecorded || mixedCompleted}
+                    onChange={(event) => {
+                      setMixedCashAmount(event.target.value);
+                      setError('');
+                      setTransferError('');
+                    }}
+                    placeholder="Nhập số tiền mặt"
+                  />
+                </label>
+                <div className="cashier-mixed-transfer-box">
+                  <span>Chuyển khoản VietQR</span>
+                  <strong>{formatMoney(mixedTransferPaid > 0 ? mixedTransferPaid : mixedTransferAmount)}</strong>
+                  <small>Tự tính theo số tiền còn lại</small>
+                </div>
+              </div>
+
+              <div className="cashier-mixed-progress">
+                <p><span>Đã thu tiền mặt</span><strong>{formatMoney(mixedCashPaid)}</strong></p>
+                <p><span>Đã nhận chuyển khoản</span><strong>{formatMoney(mixedTransferPaid)}</strong></p>
+                {mixedTransferPending > 0 && mixedTransferPaid <= 0 ? <p><span>QR đang chờ</span><strong>{formatMoney(mixedTransferPending)}</strong></p> : null}
+                <p className="remaining"><span>Còn phải thu</span><strong>{formatMoney(mixedCompleted ? 0 : mixedRemaining)}</strong></p>
+              </div>
+
+              {mixedStatusLoading && !mixedStatus ? <div className="cashier-mixed-status">Đang kiểm tra trạng thái thanh toán...</div> : null}
+              {mixedCashRecorded && !mixedCompleted ? (
+                <div className="cashier-mixed-status success"><CheckCircle2 size={17} />Đã ghi nhận phần tiền mặt. Chờ khách hoàn tất VietQR.</div>
+              ) : null}
+              {mixedTransferPaid > 0 && !mixedCompleted ? (
+                <div className="cashier-mixed-status success"><CheckCircle2 size={17} />Đã nhận chuyển khoản. Vui lòng ghi nhận phần tiền mặt còn lại.</div>
+              ) : null}
+              {mixedCompleted ? (
+                <div className="cashier-mixed-status success"><CheckCircle2 size={17} />Đã nhận đủ tiền bằng hai phương thức.</div>
+              ) : null}
+
+              {!mixedCashRecorded && !mixedCompleted ? (
+                <div className="cashier-payment-actions cashier-pos-payment-actions cashier-mixed-actions">
+                  <button className="cashier-confirm-action" type="button" disabled={submitting || transferLoading} onClick={requestConfirmation}>
+                    <Banknote size={18} />{submitting ? 'Đang ghi nhận...' : 'Ghi nhận phần tiền mặt'}
+                  </button>
+                </div>
+              ) : null}
+              {error ? <div className="cashier-error">{error}</div> : null}
+            </div>
+          ) : null}
+
+          {total > 0 && transferMethodActive && (method !== 'KET_HOP' || mixedTransferPaid <= 0) ? (
             <div className="cashier-transfer-confirmation cashier-pos-transfer-panel">
               <div className="cashier-transfer-heading cashier-pos-transfer-heading">
                 <div className="cashier-transfer-icon"><Printer size={22} /></div>
                 <div>
-                  <strong>Quét mã để thanh toán</strong>
-                  <p>Khách hàng quét mã VietQR bằng ứng dụng ngân hàng</p>
+                  <strong>{method === 'KET_HOP' ? 'VietQR cho phần chuyển khoản' : 'Quét mã để thanh toán'}</strong>
+                  <p>{method === 'KET_HOP' ? 'Mã QR chỉ chứa phần tiền chuyển khoản của thanh toán kết hợp.' : 'Khách hàng quét mã VietQR bằng ứng dụng ngân hàng'}</p>
                 </div>
               </div>
+
+              {method === 'KET_HOP' && !(mixedCashForPlan > 0 && mixedCashForPlan < total) ? (
+                <div className="cashier-pos-qr-error cashier-mixed-qr-hint">
+                  <span>Nhập phần tiền mặt để hệ thống tính số tiền và tạo mã VietQR.</span>
+                </div>
+              ) : null}
 
               {transferLoading ? (
                 <div className="cashier-pos-qr-loading">
@@ -825,18 +1047,20 @@ export default function Payment() {
                     <span className="cashier-transfer-clock"><Clock3 size={24} /></span>
                     <span>
                       <strong>{transferCountdown || 'Đang chờ khách thanh toán...'}</strong>
-                      <small>Hệ thống sẽ tự động xác nhận khi nhận được thanh toán.</small>
+                      <small>{method === 'KET_HOP' ? 'PayOS sẽ tự ghi nhận phần chuyển khoản; hóa đơn chỉ hoàn tất khi tổng hai khoản đã đủ.' : 'Hệ thống sẽ tự động xác nhận khi nhận được thanh toán.'}</small>
                     </span>
                   </div>
 
-                  <Link
-                    className="cashier-print-slip-link"
-                    to={transferSlipUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Printer size={18} />In phiếu VietQR
-                  </Link>
+                  {method === 'CHUYEN_KHOAN' ? (
+                    <Link
+                      className="cashier-print-slip-link"
+                      to={transferSlipUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Printer size={18} />In phiếu VietQR
+                    </Link>
+                  ) : null}
                   {error ? <div className="cashier-error">{error}</div> : null}
                 </>
               ) : null}
@@ -888,12 +1112,18 @@ export default function Payment() {
                   <p><span>Tiền thừa</span><strong>{formatMoney(change)}</strong></p>
                 </>
               ) : null}
+              {total > 0 && method === 'KET_HOP' ? (
+                <>
+                  <p><span>Tiền mặt</span><strong>{formatMoney(mixedCashRecorded ? mixedCashPaid : mixedCashValue || 0)}</strong></p>
+                  <p><span>Chuyển khoản VietQR</span><strong>{formatMoney(mixedTransferPaid > 0 ? mixedTransferPaid : mixedTransferAmount)}</strong></p>
+                </>
+              ) : null}
               {note.trim() ? <p><span>Ghi chú</span><strong>{note.trim()}</strong></p> : null}
             </div>
             <div className="cashier-confirm-buttons">
               <button type="button" className="cashier-outline-action" onClick={() => setConfirmOpen(false)} disabled={submitting}>Kiểm tra lại</button>
               <button type="button" className="cashier-confirm-action" onClick={confirmPayment} disabled={submitting}>
-                <WalletCards size={18} />{submitting ? 'Đang xử lý...' : total <= 0 ? 'Hoàn tất hóa đơn' : 'Xác nhận thu tiền'}
+                <WalletCards size={18} />{submitting ? 'Đang xử lý...' : total <= 0 ? 'Hoàn tất hóa đơn' : method === 'KET_HOP' ? 'Ghi nhận tiền mặt' : 'Xác nhận thu tiền'}
               </button>
             </div>
           </div>
@@ -949,7 +1179,7 @@ export default function Payment() {
             <p>Hệ thống đã ghi nhận thanh toán cho<br /><strong>{tableLabel}</strong></p>
             <div className="cashier-payment-success-amount">{formatMoney(total)}</div>
             <div className="cashier-payment-success-meta">
-              <p><span>Phương thức</span><strong>Chuyển khoản VietQR</strong></p>
+              <p><span>Phương thức</span><strong>{method === 'KET_HOP' ? 'Tiền mặt + VietQR' : 'Chuyển khoản VietQR'}</strong></p>
               <p><span>Mã đơn</span><strong>{displayCode}</strong></p>
             </div>
             <div className="cashier-payment-success-actions">

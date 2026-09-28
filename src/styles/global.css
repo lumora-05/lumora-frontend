@@ -5683,3 +5683,38 @@
 @media(max-width:760px){
   .waiter-group-order-summary{margin:0 14px 14px}
 }
+
+/* Cashier mixed payment: cash + VietQR on the same bill */
+.cashier-method-grid-three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cashier-mixed-area{margin:0 0 14px;padding:15px;border:0;border-radius:13px;background:#fff8f2;display:grid;gap:13px}
+.cashier-mixed-heading{display:flex;align-items:center;gap:11px}
+.cashier-mixed-icon{width:44px;height:44px;border-radius:50%;background:#ffead9;color:#eb5b17;display:grid;place-items:center;flex:0 0 auto}
+.cashier-mixed-heading strong{display:block;color:#d94d13;font-size:14px;font-weight:900}
+.cashier-mixed-heading p{margin:4px 0 0;color:#7f6c5f;font-size:11px;line-height:1.4}
+.cashier-mixed-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cashier-mixed-fields label{display:grid;gap:7px;color:#66503e;font-size:12px;font-weight:900}
+.cashier-mixed-fields input{width:100%;height:48px;border:1px solid #e1d0c0;border-radius:11px;background:#fff;padding:0 12px;outline:0;color:#28384c;font-weight:850}
+.cashier-mixed-fields input:focus{border-color:#c8843f;box-shadow:0 0 0 4px rgba(200,132,63,.13)}
+.cashier-mixed-fields input:disabled{background:#f4f1ee;color:#8c7c70;cursor:not-allowed}
+.cashier-mixed-transfer-box{min-height:72px;border:1px solid #ead8c7;border-radius:11px;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:10px 12px}
+.cashier-mixed-transfer-box span{color:#806a57;font-size:11px;font-weight:800}
+.cashier-mixed-transfer-box strong{margin-top:3px;color:#e45116;font-size:18px;font-weight:950}
+.cashier-mixed-transfer-box small{margin-top:2px;color:#9a897b;font-size:9.5px}
+.cashier-mixed-progress{border:1px solid #eee3d8;border-radius:11px;background:#fff;padding:10px 12px;display:grid;gap:7px}
+.cashier-mixed-progress p{margin:0;display:flex;align-items:center;justify-content:space-between;gap:14px;color:#806a57;font-size:11.5px}
+.cashier-mixed-progress p strong{color:#30251e;font-size:12px}
+.cashier-mixed-progress p.remaining{padding-top:7px;border-top:1px dashed #e5d6c7;color:#704327;font-weight:900}
+.cashier-mixed-progress p.remaining strong{color:#e45116;font-size:14px}
+.cashier-mixed-status{min-height:42px;border:1px solid #e7d7c8;border-radius:10px;background:#fff;display:flex;align-items:center;gap:8px;padding:9px 11px;color:#745d4b;font-size:11.5px;font-weight:800}
+.cashier-mixed-status.success{border-color:#cfe8d5;background:#f5faf6;color:#31573d}
+.cashier-mixed-actions{margin-top:0!important}
+.cashier-mixed-actions .cashier-confirm-action{width:100%}
+.cashier-mixed-qr-hint{min-height:74px!important}
+
+@media(max-width:760px){
+  .cashier-method-grid-three{grid-template-columns:1fr 1fr 1fr}
+  .cashier-mixed-fields{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .cashier-method-grid-three{grid-template-columns:1fr}
+}

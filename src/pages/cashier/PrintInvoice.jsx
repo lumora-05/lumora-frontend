@@ -18,6 +18,7 @@ import {
 const METHOD_LABELS = {
   TIEN_MAT: 'Tiền mặt',
   CHUYEN_KHOAN: 'Chuyển khoản',
+  KET_HOP: 'Tiền mặt + chuyển khoản',
   TIEN_COC: 'Tiền cọc đặt bàn',
 };
 
