@@ -27,6 +27,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { localizedFoodDescription, localizedFoodName } from '../utils/localizedContent';
 import { usePublicContentTranslations } from '../hooks/usePublicContentTranslations';
 import { normalizePage } from '../utils/pagination';
+import { getCustomerUser, onCustomerSessionChange } from '../utils/customerSession';
 import '../styles/home.css';
 
 const DEFAULT_SETTINGS = {
@@ -145,7 +146,15 @@ function Brand({ settings }) {
 
 function Navbar({ settings }) {
   const [open, setOpen] = useState(false);
+  const [customer, setCustomer] = useState(getCustomerUser());
   const reservationUrl = settings.reservationUrl || '/reservations';
+
+  useEffect(() => onCustomerSessionChange(() => setCustomer(getCustomerUser())), []);
+
+  const customerAccountUrl = customer ? '/menu/account' : '/login?next=/menu/account';
+  const customerLabel = customer
+    ? (customer.hoTen?.trim().split(/\s+/).slice(-1)[0] || 'Tài khoản')
+    : 'Đăng nhập';
 
   return (
     <header className="v0-navbar">
@@ -160,7 +169,10 @@ function Navbar({ settings }) {
 
         <div className="v0-book-desktop">
           <LanguageSwitcher compact />
-          <a href="/login" className="v0-button v0-button-outline v0-pill v0-login-button">Đăng nhập</a>
+          <a href={customerAccountUrl} className="v0-button v0-button-outline v0-pill v0-login-button">
+            {customer && <UserRound size={17} />}
+            {customerLabel}
+          </a>
         </div>
 
         <button
@@ -181,7 +193,10 @@ function Navbar({ settings }) {
               <a key={link.href} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
             ))}
             <LanguageSwitcher />
-            <a href="/login" className="v0-button v0-button-outline v0-pill v0-mobile-login v0-login-button" onClick={() => setOpen(false)}>Đăng nhập</a>
+            <a href={customerAccountUrl} className="v0-button v0-button-outline v0-pill v0-mobile-login v0-login-button" onClick={() => setOpen(false)}>
+              {customer && <UserRound size={17} />}
+              {customerLabel}
+            </a>
             <a href={reservationUrl} className="v0-button v0-button-primary v0-pill v0-mobile-book" onClick={() => setOpen(false)}>Đặt bàn ngay</a>
           </nav>
         </div>
