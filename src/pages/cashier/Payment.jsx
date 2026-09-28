@@ -36,7 +36,7 @@ import {
 
 const METHODS = [
   { key: 'TIEN_MAT', label: 'Tiền mặt', icon: Banknote },
-  { key: 'CHUYEN_KHOAN', label: 'VietQR', icon: QrCode },
+  { key: 'CHUYEN_KHOAN', label: 'Chuyển khoản', icon: QrCode },
   { key: 'KET_HOP', label: 'Kết hợp', icon: WalletCards },
 ];
 
