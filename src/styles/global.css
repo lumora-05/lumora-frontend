@@ -4310,6 +4310,7 @@
   box-shadow:none!important;
 }
 .cashier-pos-method-grid button:nth-child(2):not(.active){padding:0 18px!important}
+.cashier-pos-method-grid button:nth-child(2).active{padding:0 38px 0 22px!important}
 .cashier-pos-method-grid button>svg{flex:0 0 auto}
 .cashier-pos-method-grid button span:not(.cashier-pos-method-check){font-weight:900;white-space:nowrap;flex:0 0 auto}
 .cashier-pos-method-check{
