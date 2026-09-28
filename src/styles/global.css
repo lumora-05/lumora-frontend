@@ -4294,7 +4294,7 @@
 .cashier-pos-method-grid button{
   position:relative;
   min-height:74px!important;
-  padding:0 42px 0 18px!important;
+  padding:0 40px 0 12px!important;
   border:1px solid #e3cdbb!important;
   border-radius:12px!important;
   background:#fff!important;
@@ -4310,7 +4310,7 @@
   box-shadow:none!important;
 }
 .cashier-pos-method-grid button>svg{flex:0 0 auto}
-.cashier-pos-method-grid button span:not(.cashier-pos-method-check){font-weight:900}
+.cashier-pos-method-grid button span:not(.cashier-pos-method-check){font-weight:900;white-space:nowrap;flex:0 0 auto}
 .cashier-pos-method-check{
   position:absolute;right:14px;top:50%;transform:translateY(-50%);
   width:22px;height:22px;border-radius:50%;background:#f45a12;color:#fff;display:grid;place-items:center;
