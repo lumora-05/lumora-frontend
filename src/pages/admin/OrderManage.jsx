@@ -45,7 +45,7 @@ const STATUS_OPTIONS = [
   { value: 'DA_PHUC_VU', label: 'Đã phục vụ' },
   { value: 'CHO_THANH_TOAN', label: 'Chờ thanh toán' },
   { value: 'SAN_SANG_THANH_TOAN', label: 'Sẵn sàng thanh toán' },
-  { value: 'DA_THANH_TOAN', label: 'Đã thanh toán' },
+  { value: 'DA_THANH_TOAN', label: 'Hoàn tất' },
   { value: 'DA_HUY', label: 'Đã hủy' },
 ];
 
@@ -142,7 +142,7 @@ function statusMeta(code) {
     case 'SAN_SANG_THANH_TOAN':
       return { label: 'Sẵn sàng thanh toán', tone: 'pending' };
     case 'DA_THANH_TOAN':
-      return { label: 'Đã thanh toán', tone: 'completed' };
+      return { label: 'Hoàn tất', tone: 'completed' };
     case 'DA_HUY':
       return { label: 'Đã hủy', tone: 'cancelled' };
     default:
