@@ -1593,7 +1593,7 @@
   position:relative;
   min-height:104px;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 170px;
+  grid-template-columns:minmax(0,1fr) 205px;
   gap:22px;
   align-items:center;
   padding:17px 18px;
@@ -1643,9 +1643,10 @@
 .waiter-feed-side{display:grid;justify-items:end;gap:13px;}
 .waiter-feed-side time{display:flex;align-items:center;gap:6px;color:#64748b;font-size:13px;font-weight:750;}
 .waiter-confirm-button,.waiter-view-button{
-  min-width:132px;
+  min-width:190px;
   height:39px;
   padding:0 14px;
+  white-space:nowrap;
   border-radius:9px;
   display:flex;
   align-items:center;

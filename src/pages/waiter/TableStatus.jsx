@@ -131,7 +131,30 @@ function groupTableLabel(group) {
   return [...new Set(group.rows.map(tableNameOfOrder).filter(Boolean))].join(' + ');
 }
 
+function itemFoodId(item) {
+  return item?.monAn?.maMonAn ?? item?.maMonAn ?? item?.monAn?.id ?? item?.foodId ?? null;
+}
 
+function summarizeOrderItems(items, maxVisible = 3) {
+  const grouped = new Map();
+
+  items.forEach((item) => {
+    const name = itemName(item);
+    const foodId = itemFoodId(item);
+    const key = foodId != null ? `food:${foodId}` : `name:${String(name).trim().toLowerCase()}`;
+    const quantityValue = Number(item?.soLuong);
+    const quantity = Number.isFinite(quantityValue) && quantityValue > 0 ? quantityValue : 1;
+
+    if (!grouped.has(key)) grouped.set(key, { name, quantity: 0 });
+    grouped.get(key).quantity += quantity;
+  });
+
+  const rows = [...grouped.values()];
+  const visible = rows.slice(0, maxVisible).map(({ name, quantity }) => `${name} ×${quantity}`);
+  const hiddenCount = Math.max(0, rows.length - visible.length);
+
+  return hiddenCount ? `${visible.join(' · ')} · +${hiddenCount} món khác` : visible.join(' · ');
+}
 
 export default function TableStatus() {
   const toast = useToast();
@@ -237,6 +260,7 @@ export default function TableStatus() {
         ? '/waiter-icons/table-chair-preparing.png'
         : TABLE_ICON_BY_GROUP[group] || '/waiter-icons/table-chair-action.png';
     const buttonLabel = group === 'CONFIRM' ? 'Kiểm tra & xác nhận' : group === 'READY' ? 'Phục vụ món' : group === 'PAYMENT' ? 'Xem yêu cầu' : 'Cập nhật';
+    const itemSummary = items.length ? summarizeOrderItems(items) : 'Chưa có chi tiết món';
 
     return (
       <article className={`waiter-order-feed-card ${nested ? 'waiter-shared-order-row' : ''} ${meta.tone} ${group === 'READY' ? 'priority-card' : ''} wait-${elapsedTone}`} key={id}>
@@ -257,7 +281,7 @@ export default function TableStatus() {
               <div className="waiter-feed-summary">
                 <span><UtensilsCrossed size={16} />{itemCount(order)} món</span>
                 {readyCount > 0 ? <span className="waiter-ready-count">{readyCount} món cần mang ra</span> : null}
-                <p>{items.length ? items.slice(0, 4).map(itemName).join(', ') : 'Chưa có chi tiết món'}</p>
+                <p>{itemSummary}</p>
               </div>
             </div>
           </div>
