@@ -47,7 +47,9 @@ export function clearCustomerSession() {
 
   try {
     const sharedUser = JSON.parse(localStorage.getItem('user') || 'null');
-    const role = String(sharedUser?.role || sharedUser?.tenVaiTro || sharedUser?.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    const role = String(sharedUser?.role || sharedUser?.tenVaiTro || sharedUser?.vaiTro?.tenVaiTro || '')
+      .replace('ROLE_', '')
+      .toUpperCase();
     if (role === 'CUSTOMER') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

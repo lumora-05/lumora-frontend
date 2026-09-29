@@ -16,8 +16,12 @@ import { useToast, errorMessageOf } from '../../context/ToastContext';
 import { getCustomerToken } from '../../utils/customerSession';
 import '../../styles/login.css';
 
+const roleOf = (user = {}) => String(
+  user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || ''
+).replace('ROLE_', '').toUpperCase();
+
 const getHomePath = (role = '') => {
-  const normalizedRole = role.replace('ROLE_', '');
+  const normalizedRole = String(role || '').replace('ROLE_', '').toUpperCase();
 
   if (normalizedRole === 'ADMIN') return '/admin';
   if (normalizedRole === 'WAITER') return '/waiter';
@@ -73,10 +77,10 @@ export default function Login() {
   const customerNext = requestedNext.startsWith('/menu') ? requestedNext : '/menu/account';
 
   useEffect(() => {
-    if (!user?.role) return;
-    const normalizedRole = String(user.role).replace('ROLE_', '');
+    const normalizedRole = roleOf(user);
+    if (!normalizedRole) return;
     if (normalizedRole === 'CUSTOMER' && !getCustomerToken()) return;
-    navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(user.role), { replace: true });
+    navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(normalizedRole), { replace: true });
   }, [customerNext, navigate, user]);
 
   const updateField = (field) => (event) => {
@@ -99,8 +103,8 @@ export default function Login() {
     try {
       const loggedInUser = await login(username, form.password);
 
-      const normalizedRole = String(loggedInUser.role || '').replace('ROLE_', '');
-      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(loggedInUser.role), { replace: true });
+      const normalizedRole = roleOf(loggedInUser);
+      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(normalizedRole), { replace: true });
     } catch (requestError) {
       const message = errorMessageOf(requestError, 'Tên đăng nhập, số điện thoại hoặc mật khẩu không chính xác.');
       setError(message);
@@ -116,8 +120,8 @@ export default function Login() {
 
     try {
       const loggedInUser = await loginWithGoogle(credential);
-      const normalizedRole = String(loggedInUser.role || '').replace('ROLE_', '');
-      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(loggedInUser.role), { replace: true });
+      const normalizedRole = roleOf(loggedInUser);
+      navigate(normalizedRole === 'CUSTOMER' ? customerNext : getHomePath(normalizedRole), { replace: true });
     } catch (requestError) {
       const message = errorMessageOf(
         requestError,

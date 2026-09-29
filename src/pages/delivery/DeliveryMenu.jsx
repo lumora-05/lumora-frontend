@@ -22,7 +22,12 @@ import { categoryApi, menuApi } from '../../api/menuApi';
 import { systemSettingApi, systemSettingData } from '../../api/systemSettingApi';
 import { formatMoney } from '../../utils/formatMoney';
 import { imageUrl } from '../../utils/imageUrl';
-import { continueAsGuest, getCustomerUser, hasContinuedAsGuest } from '../../utils/customerSession';
+import {
+  continueAsGuest,
+  getCustomerUser,
+  hasContinuedAsGuest,
+  onCustomerSessionChange,
+} from '../../utils/customerSession';
 import { useLanguage } from '../../context/LanguageContext';
 import { localizedCategoryName, localizedFoodCategory, localizedFoodDescription, localizedFoodName } from '../../utils/localizedContent';
 import { usePublicContentTranslations } from '../../hooks/usePublicContentTranslations';
@@ -101,17 +106,23 @@ export default function DeliveryMenu() {
   }, []);
 
   useEffect(() => {
-    if (!getCustomerUser() && !hasContinuedAsGuest()) return;
-    const raw = sessionStorage.getItem(PENDING_ADD_KEY);
-    if (!raw) return;
+    const restorePendingFood = () => {
+      if (!getCustomerUser() && !hasContinuedAsGuest()) return;
+      const raw = sessionStorage.getItem(PENDING_ADD_KEY);
+      if (!raw) return;
 
-    sessionStorage.removeItem(PENDING_ADD_KEY);
-    try {
-      const pendingFood = JSON.parse(raw);
-      if (pendingFood) performAddToCart(pendingFood);
-    } catch {
-      // Bỏ qua dữ liệu tạm không hợp lệ.
-    }
+      try {
+        const pendingFood = JSON.parse(raw);
+        if (!pendingFood) return;
+        sessionStorage.removeItem(PENDING_ADD_KEY);
+        performAddToCart(pendingFood);
+      } catch {
+        sessionStorage.removeItem(PENDING_ADD_KEY);
+      }
+    };
+
+    restorePendingFood();
+    return onCustomerSessionChange(restorePendingFood);
   }, []);
 
   const filteredFoods = useMemo(() => {

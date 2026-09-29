@@ -17,7 +17,9 @@ export function AuthProvider({ children }) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data));
 
-    const role = String(data.role || data.tenVaiTro || data.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    const role = String(data.role || data.tenVaiTro || data.vaiTro?.tenVaiTro || '')
+      .replace('ROLE_', '')
+      .toUpperCase();
     if (role === 'CUSTOMER') {
       saveCustomerSession(data);
     }
@@ -45,7 +47,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    const role = String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '').replace('ROLE_', '');
+    const role = String(user?.role || user?.tenVaiTro || user?.vaiTro?.tenVaiTro || '')
+      .replace('ROLE_', '')
+      .toUpperCase();
     if (role === 'CUSTOMER') clearCustomerSession();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
