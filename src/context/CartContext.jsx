@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const CartContext = createContext(null);
 const foodId = (food) => food?.maMonAn ?? food?.id;
@@ -31,12 +31,29 @@ function readCart(qrToken) {
 
 export function CartProvider({ children, qrToken }) {
   const [items, setItems] = useState(() => readCart(qrToken));
+  const previousStorageKeyRef = useRef(storageKey(qrToken));
+  const skipNextPersistRef = useRef(false);
 
   useEffect(() => {
+    const nextStorageKey = storageKey(qrToken);
+
+    // Không đọc lại giỏ ở lần mount đầu tiên. DeliveryMenu có thể vừa khôi phục
+    // món đang chờ sau đăng nhập; đọc lại localStorage tại đây sẽ ghi đè món đó.
+    if (previousStorageKeyRef.current === nextStorageKey) return;
+
+    previousStorageKeyRef.current = nextStorageKey;
+    skipNextPersistRef.current = true;
     setItems(readCart(qrToken));
   }, [qrToken]);
 
   useEffect(() => {
+    // Khi chuyển sang một QR khác, bỏ qua lần ghi đầu tiên để không lấy giỏ
+    // của QR cũ ghi đè lên giỏ đã lưu của QR mới trước khi state được nạp lại.
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
     localStorage.setItem(storageKey(qrToken), JSON.stringify(items));
   }, [items, qrToken]);
 
